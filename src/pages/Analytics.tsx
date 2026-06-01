@@ -1,43 +1,9 @@
 import { useState } from 'react';
+import { useAnalytics } from '../hooks/useAnalytics';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, LineChart, Line, AreaChart, Area,
 } from 'recharts';
-
-// ── Mock data ──────────────────────────────────────────────────────────────────
-
-const MONTHLY_TREND = [
-  { month: 'יול', rating: 4.3, reviews: 124, response_rate: 72 },
-  { month: 'אוג', rating: 4.5, reviews: 148, response_rate: 78 },
-  { month: 'ספט', rating: 4.4, reviews: 163, response_rate: 81 },
-  { month: 'אוק', rating: 4.6, reviews: 201, response_rate: 85 },
-  { month: 'נוב', rating: 4.7, reviews: 219, response_rate: 88 },
-  { month: 'דצמ', rating: 4.8, reviews: 247, response_rate: 92 },
-];
-
-const RATING_DIST = [
-  { rating: '5 ★', count: 203, pct: 82 },
-  { rating: '4 ★', count: 30, pct: 12 },
-  { rating: '3 ★', count: 7, pct: 3 },
-  { rating: '2 ★', count: 5, pct: 2 },
-  { rating: '1 ★', count: 2, pct: 1 },
-];
-
-const PLATFORM_DATA = [
-  { name: 'Google', icon: 'language', reviews: 142, positive: 89, color: '#4285F4' },
-  { name: 'Facebook', icon: 'groups', reviews: 67, positive: 82, color: '#1877F2' },
-  { name: 'TripAdvisor', icon: 'flight', reviews: 28, positive: 91, color: '#34E0A1' },
-  { name: 'Wolt', icon: 'delivery_dining', reviews: 10, positive: 70, color: '#FF6B35' },
-];
-
-const TOPICS = [
-  { topic: 'שירות לקוחות', count: 97, positive: true },
-  { topic: 'זמני המתנה', count: 64, positive: false },
-  { topic: 'איכות המוצר', count: 81, positive: true },
-  { topic: 'מחיר', count: 43, positive: false },
-  { topic: 'אווירה', count: 58, positive: true },
-  { topic: 'ניקיון', count: 29, positive: true },
-];
 
 // ── Custom tooltips ────────────────────────────────────────────────────────────
 
@@ -113,6 +79,12 @@ function RatingBar({ rating, count, pct, maxCount }: { rating: string; count: nu
 
 export default function Analytics() {
   const [period, setPeriod] = useState<Period>('6m');
+  const { monthlyTrend, ratingDist, platformData, topics } = useAnalytics();
+
+  const MONTHLY_TREND = monthlyTrend;
+  const RATING_DIST   = ratingDist;
+  const PLATFORM_DATA = platformData;
+  const TOPICS        = topics;
 
   const periodData = period === '3m'
     ? MONTHLY_TREND.slice(-3)
@@ -120,7 +92,7 @@ export default function Analytics() {
       ? MONTHLY_TREND
       : [...MONTHLY_TREND, ...MONTHLY_TREND.map((d, i) => ({ ...d, month: ['ינו', 'פבר', 'מרץ', 'אפר', 'מאי', 'יוני'][i] }))];
 
-  const maxRatingCount = Math.max(...RATING_DIST.map((r) => r.count));
+  const maxRatingCount = Math.max(...RATING_DIST.map((r) => r.count), 1);
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#f8f9fa' }}>

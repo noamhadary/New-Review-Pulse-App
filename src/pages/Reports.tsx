@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useReviews } from '../hooks/useReviews';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -321,6 +322,7 @@ export default function Reports() {
   const [filter, setFilter]         = useState<FilterTab>('all');
   const [showModal, setShowModal]   = useState(false);
   const [downloaded, setDownloaded] = useState<string | null>(null);
+  const { reviews } = useReviews();
 
   const visible = filter === 'all' ? reports : reports.filter((r) => r.type === filter);
 
@@ -333,11 +335,16 @@ export default function Reports() {
   };
 
   const handleDownload = (report: Report) => {
-    const csv = [
-      'שם הדוח,סוג,תאריך,ביקורות',
-      `"${report.name}",${TYPE_META[report.type].label},${report.date},${report.reviews}`,
-    ].join('\n');
-    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const header = ['שם לקוח', 'פלטפורמה', 'דירוג', 'סנטימנט', 'סטטוס', 'תאריך', 'תוכן'].join(',');
+    const rows = reviews.map((r) =>
+      [`"${r.reviewer_name}"`, r.platform, r.rating, r.sentiment, r.status,
+       new Date(r.created_at).toLocaleDateString('he-IL'),
+       `"${r.content.replace(/"/g, '""')}"`].join(',')
+    );
+    const csv = rows.length > 0
+      ? '\uFEFF' + [header, ...rows].join('\n')
+      : '\uFEFF' + [`"${report.name}",${TYPE_META[report.type].label},${report.date},${report.reviews}`].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

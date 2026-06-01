@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
-import { MOCK_REVIEWS } from '../lib/mockData';
+import { useState } from 'react';
 import type { Platform, Sentiment, ReviewStatus, Review } from '../types';
 import AIReplyModal from '../components/reviews/AIReplyModal';
+import { useReviews } from '../hooks/useReviews';
 
 const PLATFORM_OPTIONS: { value: Platform | 'all'; label: string }[] = [
   { value: 'all', label: 'כל הפלטפורמות' },
@@ -54,24 +54,14 @@ export default function Reviews() {
   const [sentiment, setSentiment] = useState<Sentiment | 'all'>('all');
   const [status, setStatus] = useState<ReviewStatus | 'all'>('all');
   const [search, setSearch] = useState('');
-
-  // AI modal state
   const [aiTarget, setAiTarget] = useState<Review | null>(null);
-  // Local replied tracking (in real app this would be from DB)
-  const [repliedIds, setRepliedIds] = useState<Set<string>>(new Set());
 
-  const filtered = useMemo(() => {
-    return MOCK_REVIEWS.filter((r) => {
-      if (platform !== 'all' && r.platform !== platform) return false;
-      if (sentiment !== 'all' && r.sentiment !== sentiment) return false;
-      if (status !== 'all' && r.status !== status) return false;
-      if (search && !r.reviewer_name.includes(search) && !r.content.includes(search)) return false;
-      return true;
-    });
-  }, [platform, sentiment, status, search]);
+  const { reviews: filtered, updateReview } = useReviews({
+    platform, sentiment, status, search,
+  });
 
   const handleReplied = (reviewId: string) => {
-    setRepliedIds((prev) => new Set([...prev, reviewId]));
+    updateReview(reviewId, { status: 'replied' });
   };
 
   return (
@@ -157,7 +147,7 @@ export default function Reviews() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
             {filtered.map((review) => {
               const s = SENTIMENT_STYLES[review.sentiment];
-              const isReplied = repliedIds.has(review.id) || review.status === 'replied';
+              const isReplied = review.status === 'replied';
 
               return (
                 <div

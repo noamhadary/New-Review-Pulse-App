@@ -1,4 +1,8 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
+import { useBusiness } from '../context/BusinessContext';
 
 const STEPS = [
   {
@@ -35,15 +39,39 @@ const PLATFORMS = [
 ];
 
 export default function Onboarding() {
+  const navigate = useNavigate();
+  const { user, isDemo } = useAuth();
+  const { refetch: refetchBusiness } = useBusiness();
+
   const [step, setStep] = useState(1);
   const [business, setBusiness] = useState({ name: '', category: '', phone: '', website: '' });
   const [connected, setConnected] = useState<string[]>([]);
   const [notifs, setNotifs] = useState({ email: true, new_review: true, critical: true, weekly: false });
+  const [saving, setSaving] = useState(false);
 
   const togglePlatform = (id: string) => {
     setConnected((prev) =>
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
     );
+  };
+
+  const handleComplete = async () => {
+    if (isDemo) { navigate('/dashboard'); return; }
+    if (!user) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from('businesses').upsert({
+        owner_id: user.id,
+        name: business.name || 'העסק שלי',
+        category: business.category,
+        phone: business.phone,
+        website: business.website,
+      });
+      if (!error) refetchBusiness();
+    } catch { /* ignore */ } finally {
+      setSaving(false);
+      navigate('/dashboard');
+    }
   };
 
   return (
@@ -268,11 +296,12 @@ export default function Onboarding() {
               </button>
             )}
             <button
-              onClick={() => step < 4 ? setStep((s) => s + 1) : window.location.href = '/dashboard'}
+              onClick={() => step < 4 ? setStep((s) => s + 1) : handleComplete()}
+              disabled={saving}
               className="flex-1 py-3 rounded-xl font-bold text-sm transition-all hover:opacity-90 cursor-pointer"
               style={{ backgroundColor: '#871dd3', color: '#ffffff' }}
             >
-              {step === 4 ? 'עבור ללוח הבקרה' : 'הבא'}
+              {step === 4 ? (saving ? 'שומר...' : 'עבור ללוח הבקרה') : 'הבא'}
             </button>
           </div>
         </div>

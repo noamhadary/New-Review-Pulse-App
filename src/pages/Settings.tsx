@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { TONE_LABELS, type ToneType } from '../types';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
+import { useBusiness } from '../context/BusinessContext';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -531,19 +534,51 @@ function ModalBox({ title, icon, onClose, children }: { title: string; icon: str
 // ── Tab: Profile ───────────────────────────────────────────────────────────────
 
 function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type']) => void }) {
-  const [profile, setProfile] = useLocalStorage('rp_profile', {
-    name: 'מנהל המערכת', email: 'admin@reviewpulse.co.il',
-    business: 'חנות מרכזית', phone: '', website: '', category: 'קמעונאות',
+  const { user, isDemo, signOut } = useAuth();
+  const { business, refetch: refetchBusiness } = useBusiness();
+
+  const [profile, setProfile] = useState({
+    name: business?.name ?? 'העסק שלי',
+    email: user?.email ?? '',
+    phone: '',
+    website: '',
+    category: business?.category ?? 'קמעונאות',
   });
   const [saved, setSaved] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
 
+  // Sync when business data loads
+  useEffect(() => {
+    if (business) {
+      setProfile((p) => ({
+        ...p,
+        name: business.name ?? p.name,
+        category: business.category ?? p.category,
+      }));
+    }
+  }, [business?.id]);
+
   const initials = profile.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase() || 'מנ';
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!isDemo && user) {
+      await supabase.from('businesses').upsert({
+        owner_id: user.id,
+        name: profile.name,
+        category: profile.category,
+        phone: profile.phone,
+        website: profile.website,
+      });
+      refetchBusiness();
+    }
     setSaved(true);
     showToast('הפרופיל נשמר בהצלחה');
     setTimeout(() => setSaved(false), 2500);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    window.location.href = '/auth/login';
   };
 
   return (
@@ -567,9 +602,8 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <InputField label="שם מלא" value={profile.name} onChange={(v) => setProfile({ ...profile, name: v })} />
+          <InputField label="שם העסק" value={profile.name} onChange={(v) => setProfile({ ...profile, name: v })} />
           <InputField label="אימייל" value={profile.email} onChange={(v) => setProfile({ ...profile, email: v })} type="email" dir="ltr" />
-          <InputField label="שם העסק" value={profile.business} onChange={(v) => setProfile({ ...profile, business: v })} />
           <InputField label="טלפון" value={profile.phone} onChange={(v) => setProfile({ ...profile, phone: v })} type="tel" dir="ltr" placeholder="+972-50-0000000" />
           <InputField label="אתר אינטרנט" value={profile.website} onChange={(v) => setProfile({ ...profile, website: v })} dir="ltr" placeholder="https://example.co.il" />
           <div>
@@ -617,6 +651,18 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
       </SectionCard>
 
       <SaveBtn onSave={handleSave} saved={saved} />
+
+      {/* Sign out */}
+      <div className="flex justify-end mt-2">
+        <button
+          onClick={handleSignOut}
+          className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl cursor-pointer transition-all hover:opacity-80"
+          style={{ backgroundColor: '#fee2e2', color: '#dc2626' }}
+        >
+          <span className="material-symbols-outlined text-[16px]">logout</span>
+          התנתק
+        </button>
+      </div>
     </>
   );
 }

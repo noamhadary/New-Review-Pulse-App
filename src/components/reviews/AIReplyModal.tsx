@@ -13,7 +13,8 @@ interface Props {
 const TONES: ToneType[] = ['soft', 'gentle', 'firm', 'apologetic'];
 
 export default function AIReplyModal({ review, onClose, onReplied, defaultWhatsAppNumber }: Props) {
-  const [tone, setTone] = useState<ToneType>('soft');
+  const defaultTone: ToneType = review.rating <= 2 ? 'apologetic' : review.rating === 3 ? 'gentle' : 'soft';
+  const [tone, setTone] = useState<ToneType>(defaultTone);
   const [step, setStep] = useState<'tone' | 'loading' | 'results' | 'sent' | 'chosen'>('tone');
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
   const [editedTexts, setEditedTexts] = useState<string[]>([]);

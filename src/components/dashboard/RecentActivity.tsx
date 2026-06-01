@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MOCK_REVIEWS } from '../../lib/mockData';
 import type { Platform, Sentiment, ReviewStatus, Review } from '../../types';
 import AIReplyModal from '../reviews/AIReplyModal';
+import { useReviews } from '../../hooks/useReviews';
 
 const PLATFORM_LABELS: Record<Platform, string> = {
   google: 'Google',
@@ -143,19 +143,22 @@ function exportCSV(reviews: Review[]) {
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function RecentActivity() {
-  const [reviews, setReviews]     = useState<Review[]>(MOCK_REVIEWS.slice(0, 6));
+  const { reviews: allReviews, updateReview } = useReviews();
+  const displayReviews = allReviews.slice(0, 6);
   const [openMenu, setOpenMenu]   = useState<string | null>(null);
   const [aiTarget, setAiTarget]   = useState<Review | null>(null);
   const [exported, setExported]   = useState(false);
 
   const handleIgnore = (id: string) => {
-    setReviews((prev) => prev.map((r) => r.id === id ? { ...r, status: 'ignored' as ReviewStatus } : r));
+    updateReview(id, { status: 'ignored' as ReviewStatus });
   };
 
   const handleReplied = (id: string) => {
-    setReviews((prev) => prev.map((r) => r.id === id ? { ...r, status: 'replied' as ReviewStatus } : r));
+    updateReview(id, { status: 'replied' as ReviewStatus });
     setAiTarget(null);
   };
+
+  const reviews = displayReviews;
 
   const handleExport = () => {
     exportCSV(reviews);

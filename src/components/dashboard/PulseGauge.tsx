@@ -1,15 +1,19 @@
-const SEGMENTS = [
-  { label: 'חיובי מאוד', pct: 64, color: '#16a34a', bg: '#dcfce7', text: '#166534' },
-  { label: 'חיובי', pct: 28, color: '#2563eb', bg: '#dbeafe', text: '#1e40af' },
-  { label: 'ביקורתי', pct: 8, color: '#dc2626', bg: '#fee2e2', text: '#991b1b' },
-];
-
 const CIRCUMFERENCE = 2 * Math.PI * 84; // r=84
 
-export default function PulseGauge() {
-  const pulse = 94;
+interface Props {
+  positivePct?: number;
+  pendingCount?: number;
+}
+
+export default function PulseGauge({ positivePct = 94, pendingCount }: Props) {
+  const pulse = positivePct;
   const filled = CIRCUMFERENCE * (pulse / 100);
   const gap = CIRCUMFERENCE - filled;
+
+  const SEGMENTS = [
+    { label: 'ביקורות חיוביות', pct: positivePct, color: '#16a34a', bg: '#dcfce7', text: '#166534' },
+    { label: 'ממתין לתגובה', pct: pendingCount ?? 0, color: '#871dd3', bg: '#f3e8ff', text: '#6b21a8', isCount: true },
+  ];
 
   return (
     <div
@@ -26,14 +30,8 @@ export default function PulseGauge() {
 
       {/* Gauge */}
       <div className="relative w-44 h-44 mx-auto mb-6 flex-shrink-0">
-        {/* Track */}
         <svg className="w-full h-full -rotate-90" viewBox="0 0 192 192">
-          <circle
-            cx="96" cy="96" r="84"
-            fill="none"
-            stroke="#edeeef"
-            strokeWidth="14"
-          />
+          <circle cx="96" cy="96" r="84" fill="none" stroke="#edeeef" strokeWidth="14" />
           <circle
             cx="96" cy="96" r="84"
             fill="none"
@@ -51,18 +49,11 @@ export default function PulseGauge() {
           </defs>
         </svg>
 
-        {/* Center */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span
-            className="text-5xl font-extrabold leading-none tracking-tight"
-            style={{ color: '#871dd3' }}
-          >
+          <span className="text-5xl font-extrabold leading-none tracking-tight" style={{ color: '#871dd3' }}>
             {pulse}
           </span>
-          <span
-            className="text-xs font-semibold uppercase tracking-widest mt-1"
-            style={{ color: '#444650' }}
-          >
+          <span className="text-xs font-semibold uppercase tracking-widest mt-1" style={{ color: '#444650' }}>
             Pulse
           </span>
         </div>
@@ -70,20 +61,15 @@ export default function PulseGauge() {
 
       {/* Segments */}
       <div className="space-y-3">
-        {SEGMENTS.map(({ label, pct, bg, text }) => (
+        {SEGMENTS.map(({ label, pct, bg, text, isCount }) => (
           <div
             key={label}
             className="flex justify-between items-center px-3 py-2 rounded-lg"
             style={{ backgroundColor: '#f8f9fa' }}
           >
-            <span className="text-sm font-medium" style={{ color: '#191c1d' }}>
-              {label}
-            </span>
-            <span
-              className="text-xs font-bold px-2 py-0.5 rounded-md"
-              style={{ backgroundColor: bg, color: text }}
-            >
-              {pct}%
+            <span className="text-sm font-medium" style={{ color: '#191c1d' }}>{label}</span>
+            <span className="text-xs font-bold px-2 py-0.5 rounded-md" style={{ backgroundColor: bg, color: text }}>
+              {isCount ? pct : `${pct}%`}
             </span>
           </div>
         ))}
