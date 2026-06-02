@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { TONE_LABELS, type ToneType } from '../types';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -1166,7 +1167,9 @@ function BillingTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
 // ── Main ───────────────────────────────────────────────────────────────────────
 
 export default function Settings() {
-  const [tab, setTab] = useState<Tab>('profile');
+  const [searchParams] = useSearchParams();
+  const initialTab = (searchParams.get('tab') as Tab) ?? 'profile';
+  const [tab, setTab] = useState<Tab>(initialTab);
   const { toast, show: showToast } = useToast();
 
   return (

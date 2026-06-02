@@ -111,6 +111,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             <p className="text-white text-xs font-semibold mb-1">שדרג ל-Pro</p>
             <p className="text-white/70 text-xs mb-3">קבל גישה לכל הכלים המתקדמים</p>
             <button
+              onClick={() => { navigate('/settings?tab=billing'); onClose(); }}
               className="w-full bg-white text-xs font-bold py-2 rounded-lg transition-opacity hover:opacity-90 cursor-pointer"
               style={{ color: '#871dd3' }}
             >
