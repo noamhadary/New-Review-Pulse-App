@@ -1180,17 +1180,17 @@ export default function Settings() {
 
         <div className="flex flex-col md:flex-row gap-6">
           {/* Sidebar tabs */}
-          <div className="md:w-52 rounded-2xl p-2 flex flex-row md:flex-col gap-1 h-fit overflow-x-auto md:overflow-visible"
-            style={{ backgroundColor: '#fff', boxShadow: '0 2px 12px rgba(0,0,0,0.05)', border: '1px solid rgba(197,198,210,0.3)' }}>
+          <div className="md:w-52 rounded-2xl p-2 flex flex-row md:flex-col gap-1 h-fit overflow-x-auto md:overflow-visible md:sticky md:top-6"
+            style={{ backgroundColor: '#fff', boxShadow: '0 2px 12px rgba(0,0,0,0.05)', border: '1px solid rgba(197,198,210,0.3)', scrollbarWidth: 'none' }}>
             {TABS.map(({ id, label, icon }) => (
               <button key={id} onClick={() => setTab(id)}
-                className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all w-full text-right cursor-pointer flex-shrink-0"
+                className="flex flex-col md:flex-row items-center md:items-center gap-1 md:gap-2.5 px-2 md:px-3 py-2 md:py-2.5 rounded-xl font-medium transition-all text-center md:text-right cursor-pointer flex-shrink-0 min-w-[56px] md:min-w-0 md:w-full"
                 style={tab === id
                   ? { backgroundColor: 'rgba(135,29,211,0.08)', color: '#871dd3', fontWeight: 700 }
                   : { color: '#444650' }
                 }>
-                <span className={`material-symbols-outlined text-[18px] ${tab === id ? 'icon-filled' : ''}`}>{icon}</span>
-                <span className="hidden md:inline whitespace-nowrap">{label}</span>
+                <span className={`material-symbols-outlined text-[20px] md:text-[18px] ${tab === id ? 'icon-filled' : ''}`}>{icon}</span>
+                <span className="text-[10px] md:text-sm whitespace-nowrap leading-tight">{label}</span>
               </button>
             ))}
           </div>

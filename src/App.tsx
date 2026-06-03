@@ -11,6 +11,8 @@ import Onboarding from './pages/Onboarding';
 import Settings from './pages/Settings';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import AuthCallback from './pages/auth/AuthCallback';
+import LandingPage from './pages/LandingPage';
 
 export default function App() {
   return (
@@ -18,8 +20,10 @@ export default function App() {
       <BusinessProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/auth/login"    element={<Login />} />
-            <Route path="/auth/register" element={<Register />} />
+            <Route path="/"              element={<LandingPage />} />
+            <Route path="/auth/login"     element={<Login />} />
+            <Route path="/auth/register"  element={<Register />} />
+            <Route path="/auth/callback"  element={<AuthCallback />} />
             <Route element={<ProtectedRoute />}>
               <Route element={<Layout />}>
                 <Route path="/dashboard"  element={<Dashboard />} />
@@ -30,7 +34,7 @@ export default function App() {
                 <Route path="/settings"   element={<Settings />} />
               </Route>
             </Route>
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
       </BusinessProvider>
