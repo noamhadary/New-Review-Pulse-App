@@ -314,12 +314,9 @@ export default function LandingPage() {
           borderBottom:    scrolled ? '1px solid rgba(197,198,210,0.3)' : 'none',
         }}
       >
-        <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#002366,#871dd3)' }}>
-              <span className="material-symbols-outlined text-white text-[16px] icon-filled">star</span>
-            </div>
-            <span className="font-extrabold text-lg" style={{ color: scrolled ? '#00113a' : '#fff' }}>Review Pulse</span>
+        <div className="max-w-6xl mx-auto px-5 h-28 flex items-center justify-between">
+          <div className="cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+            <img src="/logo.png" alt="Review Pulse" style={{ height: 50, width: 'auto', maxWidth: 180, objectFit: 'contain' }} />
           </div>
 
           <div className="hidden md:flex items-center gap-6">
@@ -415,7 +412,7 @@ export default function LandingPage() {
         </div>
 
         {/* Content */}
-        <div className="relative z-10 max-w-4xl mx-auto px-5 text-center pt-24 pb-16">
+        <div className="relative z-10 max-w-4xl mx-auto px-5 text-center pt-36 pb-16">
           {/* Animated badge */}
           <div
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 text-sm font-semibold"
@@ -696,12 +693,7 @@ export default function LandingPage() {
       <footer style={{ backgroundColor: '#00113a' }}>
         <div className="max-w-6xl mx-auto px-5 py-10">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#002366,#871dd3)' }}>
-                <span className="material-symbols-outlined text-white text-[14px] icon-filled">star</span>
-              </div>
-              <span className="font-extrabold text-base text-white">Review Pulse</span>
-            </div>
+            <img src="/logo.png" alt="Review Pulse" style={{ height: 16, width: 'auto', maxWidth: 80, objectFit: 'contain', opacity: 0.85 }} />
             <div className="flex flex-wrap justify-center gap-6">
               {[["פיצ'רים",'features'],['מחירים','pricing'],['המלצות','testimonials']].map(([label, id]) => (
                 <button key={id} onClick={() => scrollTo(id)} className="text-sm cursor-pointer hover:opacity-60 transition-opacity" style={{ color: 'rgba(255,255,255,0.6)' }}>{label}</button>

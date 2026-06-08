@@ -13,7 +13,7 @@ export default function Layout() {
 
       {/* Main content — offset for fixed topbar and sidebar */}
       <main
-        className="pt-16 md:pr-64 min-h-screen"
+        className="pt-28 md:pr-64 min-h-screen"
         style={{ backgroundColor: '#f8f9fa' }}
       >
         <Outlet />

@@ -227,15 +227,14 @@ export default function Register() {
 
         {/* Logo */}
         <div className="text-center mb-8">
-          <div
-            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 cursor-pointer"
-            style={{ background: 'rgba(135,29,211,0.2)', border: '1px solid rgba(135,29,211,0.3)' }}
+          <img
+            src="/logo.png"
+            alt="Review Pulse"
+            className="cursor-pointer"
+            style={{ width: 130, maxWidth: '42%', height: 'auto', objectFit: 'contain', display: 'block', margin: '0 auto', filter: 'drop-shadow(0 0 20px rgba(135,29,211,0.55))' }}
             onClick={() => navigate('/')}
-          >
-            <span className="material-symbols-outlined text-[32px] icon-filled" style={{ color: '#871dd3' }}>star</span>
-          </div>
-          <h1 className="text-3xl font-extrabold text-white">Review Pulse</h1>
-          <p className="mt-1 text-sm" style={{ color: '#758dd5' }}>
+          />
+          <p className="mt-2 text-sm" style={{ color: '#758dd5' }}>
             {stage === 'form' ? 'הצטרף לאלפי עסקים שמנהלים את המוניטין שלהם' : 'כמעט סיימנו!'}
           </p>
         </div>

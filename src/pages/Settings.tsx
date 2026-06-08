@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { TONE_LABELS, type ToneType } from '../types';
 import { supabase } from '../lib/supabase';
@@ -58,8 +58,6 @@ const INITIAL_MEMBERS: TeamMember[] = [
   { id: 'u4', name: 'מיכל גרין',      email: 'michal@company.co.il',       role: 'manager', status: 'pending', initials: 'מג', joined_at: '2024-12-01' },
 ];
 
-const CURRENT_USER_ID = 'u1';
-
 const INTEGRATIONS_CONFIG = [
   { id: 'google',      name: 'Google Business', icon: 'language',       color: '#4285F4', reviews: 142, lastSync: 'לפני 2 שעות' },
   { id: 'facebook',    name: 'Facebook Pages',  icon: 'groups',         color: '#1877F2', reviews: 0,   lastSync: null },
@@ -69,16 +67,24 @@ const INTEGRATIONS_CONFIG = [
 
 // ── Persistence hook ───────────────────────────────────────────────────────────
 
-function useLocalStorage<T>(key: string, initial: T): [T, (v: T) => void] {
-  const [state, setState] = useState<T>(() => {
-    try { return JSON.parse(localStorage.getItem(key) ?? '') as T; }
-    catch { return initial; }
-  });
-  const set = useCallback((val: T) => {
-    setState(val);
-    localStorage.setItem(key, JSON.stringify(val));
-  }, [key]);
-  return [state, set];
+
+// ── Loading skeleton ───────────────────────────────────────────────────────────
+
+function LoadingCard() {
+  return (
+    <div className="rounded-2xl p-6 mb-5 animate-pulse" style={{ backgroundColor: '#fff', border: '1px solid rgba(197,198,210,0.3)' }}>
+      <div className="h-4 w-1/3 rounded-lg mb-5" style={{ backgroundColor: '#f3f4f5' }} />
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="flex items-center justify-between py-3 border-b last:border-b-0" style={{ borderColor: 'rgba(197,198,210,0.2)' }}>
+          <div className="space-y-1.5">
+            <div className="h-3.5 w-32 rounded" style={{ backgroundColor: '#f3f4f5' }} />
+            <div className="h-2.5 w-48 rounded" style={{ backgroundColor: '#f3f4f5' }} />
+          </div>
+          <div className="w-12 h-6 rounded-full" style={{ backgroundColor: '#f3f4f5' }} />
+        </div>
+      ))}
+    </div>
+  );
 }
 
 // ── Toast ──────────────────────────────────────────────────────────────────────
@@ -536,40 +542,80 @@ function ModalBox({ title, icon, onClose, children }: { title: string; icon: str
 
 function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type']) => void }) {
   const { user, isDemo, signOut } = useAuth();
-  const { business, refetch: refetchBusiness } = useBusiness();
+  const { business, loading: businessLoading, refetch: refetchBusiness } = useBusiness();
 
   const [profile, setProfile] = useState({
-    name: business?.name ?? 'העסק שלי',
+    name: '',
     email: user?.email ?? '',
     phone: '',
     website: '',
-    category: business?.category ?? 'קמעונאות',
+    category: 'קמעונאות',
   });
   const [saved, setSaved] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
 
-  // Sync when business data loads
+  // Load profile once data is available
   useEffect(() => {
+    if (businessLoading) return;
     if (business) {
+      // Existing user — load from Supabase
       setProfile((p) => ({
         ...p,
-        name: business.name ?? p.name,
+        name:     business.name     ?? p.name,
         category: business.category ?? p.category,
+        phone:    business.phone    ?? p.phone,
+        website:  business.website  ?? p.website,
+      }));
+    } else if (isDemo) {
+      // Demo — start with defaults, then override with any previously saved values
+      try {
+        const savedStr = localStorage.getItem('rp_demo_profile');
+        const savedData = savedStr ? JSON.parse(savedStr) : {};
+        setProfile((p) => ({ ...p, phone: '+972534777375', ...savedData }));
+      } catch {
+        setProfile((p) => ({ ...p, phone: '+972534777375' }));
+      }
+    } else if (user) {
+      // New real user — prefill from registration metadata
+      const meta = user.user_metadata as Record<string, string> | undefined;
+      setProfile((p) => ({
+        ...p,
+        name: meta?.business_name || meta?.full_name || p.name,
       }));
     }
-  }, [business?.id]);
+  // Only re-run when business record itself changes (new load / first save)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [business?.id, businessLoading]);
 
   const initials = profile.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase() || 'מנ';
 
   const handleSave = async () => {
-    if (!isDemo && user) {
-      await supabase.from('businesses').upsert({
+    if (isDemo) {
+      // Demo — persist to localStorage so navigation doesn't wipe it
+      localStorage.setItem('rp_demo_profile', JSON.stringify(profile));
+      setSaved(true);
+      showToast('הפרופיל נשמר בהצלחה');
+      setTimeout(() => setSaved(false), 2500);
+      return;
+    }
+    if (user) {
+      const payload = {
         owner_id: user.id,
-        name: profile.name,
+        name:     profile.name,
         category: profile.category,
-        phone: profile.phone,
-        website: profile.website,
-      });
+        phone:    profile.phone  || null,
+        website:  profile.website || null,
+      };
+
+      const { error } = business?.id
+        ? await supabase.from('businesses').update(payload).eq('id', business.id).eq('owner_id', user.id)
+        : await supabase.from('businesses').insert(payload);
+
+      if (error) {
+        console.error('businesses save error:', error);
+        showToast(`שגיאה בשמירה: ${error.message}`, 'error');
+        return;
+      }
       refetchBusiness();
     }
     setSaved(true);
@@ -670,16 +716,40 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
 
 // ── Tab: Notifications ─────────────────────────────────────────────────────────
 
-function NotificationsTab({ showToast }: { showToast: (m: string, t?: ToastProps['type']) => void }) {
-  const [notifs, setNotifs] = useLocalStorage('rp_notifs', {
-    email: true, push: false, new_review: true, critical: true, weekly: true, monthly: false, whatsapp: false,
-  });
+const NOTIFS_DEFAULTS = {
+  email: true, push: false, new_review: true, critical: true, weekly: true, monthly: false, whatsapp: false,
+};
 
-  const toggle = (key: keyof typeof notifs) => {
+function NotificationsTab({ showToast }: { showToast: (m: string, t?: ToastProps['type']) => void }) {
+  const { user, isDemo } = useAuth();
+  const [notifs, setNotifs] = useState(NOTIFS_DEFAULTS);
+  const [loading, setLoading] = useState(!isDemo);
+
+  useEffect(() => {
+    if (isDemo || !user) { setLoading(false); return; }
+    supabase
+      .from('user_settings')
+      .select('notifs')
+      .eq('owner_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.notifs) setNotifs({ ...NOTIFS_DEFAULTS, ...(data.notifs as object) });
+        setLoading(false);
+      });
+  }, [user?.id, isDemo]);
+
+  const toggle = async (key: keyof typeof notifs) => {
     const next = { ...notifs, [key]: !notifs[key] };
     setNotifs(next);
+    if (!isDemo && user) {
+      await supabase
+        .from('user_settings')
+        .upsert({ owner_id: user.id, notifs: next, updated_at: new Date().toISOString() }, { onConflict: 'owner_id' });
+    }
     showToast(next[key] ? 'התראה הופעלה' : 'התראה הושבתה', 'info');
   };
+
+  if (loading) return <><LoadingCard /><LoadingCard /></>;
 
   return (
     <>
@@ -701,17 +771,57 @@ function NotificationsTab({ showToast }: { showToast: (m: string, t?: ToastProps
 
 // ── Tab: AI ────────────────────────────────────────────────────────────────────
 
+const AI_DEFAULTS = { enabled: false, default_tone: 'soft' as ToneType, whatsapp_number: '', auto_publish: false };
+
 function AITab({ showToast }: { showToast: (m: string, t?: ToastProps['type']) => void }) {
-  const [ai, setAI] = useLocalStorage('rp_ai', {
-    enabled: false, default_tone: 'soft' as ToneType, whatsapp_number: '', auto_publish: false, language: 'he',
-  });
+  const { isDemo } = useAuth();
+  const { business } = useBusiness();
+  const [ai, setAI] = useState(AI_DEFAULTS);
+  const [loading, setLoading] = useState(!isDemo);
   const [saved, setSaved] = useState(false);
 
-  const handleSave = () => {
+  useEffect(() => {
+    if (isDemo || !business) { setLoading(false); return; }
+    supabase
+      .from('auto_reply_settings')
+      .select('*')
+      .eq('business_id', business.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setAI({
+            enabled:         data.enabled ?? false,
+            default_tone:    (data.default_tone as ToneType) ?? 'soft',
+            whatsapp_number: data.whatsapp_number ?? '',
+            auto_publish:    (data as Record<string, unknown>).auto_publish as boolean ?? false,
+          });
+        }
+        setLoading(false);
+      });
+  }, [business?.id, isDemo]);
+
+  const handleSave = async () => {
+    if (!isDemo && business) {
+      const { error } = await supabase
+        .from('auto_reply_settings')
+        .upsert(
+          {
+            business_id:     business.id,
+            enabled:         ai.enabled,
+            default_tone:    ai.default_tone,
+            whatsapp_number: ai.whatsapp_number,
+            auto_publish:    ai.auto_publish,
+          },
+          { onConflict: 'business_id' }
+        );
+      if (error) { showToast('שגיאה בשמירה — נסה שנית', 'error'); return; }
+    }
     setSaved(true);
     showToast('הגדרות AI נשמרו בהצלחה');
     setTimeout(() => setSaved(false), 2500);
   };
+
+  if (loading) return <><LoadingCard /><LoadingCard /></>;
 
   return (
     <>
@@ -766,45 +876,94 @@ function AITab({ showToast }: { showToast: (m: string, t?: ToastProps['type']) =
 // ── Tab: Team ──────────────────────────────────────────────────────────────────
 
 function TeamTab({ showToast }: { showToast: (m: string, t?: ToastProps['type']) => void }) {
-  const [members, setMembers] = useLocalStorage<TeamMember[]>('rp_team', INITIAL_MEMBERS);
+  const { user, isDemo } = useAuth();
+  const { business } = useBusiness();
+  const [members, setMembers] = useState<TeamMember[]>([]);
+  const [loading, setLoading]           = useState(!isDemo);
   const [showInvite, setShowInvite]     = useState(false);
   const [removeId, setRemoveId]         = useState<string | null>(null);
   const [showPermissions, setShowPerms] = useState(false);
 
-  const activeMembers  = members.filter((m) => m.status === 'active');
-  const pendingMembers = members.filter((m) => m.status === 'pending');
+  useEffect(() => {
+    if (isDemo) { setMembers(INITIAL_MEMBERS.filter(m => m.id !== 'u1')); setLoading(false); return; }
+    if (!user) { setLoading(false); return; }
+    supabase
+      .from('team_members')
+      .select('*')
+      .eq('owner_id', user.id)
+      .order('joined_at', { ascending: true })
+      .then(({ data }) => {
+        if (data) setMembers(data.map(m => ({
+          ...m,
+          initials: (m.name as string).split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || (m.email as string).slice(0, 2).toUpperCase(),
+        })));
+        setLoading(false);
+      });
+  }, [user?.id, isDemo]);
 
-  const handleRoleChange = (id: string, role: MemberRole) => {
-    setMembers(members.map((m) => m.id === id ? { ...m, role } : m));
+  // Owner row — derived from auth, always shown first, not removable
+  const meta = (user?.user_metadata ?? {}) as Record<string, string>;
+  const ownerName = isDemo ? 'מנהל המערכת' : (meta.full_name || user?.email?.split('@')[0] || 'מנהל');
+  const ownerRow: TeamMember = {
+    id: `owner_${user?.id ?? 'demo'}`,
+    name:      ownerName,
+    email:     isDemo ? 'admin@reviewpulse.co.il' : (user?.email ?? ''),
+    role:      'admin',
+    status:    'active',
+    initials:  ownerName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'מנ',
+    joined_at: business?.created_at ?? new Date().toISOString(),
+  };
+  const OWNER_ID = ownerRow.id;
+
+  const activeMembers  = [ownerRow, ...members.filter(m => m.status === 'active')];
+  const pendingMembers = members.filter(m => m.status === 'pending');
+
+  const handleRoleChange = async (id: string, role: MemberRole) => {
+    setMembers(prev => prev.map(m => m.id === id ? { ...m, role } : m));
+    if (!isDemo && user) {
+      await supabase.from('team_members').update({ role }).eq('id', id).eq('owner_id', user.id);
+    }
     showToast('התפקיד עודכן בהצלחה', 'success');
   };
 
-  const handleRemove = (id: string) => {
-    setMembers(members.filter((m) => m.id !== id));
+  const handleRemove = async (id: string) => {
+    if (!isDemo && user) {
+      await supabase.from('team_members').delete().eq('id', id).eq('owner_id', user.id);
+    }
+    setMembers(prev => prev.filter(m => m.id !== id));
     setRemoveId(null);
     showToast('חבר הצוות הוסר', 'info');
   };
 
-  const handleCancelInvite = (id: string) => {
-    setMembers(members.filter((m) => m.id !== id));
+  const handleCancelInvite = async (id: string) => {
+    if (!isDemo && user) {
+      await supabase.from('team_members').delete().eq('id', id).eq('owner_id', user.id);
+    }
+    setMembers(prev => prev.filter(m => m.id !== id));
     showToast('ההזמנה בוטלה', 'info');
   };
 
-  const handleInvite = (email: string, role: MemberRole) => {
-    const initials = email.slice(0, 2).toUpperCase();
-    const newMember: TeamMember = {
-      id: `u${Date.now()}`,
-      name: email.split('@')[0],
-      email,
-      role,
-      status: 'pending',
-      initials,
-      joined_at: new Date().toISOString().slice(0, 10),
-    };
-    setMembers([...members, newMember]);
+  const handleInvite = async (email: string, role: MemberRole) => {
+    const name     = email.split('@')[0];
+    const initials = name.slice(0, 2).toUpperCase();
+    const now      = new Date().toISOString();
+
+    if (!isDemo && user) {
+      const { data, error } = await supabase
+        .from('team_members')
+        .insert({ owner_id: user.id, name, email, role, status: 'pending', joined_at: now })
+        .select()
+        .single();
+      if (error) { showToast('שגיאה בשליחת ההזמנה', 'error'); return; }
+      if (data) { setMembers(prev => [...prev, { ...data, initials }]); }
+    } else {
+      setMembers(prev => [...prev, { id: `u${Date.now()}`, name, email, role, status: 'pending', initials, joined_at: now }]);
+    }
     setShowInvite(false);
     showToast(`הזמנה נשלחה אל ${email}`);
   };
+
+  if (loading) return <LoadingCard />;
 
   return (
     <>
@@ -815,7 +974,7 @@ function TeamTab({ showToast }: { showToast: (m: string, t?: ToastProps['type'])
           <ModalBox title="הסרת חבר צוות" icon="person_remove" onClose={() => setRemoveId(null)}>
             <p className="text-sm mb-5" style={{ color: '#444650' }}>
               האם אתה בטוח שברצונך להסיר את{' '}
-              <strong style={{ color: '#00113a' }}>{members.find((m) => m.id === removeId)?.name}</strong> מהצוות?
+              <strong style={{ color: '#00113a' }}>{members.find(m => m.id === removeId)?.name}</strong> מהצוות?
               הפעולה לא ניתנת לביטול.
             </p>
             <div className="flex gap-3">
@@ -834,7 +993,6 @@ function TeamTab({ showToast }: { showToast: (m: string, t?: ToastProps['type'])
         </Overlay>
       )}
 
-      {/* Header card */}
       <SectionCard title="חברי הצוות" subtitle={`${activeMembers.length} חברים פעילים${pendingMembers.length ? ` · ${pendingMembers.length} ממתינים` : ''}`}>
         <div className="flex justify-between items-center mb-5">
           <button onClick={() => setShowPerms(!showPermissions)}
@@ -851,14 +1009,13 @@ function TeamTab({ showToast }: { showToast: (m: string, t?: ToastProps['type'])
           </button>
         </div>
 
-        {/* Permission matrix */}
         {showPermissions && (
           <div className="mb-5 rounded-xl overflow-hidden border" style={{ borderColor: 'rgba(197,198,210,0.3)' }}>
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ backgroundColor: '#f3f4f5' }}>
                   <th className="px-4 py-2.5 text-right text-xs font-semibold" style={{ color: '#444650' }}>פיצ'ר</th>
-                  {(['admin', 'manager', 'viewer'] as MemberRole[]).map((r) => (
+                  {(['admin', 'manager', 'viewer'] as MemberRole[]).map(r => (
                     <th key={r} className="px-3 py-2.5 text-center text-xs font-bold" style={{ color: ROLE_META[r].color }}>
                       {ROLE_META[r].label}
                     </th>
@@ -871,8 +1028,7 @@ function TeamTab({ showToast }: { showToast: (m: string, t?: ToastProps['type'])
                     <td className="px-4 py-2.5 text-xs" style={{ color: '#191c1d' }}>{feature}</td>
                     {[admin, manager, viewer].map((allowed, j) => (
                       <td key={j} className="px-3 py-2.5 text-center">
-                        <span className={`material-symbols-outlined text-[16px] icon-filled`}
-                          style={{ color: allowed ? '#16a34a' : '#c5c6d2' }}>
+                        <span className="material-symbols-outlined text-[16px] icon-filled" style={{ color: allowed ? '#16a34a' : '#c5c6d2' }}>
                           {allowed ? 'check_circle' : 'cancel'}
                         </span>
                       </td>
@@ -884,46 +1040,45 @@ function TeamTab({ showToast }: { showToast: (m: string, t?: ToastProps['type'])
           </div>
         )}
 
-        {/* Active members */}
         <div className="space-y-2">
-          {activeMembers.map((m) => (
+          {activeMembers.map(m => (
             <div key={m.id} className="flex items-center gap-3 p-3 rounded-xl transition-colors"
               style={{ backgroundColor: '#f8f9fa', border: '1px solid rgba(197,198,210,0.3)' }}>
               <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                style={{ backgroundColor: m.id === CURRENT_USER_ID ? 'rgba(135,29,211,0.15)' : '#edeeef', color: m.id === CURRENT_USER_ID ? '#871dd3' : '#444650' }}>
+                style={{ backgroundColor: m.id === OWNER_ID ? 'rgba(135,29,211,0.15)' : '#edeeef', color: m.id === OWNER_ID ? '#871dd3' : '#444650' }}>
                 {m.initials}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-semibold truncate" style={{ color: '#00113a' }}>{m.name}</p>
-                  {m.id === CURRENT_USER_ID && (
+                  {m.id === OWNER_ID && (
                     <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: '#edeeef', color: '#757682' }}>אתה</span>
                   )}
                 </div>
                 <p className="text-xs truncate" style={{ color: '#757682', direction: 'ltr' }}>{m.email}</p>
               </div>
-              {m.id === CURRENT_USER_ID ? (
+              {m.id === OWNER_ID ? (
                 <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ backgroundColor: ROLE_META[m.role].bg, color: ROLE_META[m.role].color }}>
                   {ROLE_META[m.role].label}
                 </span>
               ) : (
                 <select
                   value={m.role}
-                  onChange={(e) => handleRoleChange(m.id, e.target.value as MemberRole)}
+                  onChange={e => handleRoleChange(m.id, e.target.value as MemberRole)}
                   className="text-xs font-bold px-2.5 py-1.5 rounded-lg cursor-pointer outline-none transition-colors"
                   style={{ backgroundColor: ROLE_META[m.role].bg, color: ROLE_META[m.role].color, border: 'none' }}
                 >
-                  {(['admin', 'manager', 'viewer'] as MemberRole[]).map((r) => (
+                  {(['admin', 'manager', 'viewer'] as MemberRole[]).map(r => (
                     <option key={r} value={r}>{ROLE_META[r].label}</option>
                   ))}
                 </select>
               )}
-              {m.id !== CURRENT_USER_ID && (
+              {m.id !== OWNER_ID && (
                 <button onClick={() => setRemoveId(m.id)}
                   className="p-1.5 rounded-lg cursor-pointer transition-colors flex-shrink-0"
                   style={{ color: '#ba1a1a' }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = '#fee2e2'; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; }}>
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '#fee2e2'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; }}>
                   <span className="material-symbols-outlined text-[18px]">person_remove</span>
                 </button>
               )}
@@ -932,11 +1087,10 @@ function TeamTab({ showToast }: { showToast: (m: string, t?: ToastProps['type'])
         </div>
       </SectionCard>
 
-      {/* Pending invitations */}
       {pendingMembers.length > 0 && (
         <SectionCard title="הזמנות ממתינות" subtitle="הוזמנו אך טרם הצטרפו">
           <div className="space-y-2">
-            {pendingMembers.map((m) => (
+            {pendingMembers.map(m => (
               <div key={m.id} className="flex items-center gap-3 p-3 rounded-xl"
                 style={{ backgroundColor: '#fef9c3', border: '1px solid rgba(234,179,8,0.3)' }}>
                 <span className="material-symbols-outlined text-[20px] icon-filled" style={{ color: '#d97706' }}>schedule</span>
@@ -966,30 +1120,51 @@ function TeamTab({ showToast }: { showToast: (m: string, t?: ToastProps['type'])
 // ── Tab: Integrations ──────────────────────────────────────────────────────────
 
 function IntegrationsTab({ showToast }: { showToast: (m: string, t?: ToastProps['type']) => void }) {
-  const [connected, setConnected] = useLocalStorage<string[]>('rp_integrations', ['google']);
-  const [syncing, setSyncing]     = useState<string | null>(null);
-  const [connecting, setConnecting] = useState<typeof INTEGRATIONS_CONFIG[number] | null>(null);
+  const { user, isDemo } = useAuth();
+  const [connected, setConnected]       = useState<string[]>(isDemo ? ['google'] : []);
+  const [loading, setLoading]           = useState(!isDemo);
+  const [syncing, setSyncing]           = useState<string | null>(null);
+  const [connecting, setConnecting]     = useState<typeof INTEGRATIONS_CONFIG[number] | null>(null);
   const [disconnectId, setDisconnectId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isDemo || !user) { setLoading(false); return; }
+    supabase
+      .from('platform_connections')
+      .select('platform')
+      .eq('owner_id', user.id)
+      .then(({ data }) => {
+        if (data) setConnected(data.map(r => r.platform as string));
+        setLoading(false);
+      });
+  }, [user?.id, isDemo]);
 
   const handleSync = (id: string) => {
     setSyncing(id);
-    setTimeout(() => {
-      setSyncing(null);
-      showToast('הביקורות סונכרנו בהצלחה');
-    }, 2000);
+    setTimeout(() => { setSyncing(null); showToast('הביקורות סונכרנו בהצלחה'); }, 2000);
   };
 
-  const handleConnected = (id: string) => {
-    setConnected([...connected, id]);
+  const handleConnected = async (id: string) => {
+    if (!isDemo && user) {
+      await supabase
+        .from('platform_connections')
+        .upsert({ owner_id: user.id, platform: id }, { onConflict: 'owner_id,platform' });
+    }
+    setConnected(prev => [...prev, id]);
     setConnecting(null);
     showToast(`${INTEGRATIONS_CONFIG.find(p => p.id === id)?.name} חובר בהצלחה!`);
   };
 
-  const handleDisconnect = (id: string) => {
-    setConnected(connected.filter((c) => c !== id));
+  const handleDisconnect = async (id: string) => {
+    if (!isDemo && user) {
+      await supabase.from('platform_connections').delete().eq('owner_id', user.id).eq('platform', id);
+    }
+    setConnected(prev => prev.filter(c => c !== id));
     setDisconnectId(null);
-    showToast(`הפלטפורמה נותקה`, 'info');
+    showToast('הפלטפורמה נותקה', 'info');
   };
+
+  if (loading) return <LoadingCard />;
 
   return (
     <>

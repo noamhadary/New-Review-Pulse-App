@@ -14,6 +14,7 @@ const DEMO_BUSINESS: Business = {
   owner_id: 'demo-user-1',
   name: 'העסק שלי',
   category: 'מסעדה',
+  phone: '+972534777375',
   created_at: new Date().toISOString(),
 };
 

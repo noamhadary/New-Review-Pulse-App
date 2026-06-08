@@ -37,7 +37,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       {/* Sidebar panel */}
       <aside
         className={`
-          fixed top-16 right-0 h-[calc(100vh-64px)] w-64 z-40
+          fixed top-28 right-0 h-[calc(100vh-112px)] w-64 z-40
           flex flex-col border-l
           transition-transform duration-300 ease-in-out
           ${open ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}
@@ -49,19 +49,9 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         }}
       >
         {/* Brand */}
-        <div className="px-6 py-6 border-b" style={{ borderColor: '#c5c6d2' }}>
-          <div className="flex items-center gap-3 mb-1">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ backgroundColor: '#002366' }}
-            >
-              <span className="material-symbols-outlined text-white text-[20px] icon-filled">analytics</span>
-            </div>
-            <div>
-              <p className="font-bold text-sm" style={{ color: '#00113a' }}>Review Pulse</p>
-              <p className="text-xs" style={{ color: '#444650' }}>ניהול מוניטין</p>
-            </div>
-          </div>
+        <div className="px-5 py-5 border-b" style={{ borderColor: '#c5c6d2' }}>
+          <img src="/logo.png" alt="Review Pulse" style={{ height: 38, width: 'auto', maxWidth: '100%', objectFit: 'contain' }} />
+          <p className="text-xs mt-1.5" style={{ color: '#757682' }}>ניהול מוניטין</p>
         </div>
 
         {/* Navigation */}

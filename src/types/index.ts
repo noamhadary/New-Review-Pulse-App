@@ -22,6 +22,8 @@ export interface Business {
   owner_id: string;
   name: string;
   category: string;
+  phone?: string;
+  website?: string;
   logo_url?: string;
   created_at: string;
 }

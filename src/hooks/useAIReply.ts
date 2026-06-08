@@ -56,6 +56,7 @@ export function useAIReply() {
   ) => {
     if (!state.suggestions.length) return;
     setState((s) => ({ ...s, isSendingWhatsApp: true, error: null }));
+
     try {
       const { error } = await supabase.functions.invoke('send-whatsapp', {
         body: {
@@ -73,7 +74,7 @@ export function useAIReply() {
       setState((s) => ({
         ...s,
         isSendingWhatsApp: false,
-        error: 'שגיאה בשליחת WhatsApp — בדוק את הגדרות Twilio',
+        error: 'שגיאה בשליחת WhatsApp — בדוק את הגדרות GREEN API',
       }));
     }
   };

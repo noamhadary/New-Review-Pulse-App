@@ -9,6 +9,8 @@ interface AuthContextValue {
   signOut: () => Promise<void>;
   /** True when running without Supabase credentials (demo mode) */
   isDemo: boolean;
+  /** Activate demo session at runtime (e.g. "try demo" button) */
+  loginAsDemo: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue>({
@@ -17,6 +19,7 @@ const AuthContext = createContext<AuthContextValue>({
   loading: true,
   signOut: async () => {},
   isDemo: false,
+  loginAsDemo: () => {},
 });
 
 const DEMO_MODE =
@@ -26,6 +29,9 @@ const DEMO_MODE =
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [runtimeDemo, setRuntimeDemo] = useState(
+    () => sessionStorage.getItem('rp_demo') === '1'
+  );
 
   useEffect(() => {
     if (DEMO_MODE) {
@@ -46,8 +52,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => listener.subscription.unsubscribe();
   }, []);
 
+  const effectiveDemo = DEMO_MODE || runtimeDemo;
+
+  const loginAsDemo = () => {
+    sessionStorage.setItem('rp_demo', '1');
+    setRuntimeDemo(true);
+  };
+
   const signOut = async () => {
     if (!DEMO_MODE) await supabase.auth.signOut();
+    sessionStorage.removeItem('rp_demo');
+    setRuntimeDemo(false);
     setSession(null);
   };
 
@@ -58,7 +73,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user: session?.user ?? null,
         loading,
         signOut,
-        isDemo: DEMO_MODE,
+        isDemo: effectiveDemo,
+        loginAsDemo,
       }}
     >
       {children}

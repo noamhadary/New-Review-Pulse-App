@@ -63,11 +63,20 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
 
   return (
     <header
-      className="fixed top-0 right-0 left-0 z-50 h-16 flex items-center justify-between px-6 md:px-16 shadow-md"
+      className="fixed top-0 right-0 left-0 z-50 h-28 flex items-center justify-between px-6 md:px-16 shadow-md"
       style={{ backgroundColor: '#002366', color: '#ffffff' }}
     >
-      {/* Logo + Nav */}
-      <div className="flex items-center gap-8">
+      {/* לוגו — צמוד ימין (ילד ראשון ב-RTL) */}
+      <img
+        src="/logo.png"
+        alt="Review Pulse"
+        className="cursor-pointer select-none"
+        style={{ height: 50, width: 'auto', maxWidth: 180, objectFit: 'contain' }}
+        onClick={() => navigate('/dashboard')}
+      />
+
+      {/* Nav + mobile menu */}
+      <div className="flex items-center gap-4">
         <button
           className="md:hidden p-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
           onClick={onMenuToggle}
@@ -75,12 +84,6 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
         >
           <span className="material-symbols-outlined">menu</span>
         </button>
-        <h1
-          className="text-xl font-bold cursor-pointer select-none"
-          onClick={() => navigate('/dashboard')}
-        >
-          Review Pulse
-        </h1>
         <nav className="hidden md:flex items-center gap-1">
           {NAV_LINKS.map(({ label, path }) => {
             const active = location.pathname === path;

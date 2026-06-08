@@ -156,7 +156,7 @@ export default function AuthCallback() {
         </div>
 
         {/* Logo below card */}
-        <p className="mt-6 text-sm font-bold" style={{ color: 'rgba(255,255,255,0.5)' }}>Review Pulse</p>
+        <img src="/logo.png" alt="Review Pulse" style={{ width: 180, maxWidth: '80%', height: 'auto', objectFit: 'contain', opacity: 0.65, marginTop: 24 }} />
       </div>
 
       <style>{`

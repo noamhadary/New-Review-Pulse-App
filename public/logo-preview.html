@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<title>Logo Preview — Review Pulse</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
+  body { background: #f0f0f0; display: flex; flex-direction: column; gap: 0; }
+
+  .label { padding: 10px 20px; font-size: 12px; font-weight: 600; color: #555; background: #e0e0e0; }
+
+  /* ── Navbar dark (scrolled=false) ── */
+  .nav-dark {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; height: 64px;
+    background: transparent;
+    background-image: linear-gradient(160deg,#00113a 0%,#001a55 40%,#3b0070 100%);
+  }
+
+  /* ── Navbar white (scrolled=true) ── */
+  .nav-white {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; height: 64px;
+    background: rgba(255,255,255,0.95);
+    box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+    border-bottom: 1px solid rgba(197,198,210,0.3);
+  }
+
+  /* ── Login / Register card ── */
+  .auth-card {
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    padding: 40px 24px;
+    background: linear-gradient(135deg,#00113a 0%,#002366 50%,#1a0040 100%);
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 20px 16px;
+    background: #fff;
+    border-right: 1px solid rgba(197,198,210,0.3);
+    width: 220px;
+  }
+
+  .logo-wrap { display: flex; align-items: center; cursor: pointer; }
+  .logo-img-nav   { height: 36px; object-fit: contain; }
+  .logo-img-auth  { height: 56px; object-fit: contain; filter: drop-shadow(0 0 16px rgba(135,29,211,0.5)); }
+  .logo-img-sidebar { height: 32px; object-fit: contain; }
+
+  .nav-links { display: flex; gap: 24px; }
+  .nav-links a { color: rgba(255,255,255,0.8); text-decoration: none; font-size: 14px; }
+  .nav-links-dark a { color: #444; text-decoration: none; font-size: 14px; }
+  .btn-outline { padding: 8px 16px; border: 1.5px solid rgba(255,255,255,0.5); color: #fff; border-radius: 10px; font-size: 13px; font-weight: 700; background: transparent; cursor: pointer; }
+  .btn-fill    { padding: 8px 16px; background: linear-gradient(135deg,#871dd3,#60a5fa); color: #fff; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .btn-outline-dark { padding: 8px 16px; border: 1.5px solid #871dd3; color: #871dd3; border-radius: 10px; font-size: 13px; font-weight: 700; background: transparent; cursor: pointer; }
+
+  .sidebar-link { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 10px; color: #444; font-size: 14px; }
+  .sidebar-link.active { background: rgba(135,29,211,0.08); color: #871dd3; font-weight: 700; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+</style>
+</head>
+<body>
+
+<div class="label">1. Navbar — על רקע כהה (דף נחיתה / Hero)</div>
+<div class="nav-dark">
+  <div class="logo-wrap">
+    <img src="/logo.png" class="logo-img-nav" alt="Review Pulse" />
+  </div>
+  <div class="nav-links">
+    <a href="#">פיצ'רים</a><a href="#">מחירים</a><a href="#">המלצות</a>
+  </div>
+  <div style="display:flex;gap:10px">
+    <button class="btn-outline">התחבר</button>
+    <button class="btn-fill">התחל חינם</button>
+  </div>
+</div>
+
+<div class="label">2. Navbar — על רקע לבן (אחרי scroll)</div>
+<div class="nav-white">
+  <div class="logo-wrap">
+    <img src="/logo.png" class="logo-img-nav" alt="Review Pulse" />
+  </div>
+  <div class="nav-links" style="gap:24px">
+    <a class="nav-links-dark" href="#">פיצ'רים</a><a class="nav-links-dark" href="#">מחירים</a>
+  </div>
+  <div style="display:flex;gap:10px">
+    <button class="btn-outline-dark">התחבר</button>
+    <button class="btn-fill">התחל חינם</button>
+  </div>
+</div>
+
+<div class="label">3. דף הרשמה / התחברות — מעל הכרטיס</div>
+<div class="auth-card">
+  <div class="logo-wrap" style="flex-direction:column;gap:8px">
+    <img src="/logo.png" class="logo-img-auth" alt="Review Pulse" />
+  </div>
+  <p style="color:rgba(255,255,255,0.6);font-size:14px">הצטרף לאלפי עסקים שמנהלים את המוניטין שלהם</p>
+</div>
+
+<div class="label">4. Sidebar — תוך כדי שימוש באפליקציה</div>
+<div class="sidebar">
+  <div class="logo-wrap" style="padding-bottom:16px;border-bottom:1px solid rgba(197,198,210,0.3);margin-bottom:8px">
+    <img src="/logo.png" class="logo-img-sidebar" alt="Review Pulse" />
+  </div>
+  <div class="sidebar-link active"><span class="dot"></span> דשבורד</div>
+  <div class="sidebar-link"><span class="dot"></span> ביקורות</div>
+  <div class="sidebar-link"><span class="dot"></span> אנליטיקס</div>
+</div>
+
+</body>
+</html>

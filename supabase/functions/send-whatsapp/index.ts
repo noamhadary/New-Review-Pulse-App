@@ -5,11 +5,25 @@ const CORS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+function toGreenChatId(phone: string): string {
+  let digits = phone.replace(/\D/g, '');
+  if (digits.startsWith('0')) digits = '972' + digits.slice(1);
+  if (digits.length <= 10 && !digits.startsWith('972')) digits = '972' + digits;
+  return `${digits}@c.us`;
+}
+
+function normalizePhone(phone: string): string {
+  let digits = phone.replace(/\D/g, '');
+  if (digits.startsWith('0')) digits = '972' + digits.slice(1);
+  if (digits.length <= 10 && !digits.startsWith('972')) digits = '972' + digits;
+  return `+${digits}`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
 
   try {
-    const { to, session_id, review_id, suggestions, reviewer_name, rating, content_snippet } =
+    const { to, session_id, suggestions, reviewer_name, rating, content_snippet } =
       await req.json();
 
     if (!to || !suggestions?.length) {
@@ -18,28 +32,26 @@ Deno.serve(async (req) => {
       });
     }
 
-    const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
-    const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
-    const from = Deno.env.get('TWILIO_WHATSAPP_FROM') ?? 'whatsapp:+14155238886';
+    const instanceId = Deno.env.get('GREEN_API_INSTANCE_ID');
+    const apiToken = Deno.env.get('GREEN_API_TOKEN');
 
-    if (!accountSid || !authToken) throw new Error('Twilio credentials not set');
+    if (!instanceId || !apiToken) throw new Error('GREEN API credentials not set');
 
-    const stars = '⭐'.repeat(Math.min(rating ?? 3, 5));
+    const stars = String.fromCodePoint(0x2B50).repeat(Math.min(rating ?? 3, 5));
     const snippet = content_snippet
       ? `"${content_snippet.slice(0, 80)}${content_snippet.length > 80 ? '...' : ''}"`
       : '';
 
-    const numbered = ['1️⃣', '2️⃣', '3️⃣', '4️⃣'];
     const optionsText = suggestions
       .slice(0, 4)
-      .map((s: string, i: number) => `${numbered[i]} ${s}`)
+      .map((s: string, i: number) => `${i + 1}. ${s}`)
       .join('\n\n');
 
-    const body = [
-      `📩 ביקורת חדשה מ-${reviewer_name ?? 'לקוח'} (${stars})`,
+    const message = [
+      `ביקורת חדשה מ-${reviewer_name ?? 'לקוח'} (${stars})`,
       snippet,
       '',
-      'בחר תגובה — שלח מספר:',
+      'בחר תגובה - שלח מספר:',
       '',
       optionsText,
       '',
@@ -48,28 +60,20 @@ Deno.serve(async (req) => {
       .filter((l) => l !== undefined)
       .join('\n');
 
-    const params = new URLSearchParams({
-      From: from,
-      To: `whatsapp:${to.startsWith('+') ? to : '+' + to}`,
-      Body: body,
-    });
+    const chatId = toGreenChatId(to);
 
-    const twilioRes = await fetch(
-      `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
+    const greenRes = await fetch(
+      `https://api.green-api.com/waInstance${instanceId}/sendMessage/${apiToken}`,
       {
         method: 'POST',
-        headers: {
-          Authorization: `Basic ${btoa(`${accountSid}:${authToken}`)}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: params.toString(),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chatId, message }),
       },
     );
 
-    const twilioData = await twilioRes.json();
-    if (!twilioRes.ok) throw new Error(`Twilio error: ${JSON.stringify(twilioData)}`);
+    const greenData = await greenRes.json();
+    if (!greenRes.ok) throw new Error(`GREEN API error: ${JSON.stringify(greenData)}`);
 
-    // Update session with whatsapp_to so webhook can match the reply
     if (session_id) {
       const supabase = createClient(
         Deno.env.get('SUPABASE_URL') ?? '',
@@ -77,11 +81,11 @@ Deno.serve(async (req) => {
       );
       await supabase
         .from('reply_sessions')
-        .update({ whatsapp_to: to })
+        .update({ whatsapp_to: normalizePhone(to) })
         .eq('id', session_id);
     }
 
-    return new Response(JSON.stringify({ ok: true, sid: twilioData.sid }), {
+    return new Response(JSON.stringify({ ok: true, idMessage: greenData.idMessage }), {
       headers: { ...CORS, 'Content-Type': 'application/json' },
     });
   } catch (err) {
