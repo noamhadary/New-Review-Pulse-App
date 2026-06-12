@@ -22,7 +22,7 @@ interface TooltipProps {
 function CustomTooltip({ active, payload, label }: TooltipProps) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-xl px-4 py-3 shadow-xl text-sm" style={{ backgroundColor: '#00113a', color: '#ffffff', border: '1px solid rgba(255,255,255,0.1)' }}>
+    <div className="rounded-xl px-4 py-3 shadow-xl text-sm bg-primary text-white border border-white/10">
       <p className="font-semibold mb-1">{label}</p>
       {payload.map((p) => (
         <p key={p.name} style={{ color: p.color }}>{p.name}: {p.value}%</p>
@@ -40,15 +40,17 @@ export default function SentimentChart({ weekData }: Props) {
   const data = period === 'week' ? (weekData ?? MOCK_SENTIMENT_WEEK) : MONTH_DATA;
 
   return (
-    <div className="rounded-2xl p-6 md:p-8 flex flex-col" style={{ backgroundColor: '#ffffff', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid rgba(197,198,210,0.2)' }}>
+    <div className="rounded-2xl p-6 md:p-8 flex flex-col bg-white border border-outline-variant/20" style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h3 className="text-xl font-bold" style={{ color: '#00113a' }}>ניתוח סנטימנט</h3>
-          <p className="text-xs mt-0.5" style={{ color: '#444650' }}>אחוז ביקורות חיוביות לעומת ביקורתיות</p>
+          <h3 className="text-xl font-bold text-primary">ניתוח סנטימנט</h3>
+          <p className="text-xs mt-0.5 text-on-surface-variant">אחוז ביקורות חיוביות לעומת ביקורתיות</p>
         </div>
         <div className="flex gap-2">
           {(['week', 'month'] as const).map((p) => (
-            <button key={p} onClick={() => setPeriod(p)} className="px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer" style={period === p ? { backgroundColor: '#002366', color: '#ffffff' } : { backgroundColor: '#edeeef', color: '#444650' }}>
+            <button key={p} onClick={() => setPeriod(p)} className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer ${
+              period === p ? 'bg-primary-container text-white' : 'bg-surface-container text-on-surface-variant'
+            }`}>
               {p === 'week' ? '7 ימים' : '30 יום'}
             </button>
           ))}
@@ -56,12 +58,12 @@ export default function SentimentChart({ weekData }: Props) {
       </div>
       <div className="flex items-center gap-5 mb-4 text-xs font-medium">
         <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-sm inline-block" style={{ backgroundColor: '#002366' }} />
-          <span style={{ color: '#444650' }}>חיובי</span>
+          <span className="w-3 h-3 rounded-sm inline-block bg-primary-container" />
+          <span className="text-on-surface-variant">חיובי</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-sm inline-block" style={{ backgroundColor: '#871dd3' }} />
-          <span style={{ color: '#444650' }}>ביקורתי</span>
+          <span className="w-3 h-3 rounded-sm inline-block bg-secondary" />
+          <span className="text-on-surface-variant">ביקורתי</span>
         </div>
       </div>
       <div className="flex-1" style={{ minHeight: 220 }}>

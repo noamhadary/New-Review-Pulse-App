@@ -23,7 +23,7 @@ export default function AIReplyModal({ review, onClose, onReplied, defaultWhatsA
   const [chosenIdx, setChosenIdx] = useState<number | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
-  const { suggestions, isLoading, isSendingWhatsApp, whatsAppSent, error, generate, sendWhatsApp, chooseReply } =
+  const { suggestions, isSendingWhatsApp, error, generate, sendWhatsApp, chooseReply } =
     useAIReply();
 
   // Close on Escape
@@ -33,18 +33,12 @@ export default function AIReplyModal({ review, onClose, onReplied, defaultWhatsA
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
 
-  // Sync edited texts when suggestions arrive
-  useEffect(() => {
-    if (suggestions.length) {
-      setEditedTexts([...suggestions]);
-      setStep('results');
-    }
-  }, [suggestions]);
-
-  useEffect(() => { if (isLoading) setStep('loading'); }, [isLoading]);
-  useEffect(() => { if (whatsAppSent) setStep('sent'); }, [whatsAppSent]);
-
-  const handleGenerate = () => generate(review, tone);
+  const handleGenerate = async () => {
+    setStep('loading');
+    const generated = await generate(review, tone);
+    setEditedTexts([...generated]);
+    setStep('results');
+  };
 
   const handleChoose = async (idx: number) => {
     const text = editedTexts[idx] ?? suggestions[idx];
@@ -56,31 +50,28 @@ export default function AIReplyModal({ review, onClose, onReplied, defaultWhatsA
 
   const handleSendWhatsApp = async () => {
     if (!whatsAppNum) { setShowWhatsAppInput(true); return; }
-    await sendWhatsApp(whatsAppNum, {
+    const sent = await sendWhatsApp(whatsAppNum, {
       reviewer_name: review.reviewer_name,
       rating: review.rating,
       content: review.content,
     });
+    if (sent) setStep('sent');
   };
 
   const toneInfo = TONE_LABELS[tone];
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+      style={{ backdropFilter: 'blur(4px)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
         ref={modalRef}
-        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl flex flex-col"
-        style={{ backgroundColor: '#ffffff' }}
+        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl flex flex-col bg-white"
       >
         {/* Header */}
-        <div
-          className="flex items-center justify-between px-6 py-4 border-b sticky top-0 z-10"
-          style={{ borderColor: 'rgba(197,198,210,0.3)', backgroundColor: '#ffffff' }}
-        >
+        <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant/30 sticky top-0 z-10 bg-white">
           <div className="flex items-center gap-3">
             <div
               className="w-9 h-9 rounded-xl flex items-center justify-center"
@@ -89,14 +80,13 @@ export default function AIReplyModal({ review, onClose, onReplied, defaultWhatsA
               <span className="material-symbols-outlined text-white text-[18px] icon-filled">smart_toy</span>
             </div>
             <div>
-              <p className="font-bold text-sm" style={{ color: '#00113a' }}>AI תגובה חכמה</p>
-              <p className="text-xs" style={{ color: '#444650' }}>ל-{review.reviewer_name}</p>
+              <p className="font-bold text-sm text-primary">AI תגובה חכמה</p>
+              <p className="text-xs text-on-surface-variant">ל-{review.reviewer_name}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-surface-container transition-colors cursor-pointer"
-            style={{ color: '#444650' }}
+            className="p-2 rounded-lg hover:bg-surface-container transition-colors cursor-pointer text-on-surface-variant"
             aria-label="סגור"
           >
             <span className="material-symbols-outlined">close</span>
@@ -106,21 +96,23 @@ export default function AIReplyModal({ review, onClose, onReplied, defaultWhatsA
         <div className="p-6 flex-1">
           {/* Review snippet */}
           <div
-            className="rounded-xl p-4 mb-6 text-sm"
-            style={{ backgroundColor: '#f3f4f5', borderRight: '4px solid #002366' }}
+            className="rounded-xl p-4 mb-6 text-sm bg-surface-container-low"
+            style={{ borderRight: '4px solid #002366' }}
           >
             <div className="flex items-center gap-2 mb-1">
-              <span className="font-bold" style={{ color: '#00113a' }}>{review.reviewer_name}</span>
-              <span className="text-xs" style={{ color: '#757682' }}>·</span>
-              {'⭐'.repeat(review.rating)}
+              <span className="font-bold text-primary">{review.reviewer_name}</span>
+              <span className="text-xs text-outline">·</span>
+              <span className="text-xs font-bold" style={{ color: '#f59e0b' }}>
+                {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+              </span>
             </div>
-            <p className="line-clamp-2" style={{ color: '#444650' }}>"{review.content}"</p>
+            <p className="line-clamp-2 text-on-surface-variant">"{review.content}"</p>
           </div>
 
           {/* ── STEP: Tone Selection ── */}
           {step === 'tone' && (
             <div>
-              <p className="text-sm font-semibold mb-4" style={{ color: '#00113a' }}>
+              <p className="text-sm font-semibold mb-4 text-primary">
                 בחר אופי תגובה:
               </p>
               <div className="grid grid-cols-2 gap-3 mb-6">
@@ -153,15 +145,15 @@ export default function AIReplyModal({ review, onClose, onReplied, defaultWhatsA
                           </span>
                         )}
                       </div>
-                      <p className="text-xs" style={{ color: '#444650' }}>{info.desc}</p>
+                      <p className="text-xs text-on-surface-variant">{info.desc}</p>
                     </button>
                   );
                 })}
               </div>
               <button
                 onClick={handleGenerate}
-                className="w-full py-3.5 rounded-xl font-bold text-sm transition-all hover:opacity-90 active:scale-95 cursor-pointer flex items-center justify-center gap-2"
-                style={{ background: 'linear-gradient(135deg,#002366,#871dd3)', color: '#ffffff' }}
+                className="w-full py-3.5 rounded-xl font-bold text-sm transition-all hover:opacity-90 active:scale-95 cursor-pointer flex items-center justify-center gap-2 text-white"
+                style={{ background: 'linear-gradient(135deg,#002366,#871dd3)' }}
               >
                 <span className="material-symbols-outlined text-[18px] icon-filled">auto_awesome</span>
                 צור 4 הצעות תגובה
@@ -172,14 +164,13 @@ export default function AIReplyModal({ review, onClose, onReplied, defaultWhatsA
           {/* ── STEP: Loading ── */}
           {step === 'loading' && (
             <div className="space-y-3">
-              <p className="text-sm text-center font-semibold mb-4" style={{ color: '#444650' }}>
+              <p className="text-sm text-center font-semibold mb-4 text-on-surface-variant">
                 Claude מנסח 4 תגובות בסגנון <span style={{ color: toneInfo.color }}>{toneInfo.he}</span>...
               </p>
               {[1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
-                  className="h-20 rounded-xl animate-pulse"
-                  style={{ backgroundColor: '#edeeef' }}
+                  className="h-20 rounded-xl animate-pulse bg-surface-container"
                 />
               ))}
             </div>
@@ -189,14 +180,13 @@ export default function AIReplyModal({ review, onClose, onReplied, defaultWhatsA
           {step === 'results' && suggestions.length > 0 && (
             <div>
               <div className="flex items-center justify-between mb-4">
-                <p className="text-sm font-semibold" style={{ color: '#00113a' }}>
+                <p className="text-sm font-semibold text-primary">
                   4 הצעות תגובה — סגנון{' '}
                   <span style={{ color: toneInfo.color }}>{toneInfo.he}</span>
                 </p>
                 <button
                   onClick={() => setStep('tone')}
-                  className="text-xs font-semibold flex items-center gap-1 cursor-pointer hover:underline"
-                  style={{ color: '#871dd3' }}
+                  className="text-xs font-semibold flex items-center gap-1 cursor-pointer hover:underline text-secondary"
                 >
                   <span className="material-symbols-outlined text-[14px]">refresh</span>
                   שנה סגנון
@@ -209,11 +199,7 @@ export default function AIReplyModal({ review, onClose, onReplied, defaultWhatsA
                   return (
                     <div
                       key={idx}
-                      className="rounded-xl border transition-all"
-                      style={{
-                        border: '1px solid rgba(197,198,210,0.5)',
-                        backgroundColor: '#f8f9fa',
-                      }}
+                      className="rounded-xl border border-outline-variant/50 transition-all bg-background"
                     >
                       <div className="flex items-center gap-2 px-4 pt-3 pb-1">
                         <span
@@ -222,13 +208,13 @@ export default function AIReplyModal({ review, onClose, onReplied, defaultWhatsA
                         >
                           {idx + 1}
                         </span>
-                        <span className="text-xs font-medium" style={{ color: '#757682' }}>
+                        <span className="text-xs font-medium text-outline">
                           וריאציה {idx + 1}
                         </span>
                         <button
-                          className="mr-auto text-xs cursor-pointer hover:opacity-70 transition-opacity"
-                          style={{ color: '#757682' }}
+                          className="mr-auto text-xs cursor-pointer hover:opacity-70 transition-opacity text-outline"
                           onClick={() => setEditingIdx(isEditing ? null : idx)}
+                          aria-label={isEditing ? 'סיים עריכה' : 'ערוך תגובה'}
                         >
                           <span className="material-symbols-outlined text-[14px]">
                             {isEditing ? 'done' : 'edit'}
@@ -245,23 +231,19 @@ export default function AIReplyModal({ review, onClose, onReplied, defaultWhatsA
                             setEditedTexts(copy);
                           }}
                           rows={3}
-                          className="w-full px-4 pb-3 text-sm outline-none resize-none bg-transparent"
-                          style={{ color: '#191c1d', direction: 'rtl' }}
+                          dir="rtl"
+                          className="w-full px-4 pb-3 text-sm outline-none resize-none bg-transparent text-on-surface"
                         />
                       ) : (
-                        <p className="px-4 pb-3 text-sm leading-relaxed" style={{ color: '#191c1d' }}>
+                        <p className="px-4 pb-3 text-sm leading-relaxed text-on-surface">
                           {editedTexts[idx] ?? sug}
                         </p>
                       )}
 
-                      <div
-                        className="flex gap-2 px-4 pb-3 border-t pt-2"
-                        style={{ borderColor: 'rgba(197,198,210,0.3)' }}
-                      >
+                      <div className="flex gap-2 px-4 pb-3 border-t border-outline-variant/30 pt-2">
                         <button
                           onClick={() => handleChoose(idx)}
-                          className="flex-1 py-2 rounded-lg text-xs font-bold transition-all hover:opacity-90 cursor-pointer flex items-center justify-center gap-1.5"
-                          style={{ backgroundColor: '#002366', color: '#ffffff' }}
+                          className="flex-1 py-2 rounded-lg text-xs font-bold transition-all hover:opacity-90 cursor-pointer flex items-center justify-center gap-1.5 bg-primary-container text-white"
                         >
                           <span className="material-symbols-outlined text-[14px] icon-filled">check_circle</span>
                           בחר תגובה זו
@@ -273,19 +255,16 @@ export default function AIReplyModal({ review, onClose, onReplied, defaultWhatsA
               </div>
 
               {/* WhatsApp send section */}
-              <div
-                className="rounded-xl p-4"
-                style={{ backgroundColor: 'rgba(135,29,211,0.05)', border: '1px solid rgba(135,29,211,0.2)' }}
-              >
+              <div className="rounded-xl p-4 bg-secondary/5 border border-secondary/20">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="material-symbols-outlined text-[20px] icon-filled" style={{ color: '#25D366' }}>
                     chat
                   </span>
-                  <p className="text-sm font-bold" style={{ color: '#00113a' }}>
+                  <p className="text-sm font-bold text-primary">
                     בחר דרך WhatsApp
                   </p>
                 </div>
-                <p className="text-xs mb-3" style={{ color: '#444650' }}>
+                <p className="text-xs mb-3 text-on-surface-variant">
                   קבל את 4 ההצעות בWhatsApp ובחר בתשובה (שלח 1-4)
                 </p>
 
@@ -295,25 +274,21 @@ export default function AIReplyModal({ review, onClose, onReplied, defaultWhatsA
                     value={whatsAppNum}
                     onChange={(e) => setWhatsAppNum(e.target.value)}
                     placeholder="+972501234567"
-                    className="w-full px-3 py-2.5 rounded-xl text-sm mb-3 outline-none"
-                    style={{
-                      backgroundColor: '#ffffff',
-                      border: '1px solid rgba(135,29,211,0.3)',
-                      color: '#191c1d',
-                      direction: 'ltr',
-                    }}
+                    dir="ltr"
+                    aria-label="מספר WhatsApp"
+                    className="w-full px-3 py-2.5 rounded-xl text-sm mb-3 outline-none bg-white border border-secondary/30 text-on-surface"
                   />
                 )}
 
                 {error && (
-                  <p className="text-xs mb-2" style={{ color: '#ba1a1a' }}>{error}</p>
+                  <p className="text-xs mb-2 text-error">{error}</p>
                 )}
 
                 <button
                   onClick={handleSendWhatsApp}
                   disabled={isSendingWhatsApp}
-                  className="w-full py-2.5 rounded-xl text-xs font-bold transition-all hover:opacity-90 cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
-                  style={{ backgroundColor: '#25D366', color: '#ffffff' }}
+                  className="w-full py-2.5 rounded-xl text-xs font-bold transition-all hover:opacity-90 cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2 text-white"
+                  style={{ backgroundColor: '#25D366' }}
                 >
                   {isSendingWhatsApp ? (
                     <>
@@ -336,25 +311,21 @@ export default function AIReplyModal({ review, onClose, onReplied, defaultWhatsA
           {/* ── STEP: WhatsApp Sent ── */}
           {step === 'sent' && (
             <div className="text-center py-8">
-              <div
-                className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-                style={{ backgroundColor: '#dcfce7' }}
-              >
-                <span className="material-symbols-outlined text-[32px] icon-filled" style={{ color: '#16a34a' }}>
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-green-100">
+                <span className="material-symbols-outlined text-[32px] icon-filled text-green-600">
                   check_circle
                 </span>
               </div>
-              <h3 className="font-bold text-lg mb-2" style={{ color: '#00113a' }}>
+              <h3 className="font-bold text-lg mb-2 text-primary">
                 נשלח בWhatsApp!
               </h3>
-              <p className="text-sm mb-6" style={{ color: '#444650' }}>
+              <p className="text-sm mb-6 text-on-surface-variant">
                 ענה <strong>1–4</strong> בWhatsApp לבחירת התגובה.
                 <br />ההודעה תפוג תוך 24 שעות.
               </p>
               <button
                 onClick={onClose}
-                className="px-6 py-2.5 rounded-xl font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity"
-                style={{ backgroundColor: '#002366', color: '#ffffff' }}
+                className="px-6 py-2.5 rounded-xl font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity bg-primary-container text-white"
               >
                 סגור
               </button>
@@ -372,19 +343,15 @@ export default function AIReplyModal({ review, onClose, onReplied, defaultWhatsA
                   mark_chat_read
                 </span>
               </div>
-              <h3 className="font-bold text-lg mb-2" style={{ color: '#00113a' }}>
+              <h3 className="font-bold text-lg mb-2 text-primary">
                 תגובה {chosenIdx + 1} נבחרה ונשמרה!
               </h3>
-              <p
-                className="text-sm p-4 rounded-xl mb-6 text-right"
-                style={{ backgroundColor: '#f3f4f5', color: '#444650' }}
-              >
+              <p className="text-sm p-4 rounded-xl mb-6 text-right bg-surface-container-low text-on-surface-variant">
                 "{editedTexts[chosenIdx] ?? suggestions[chosenIdx]}"
               </p>
               <button
                 onClick={onClose}
-                className="px-6 py-2.5 rounded-xl font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity"
-                style={{ backgroundColor: '#002366', color: '#ffffff' }}
+                className="px-6 py-2.5 rounded-xl font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity bg-primary-container text-white"
               >
                 סגור
               </button>

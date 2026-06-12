@@ -90,22 +90,16 @@ function RowMenu({ review, open, onClose, onReply, onIgnore }: {
   return (
     <div
       ref={ref}
-      className="absolute left-0 top-8 z-50 w-44 rounded-xl overflow-hidden"
-      style={{
-        backgroundColor: '#fff',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-        border: '1px solid rgba(197,198,210,0.3)',
-      }}
+      className="absolute left-0 top-8 z-50 w-44 rounded-xl overflow-hidden bg-white border border-outline-variant/30"
+      style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}
     >
       {actions.map(({ icon, label, color, onClick, disabled }) => (
         <button
           key={label}
           onClick={disabled ? undefined : onClick}
-          className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-right transition-colors cursor-pointer disabled:opacity-40"
+          className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-right transition-colors cursor-pointer disabled:opacity-40 enabled:hover:bg-background"
           style={{ color }}
           disabled={disabled}
-          onMouseEnter={(e) => { if (!disabled) (e.currentTarget as HTMLElement).style.backgroundColor = '#f8f9fa'; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; }}
         >
           <span className="material-symbols-outlined text-[16px]">{icon}</span>
           {label}
@@ -169,26 +163,17 @@ export default function RecentActivity() {
   return (
     <>
       <div
-        className="rounded-2xl overflow-hidden"
-        style={{
-          backgroundColor: '#ffffff',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-          border: '1px solid rgba(197,198,210,0.2)',
-        }}
+        className="rounded-2xl overflow-hidden bg-white border border-outline-variant/20"
+        style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}
       >
         {/* Header */}
-        <div
-          className="px-6 py-5 flex justify-between items-center border-b"
-          style={{ borderColor: 'rgba(197,198,210,0.3)' }}
-        >
-          <h3 className="text-xl font-bold" style={{ color: '#00113a' }}>פעילות אחרונה</h3>
+        <div className="px-6 py-5 flex justify-between items-center border-b border-outline-variant/30">
+          <h3 className="text-xl font-bold text-primary">פעילות אחרונה</h3>
           <button
             onClick={handleExport}
-            className="flex items-center gap-1.5 text-sm font-semibold cursor-pointer transition-all hover:opacity-80 px-3 py-1.5 rounded-lg"
-            style={exported
-              ? { backgroundColor: '#dcfce7', color: '#16a34a' }
-              : { backgroundColor: 'rgba(135,29,211,0.08)', color: '#871dd3' }
-            }
+            className={`flex items-center gap-1.5 text-sm font-semibold cursor-pointer transition-all hover:opacity-80 px-3 py-1.5 rounded-lg ${
+              exported ? 'bg-green-100 text-green-600' : 'bg-secondary/8 text-secondary'
+            }`}
           >
             <span className="material-symbols-outlined text-[16px] icon-filled">
               {exported ? 'check' : 'download'}
@@ -201,12 +186,11 @@ export default function RecentActivity() {
         <div className="overflow-x-auto">
           <table className="w-full text-right border-collapse">
             <thead>
-              <tr style={{ backgroundColor: '#f3f4f5' }}>
+              <tr className="bg-surface-container-low">
                 {['לקוח', 'פלטפורמה', 'דירוג', 'סנטימנט', 'סטטוס', ''].map((h) => (
                   <th
                     key={h}
-                    className="px-4 py-3 text-xs font-semibold uppercase tracking-wider"
-                    style={{ color: '#444650' }}
+                    className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-on-surface-variant"
                   >
                     {h}
                   </th>
@@ -220,21 +204,15 @@ export default function RecentActivity() {
                 return (
                   <tr
                     key={review.id}
-                    className="transition-colors"
-                    style={{ borderBottom: '1px solid rgba(197,198,210,0.2)' }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = '#f8f9fa'; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = 'transparent'; }}
+                    className="transition-colors border-b border-outline-variant/20 hover:bg-background"
                   >
                     {/* Customer */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div
-                          className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                          style={{ backgroundColor: 'rgba(135,29,211,0.1)', color: '#871dd3' }}
-                        >
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 bg-secondary/10 text-secondary">
                           {review.reviewer_initials}
                         </div>
-                        <span className="text-sm font-medium" style={{ color: '#00113a' }}>
+                        <span className="text-sm font-medium text-primary">
                           {review.reviewer_name}
                         </span>
                       </div>
@@ -242,7 +220,7 @@ export default function RecentActivity() {
 
                     {/* Platform */}
                     <td className="px-4 py-3">
-                      <span className="text-sm" style={{ color: '#444650' }}>
+                      <span className="text-sm text-on-surface-variant">
                         {PLATFORM_LABELS[review.platform]}
                       </span>
                     </td>
@@ -271,7 +249,7 @@ export default function RecentActivity() {
                         >
                           {status.icon}
                         </span>
-                        <span style={{ color: '#444650' }}>{status.label}</span>
+                        <span className="text-on-surface-variant">{status.label}</span>
                       </span>
                     </td>
 
@@ -280,8 +258,7 @@ export default function RecentActivity() {
                       <div className="relative">
                         <button
                           onClick={() => setOpenMenu(openMenu === review.id ? null : review.id)}
-                          className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-                          style={{ color: '#444650' }}
+                          className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer text-on-surface-variant"
                           aria-label="פעולות נוספות"
                         >
                           <span className="material-symbols-outlined text-[20px]">more_vert</span>

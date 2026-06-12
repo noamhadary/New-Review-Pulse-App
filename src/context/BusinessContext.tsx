@@ -1,12 +1,7 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
-import { useAuth } from './AuthContext';
+import { useAuth } from './auth-context';
+import { BusinessContext } from './business-context';
 import type { Business } from '../types';
 
 const DEMO_BUSINESS: Business = {
@@ -18,47 +13,32 @@ const DEMO_BUSINESS: Business = {
   created_at: new Date().toISOString(),
 };
 
-interface BusinessContextValue {
-  business: Business | null;
-  loading: boolean;
-  refetch: () => void;
-}
-
-const BusinessContext = createContext<BusinessContextValue>({
-  business: null,
-  loading: true,
-  refetch: () => {},
-});
-
 export function BusinessProvider({ children }: { children: ReactNode }) {
   const { user, isDemo } = useAuth();
-  const [business, setBusiness] = useState<Business | null>(null);
-  const [loading, setLoading] = useState(true);
   const [tick, setTick] = useState(0);
+  const [fetched, setFetched] = useState<{ key: string; business: Business | null } | null>(null);
+
+  const userId = user?.id ?? null;
+  // null when there is nothing to fetch (demo / logged out); changes on refetch
+  const fetchKey = isDemo || !userId ? null : `${userId}:${tick}`;
 
   useEffect(() => {
-    if (isDemo) {
-      setBusiness(DEMO_BUSINESS);
-      setLoading(false);
-      return;
-    }
-    if (!user) {
-      setBusiness(null);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
+    if (!fetchKey || !userId) return;
+    let cancelled = false;
     supabase
       .from('businesses')
       .select('*')
-      .eq('owner_id', user.id)
+      .eq('owner_id', userId)
       .single()
       .then(({ data, error }) => {
-        if (!error && data) setBusiness(data as Business);
-        setLoading(false);
+        if (cancelled) return;
+        setFetched({ key: fetchKey, business: !error && data ? (data as Business) : null });
       });
-  }, [user, isDemo, tick]);
+    return () => { cancelled = true; };
+  }, [fetchKey, userId]);
+
+  const business = isDemo ? DEMO_BUSINESS : userId ? (fetched?.business ?? null) : null;
+  const loading = fetchKey != null && fetched?.key !== fetchKey;
 
   return (
     <BusinessContext.Provider
@@ -67,8 +47,4 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       {children}
     </BusinessContext.Provider>
   );
-}
-
-export function useBusiness() {
-  return useContext(BusinessContext);
 }

@@ -71,6 +71,7 @@ const STYLES = `
   }
   .card-tilt:hover {
     transform: translateY(-6px) rotate(-0.5deg);
+    box-shadow: var(--tilt-shadow, 0 12px 40px rgba(0,0,0,0.10));
   }
 `;
 
@@ -342,7 +343,8 @@ export default function LandingPage() {
             </button>
           </div>
 
-          <button className="md:hidden p-2 rounded-lg cursor-pointer" style={{ color: scrolled ? '#444650' : '#fff' }}
+          <button className="md:hidden p-2.5 rounded-lg cursor-pointer" style={{ color: scrolled ? '#444650' : '#fff' }}
+            aria-label={mobileMenu ? 'סגור תפריט' : 'פתח תפריט'}
             onClick={() => setMobileMenu(!mobileMenu)}>
             <span className="material-symbols-outlined">{mobileMenu ? 'close' : 'menu'}</span>
           </button>
@@ -351,7 +353,7 @@ export default function LandingPage() {
         {mobileMenu && (
           <div className="md:hidden px-5 pb-5 pt-2 flex flex-col gap-2" style={{ backgroundColor: '#fff', borderTop: '1px solid rgba(197,198,210,0.3)' }}>
             {[["פיצ'רים",'features'],['איך זה עובד','how'],['מחירים','pricing'],['המלצות','testimonials']].map(([label, id]) => (
-              <button key={id} onClick={() => scrollTo(id)} className="text-sm font-medium text-right py-2 cursor-pointer" style={{ color: '#444650' }}>{label}</button>
+              <button key={id} onClick={() => scrollTo(id)} className="text-sm font-medium text-right py-3 cursor-pointer text-on-surface-variant">{label}</button>
             ))}
             <div className="flex gap-3 pt-2">
               <button onClick={() => navigate('/auth/login')}   className="flex-1 py-2.5 rounded-xl text-sm font-bold cursor-pointer border" style={{ color: '#871dd3', borderColor: '#871dd3' }}>התחבר</button>
@@ -471,7 +473,7 @@ export default function LandingPage() {
           {/* Trust badges */}
           <div className="flex flex-wrap justify-center gap-6 mt-12">
             {[{ icon: 'verified_user', text: 'SSL מאובטח' }, { icon: 'credit_card_off', text: 'ללא כרטיס אשראי' }, { icon: 'cancel', text: 'ביטול בכל עת' }].map(({ icon, text }) => (
-              <div key={text} className="flex items-center gap-1.5 text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>
+              <div key={text} className="flex items-center gap-1.5 text-sm" style={{ color: 'rgba(255,255,255,0.78)' }}>
                 <span className="material-symbols-outlined text-[16px] icon-filled" style={{ color: 'rgba(135,29,211,0.9)' }}>{icon}</span>
                 {text}
               </div>
@@ -512,9 +514,7 @@ export default function LandingPage() {
               <FadeSection key={f.title} delay={i * 70}>
                 <div
                   className="card-tilt h-full rounded-2xl p-6 cursor-default"
-                  style={{ backgroundColor: '#fff', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid rgba(197,198,210,0.3)' }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = `0 12px 40px ${f.color}22`; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 16px rgba(0,0,0,0.06)'; }}
+                  style={{ backgroundColor: '#fff', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid rgba(197,198,210,0.3)', '--tilt-shadow': `0 12px 40px ${f.color}22` } as React.CSSProperties}
                 >
                   {/* Icon with pulse glow */}
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 relative" style={{ backgroundColor: f.bg }}>
@@ -628,9 +628,7 @@ export default function LandingPage() {
               <FadeSection key={t.name} delay={i * 100}>
                 <div
                   className="card-tilt rounded-2xl p-6 h-full flex flex-col cursor-default"
-                  style={{ backgroundColor: '#f8f9fa', border: '1px solid rgba(197,198,210,0.3)' }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = `0 12px 40px ${t.color}18`; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}
+                  style={{ backgroundColor: '#f8f9fa', border: '1px solid rgba(197,198,210,0.3)', '--tilt-shadow': `0 12px 40px ${t.color}18` } as React.CSSProperties}
                 >
                   <StarRating count={t.rating} />
                   <p className="text-sm leading-relaxed mt-4 flex-1" style={{ color: '#444650' }}>"{t.text}"</p>
@@ -696,10 +694,10 @@ export default function LandingPage() {
             <img src="/logo.png" alt="Review Pulse" style={{ height: 16, width: 'auto', maxWidth: 80, objectFit: 'contain', opacity: 0.85 }} />
             <div className="flex flex-wrap justify-center gap-6">
               {[["פיצ'רים",'features'],['מחירים','pricing'],['המלצות','testimonials']].map(([label, id]) => (
-                <button key={id} onClick={() => scrollTo(id)} className="text-sm cursor-pointer hover:opacity-60 transition-opacity" style={{ color: 'rgba(255,255,255,0.6)' }}>{label}</button>
+                <button key={id} onClick={() => scrollTo(id)} className="text-sm py-2.5 cursor-pointer hover:opacity-60 transition-opacity text-white/70">{label}</button>
               ))}
-              <button onClick={() => navigate('/auth/login')}    className="text-sm cursor-pointer hover:opacity-60" style={{ color: 'rgba(255,255,255,0.6)' }}>כניסה</button>
-              <button onClick={() => navigate('/auth/register')} className="text-sm cursor-pointer hover:opacity-60" style={{ color: 'rgba(255,255,255,0.6)' }}>הרשמה</button>
+              <button onClick={() => navigate('/auth/login')}    className="text-sm py-2.5 cursor-pointer hover:opacity-60 transition-opacity text-white/70">כניסה</button>
+              <button onClick={() => navigate('/auth/register')} className="text-sm py-2.5 cursor-pointer hover:opacity-60 transition-opacity text-white/70">הרשמה</button>
             </div>
             <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>© 2025 Review Pulse. כל הזכויות שמורות.</p>
           </div>

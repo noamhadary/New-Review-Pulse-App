@@ -17,14 +17,10 @@ export default function PulseGauge({ positivePct = 94, pendingCount }: Props) {
 
   return (
     <div
-      className="rounded-2xl p-6 md:p-8 flex flex-col"
-      style={{
-        backgroundColor: '#ffffff',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-        border: '1px solid rgba(197,198,210,0.2)',
-      }}
+      className="rounded-2xl p-6 md:p-8 flex flex-col bg-white border border-outline-variant/20"
+      style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}
     >
-      <h3 className="text-xl font-bold mb-6" style={{ color: '#00113a' }}>
+      <h3 className="text-xl font-bold mb-6 text-primary">
         Review Pulse Gauge
       </h3>
 
@@ -50,10 +46,10 @@ export default function PulseGauge({ positivePct = 94, pendingCount }: Props) {
         </svg>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-5xl font-extrabold leading-none tracking-tight" style={{ color: '#871dd3' }}>
+          <span className="text-5xl font-extrabold leading-none tracking-tight text-secondary">
             {pulse}
           </span>
-          <span className="text-xs font-semibold uppercase tracking-widest mt-1" style={{ color: '#444650' }}>
+          <span className="text-xs font-semibold uppercase tracking-widest mt-1 text-on-surface-variant">
             Pulse
           </span>
         </div>
@@ -64,10 +60,9 @@ export default function PulseGauge({ positivePct = 94, pendingCount }: Props) {
         {SEGMENTS.map(({ label, pct, bg, text, isCount }) => (
           <div
             key={label}
-            className="flex justify-between items-center px-3 py-2 rounded-lg"
-            style={{ backgroundColor: '#f8f9fa' }}
+            className="flex justify-between items-center px-3 py-2 rounded-lg bg-background"
           >
-            <span className="text-sm font-medium" style={{ color: '#191c1d' }}>{label}</span>
+            <span className="text-sm font-medium text-on-surface">{label}</span>
             <span className="text-xs font-bold px-2 py-0.5 rounded-md" style={{ backgroundColor: bg, color: text }}>
               {isCount ? pct : `${pct}%`}
             </span>

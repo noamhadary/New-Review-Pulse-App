@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { TONE_LABELS, type ToneType } from '../types';
 import { supabase } from '../lib/supabase';
-import { useAuth } from '../context/AuthContext';
-import { useBusiness } from '../context/BusinessContext';
+import { useAuth } from '../context/auth-context';
+import { useBusiness } from '../context/business-context';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -72,15 +72,15 @@ const INTEGRATIONS_CONFIG = [
 
 function LoadingCard() {
   return (
-    <div className="rounded-2xl p-6 mb-5 animate-pulse" style={{ backgroundColor: '#fff', border: '1px solid rgba(197,198,210,0.3)' }}>
-      <div className="h-4 w-1/3 rounded-lg mb-5" style={{ backgroundColor: '#f3f4f5' }} />
+    <div className="rounded-2xl p-6 mb-5 animate-pulse bg-white border border-outline-variant/30">
+      <div className="h-4 w-1/3 rounded-lg mb-5 bg-surface-container-low" />
       {[1, 2, 3].map((i) => (
-        <div key={i} className="flex items-center justify-between py-3 border-b last:border-b-0" style={{ borderColor: 'rgba(197,198,210,0.2)' }}>
+        <div key={i} className="flex items-center justify-between py-3 border-b last:border-b-0 border-outline-variant/20">
           <div className="space-y-1.5">
-            <div className="h-3.5 w-32 rounded" style={{ backgroundColor: '#f3f4f5' }} />
-            <div className="h-2.5 w-48 rounded" style={{ backgroundColor: '#f3f4f5' }} />
+            <div className="h-3.5 w-32 rounded bg-surface-container-low" />
+            <div className="h-2.5 w-48 rounded bg-surface-container-low" />
           </div>
-          <div className="w-12 h-6 rounded-full" style={{ backgroundColor: '#f3f4f5' }} />
+          <div className="w-12 h-6 rounded-full bg-surface-container-low" />
         </div>
       ))}
     </div>
@@ -96,9 +96,8 @@ function Toast({ message, type, visible }: ToastProps) {
   const icons  = { success: 'check_circle', error: 'error', info: 'info' };
   return (
     <div
-      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2.5 px-5 py-3 rounded-xl shadow-2xl transition-all duration-300"
+      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2.5 px-5 py-3 rounded-xl shadow-2xl transition-all duration-300 bg-white"
       style={{
-        backgroundColor: '#fff',
         border: `1.5px solid ${colors[type]}`,
         opacity: visible ? 1 : 0,
         transform: visible ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(16px)',
@@ -106,7 +105,7 @@ function Toast({ message, type, visible }: ToastProps) {
       }}
     >
       <span className="material-symbols-outlined text-[18px] icon-filled" style={{ color: colors[type] }}>{icons[type]}</span>
-      <span className="text-sm font-semibold" style={{ color: '#00113a' }}>{message}</span>
+      <span className="text-sm font-semibold text-primary">{message}</span>
     </div>
   );
 }
@@ -124,10 +123,10 @@ function useToast() {
 
 function SectionCard({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl p-6 mb-5" style={{ backgroundColor: '#fff', boxShadow: '0 2px 12px rgba(0,0,0,0.05)', border: '1px solid rgba(197,198,210,0.3)' }}>
+    <div className="rounded-2xl p-6 mb-5 bg-white border border-outline-variant/30" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.05)' }}>
       <div className="mb-5">
-        <h3 className="text-base font-bold" style={{ color: '#00113a' }}>{title}</h3>
-        {subtitle && <p className="text-xs mt-0.5" style={{ color: '#757682' }}>{subtitle}</p>}
+        <h3 className="text-base font-bold text-primary">{title}</h3>
+        {subtitle && <p className="text-xs mt-0.5 text-outline">{subtitle}</p>}
       </div>
       {children}
     </div>
@@ -138,16 +137,20 @@ function Toggle({ value, onChange, label, desc, disabled }: {
   value: boolean; onChange: () => void; label: string; desc?: string; disabled?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between py-3 border-b last:border-b-0" style={{ borderColor: 'rgba(197,198,210,0.3)' }}>
+    <div className="flex items-center justify-between py-3 border-b last:border-b-0 border-outline-variant/30">
       <div>
-        <p className="text-sm font-semibold" style={{ color: disabled ? '#c5c6d2' : '#191c1d' }}>{label}</p>
-        {desc && <p className="text-xs mt-0.5" style={{ color: '#757682' }}>{desc}</p>}
+        <p className={`text-sm font-semibold ${disabled ? 'text-outline-variant' : 'text-on-surface'}`}>{label}</p>
+        {desc && <p className="text-xs mt-0.5 text-outline">{desc}</p>}
       </div>
       <button
         onClick={disabled ? undefined : onChange}
         disabled={disabled}
-        className="relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0"
-        style={{ backgroundColor: value ? '#871dd3' : '#c5c6d2', cursor: disabled ? 'not-allowed' : 'pointer' }}
+        role="switch"
+        aria-checked={value}
+        aria-label={label}
+        className={`relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0 ${
+          value ? 'bg-secondary' : 'bg-outline-variant'
+        } ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
       >
         <span className="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all duration-300"
           style={{ right: value ? 6 : 'auto', left: value ? 'auto' : 6 }} />
@@ -160,25 +163,23 @@ function InputField({ label, value, onChange, type = 'text', placeholder, dir, r
   label: string; value: string; onChange?: (v: string) => void;
   type?: string; placeholder?: string; dir?: 'ltr' | 'rtl'; readOnly?: boolean;
 }) {
+  const id = useId();
   return (
     <div>
-      <label className="block text-xs font-semibold mb-1" style={{ color: '#444650' }}>{label}</label>
+      <label htmlFor={id} className="block text-xs font-semibold mb-1 text-on-surface-variant">{label}</label>
       <input
+        id={id}
         type={type}
         value={value}
         onChange={readOnly ? undefined : (e) => onChange?.(e.target.value)}
         placeholder={placeholder}
         readOnly={readOnly}
-        className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-colors"
-        style={{
-          backgroundColor: readOnly ? '#f8f9fa' : '#f3f4f5',
-          border: '1px solid rgba(197,198,210,0.5)',
-          color: readOnly ? '#757682' : '#191c1d',
-          direction: dir,
-          cursor: readOnly ? 'default' : 'text',
-        }}
-        onFocus={readOnly ? undefined : (e) => { e.target.style.borderColor = '#871dd3'; }}
-        onBlur={readOnly ? undefined : (e) => { e.target.style.borderColor = 'rgba(197,198,210,0.5)'; }}
+        dir={dir}
+        className={`w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-colors border border-outline-variant/50 ${
+          readOnly
+            ? 'bg-background text-outline cursor-default'
+            : 'bg-surface-container-low text-on-surface focus:border-secondary'
+        }`}
       />
     </div>
   );
@@ -188,8 +189,9 @@ function SaveBtn({ onSave, saved }: { onSave: () => void; saved: boolean }) {
   return (
     <button
       onClick={onSave}
-      className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm cursor-pointer transition-all hover:opacity-90"
-      style={{ backgroundColor: saved ? '#16a34a' : '#871dd3', color: '#fff' }}
+      className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm cursor-pointer transition-all hover:opacity-90 text-white ${
+        saved ? 'bg-green-600' : 'bg-secondary'
+      }`}
     >
       <span className="material-symbols-outlined text-[18px] icon-filled">{saved ? 'check_circle' : 'save'}</span>
       {saved ? 'נשמר!' : 'שמור שינויים'}
@@ -233,13 +235,12 @@ function PasswordModal({ onClose, onSave }: { onClose: () => void; onSave: () =>
           ))}
           <button
             onClick={() => setShow(!show)}
-            className="flex items-center gap-1.5 text-xs cursor-pointer"
-            style={{ color: '#871dd3' }}
+            className="flex items-center gap-1.5 text-xs cursor-pointer text-secondary"
           >
             <span className="material-symbols-outlined text-[14px]">{show ? 'visibility_off' : 'visibility'}</span>
             {show ? 'הסתר סיסמאות' : 'הצג סיסמאות'}
           </button>
-          {error && <p className="text-xs font-semibold" style={{ color: '#dc2626' }}>{error}</p>}
+          {error && <p className="text-xs font-semibold text-red-600">{error}</p>}
           <div className="flex gap-3 pt-2">
             <button onClick={handleSubmit}
               className="flex-1 py-2.5 rounded-xl font-bold text-sm cursor-pointer hover:opacity-90"
@@ -247,8 +248,7 @@ function PasswordModal({ onClose, onSave }: { onClose: () => void; onSave: () =>
               שמור סיסמה
             </button>
             <button onClick={onClose}
-              className="px-5 py-2.5 rounded-xl font-bold text-sm cursor-pointer border"
-              style={{ color: '#444650', borderColor: 'rgba(197,198,210,0.5)' }}>
+              className="px-5 py-2.5 rounded-xl font-bold text-sm cursor-pointer border text-on-surface-variant border-outline-variant/50">
               ביטול
             </button>
           </div>
@@ -281,7 +281,7 @@ function InviteModal({ onClose, onInvite }: {
           <InputField label="כתובת אימייל" value={email} onChange={setEmail} type="email" placeholder="name@company.co.il" dir="ltr" />
 
           <div>
-            <p className="text-xs font-semibold mb-2" style={{ color: '#444650' }}>תפקיד</p>
+            <p className="text-xs font-semibold mb-2 text-on-surface-variant">תפקיד</p>
             <div className="space-y-2">
               {(['admin', 'manager', 'viewer'] as MemberRole[]).map((r) => {
                 const m = ROLE_META[r];
@@ -295,7 +295,7 @@ function InviteModal({ onClose, onInvite }: {
                     <span className="material-symbols-outlined text-[18px] icon-filled" style={{ color: m.color }}>{m.icon}</span>
                     <div className="flex-1">
                       <p className="text-sm font-bold" style={{ color: m.color }}>{m.label}</p>
-                      <p className="text-xs" style={{ color: '#757682' }}>{m.desc}</p>
+                      <p className="text-xs text-outline">{m.desc}</p>
                     </div>
                     {role === r && <span className="material-symbols-outlined text-[16px] icon-filled" style={{ color: m.color }}>check_circle</span>}
                   </button>
@@ -304,7 +304,7 @@ function InviteModal({ onClose, onInvite }: {
             </div>
           </div>
 
-          {error && <p className="text-xs font-semibold" style={{ color: '#dc2626' }}>{error}</p>}
+          {error && <p className="text-xs font-semibold text-red-600">{error}</p>}
 
           <div className="flex gap-3">
             <button onClick={handleSubmit}
@@ -314,8 +314,7 @@ function InviteModal({ onClose, onInvite }: {
               שלח הזמנה
             </button>
             <button onClick={onClose}
-              className="px-5 py-2.5 rounded-xl font-bold text-sm cursor-pointer border"
-              style={{ color: '#444650', borderColor: 'rgba(197,198,210,0.5)' }}>
+              className="px-5 py-2.5 rounded-xl font-bold text-sm cursor-pointer border text-on-surface-variant border-outline-variant/50">
               ביטול
             </button>
           </div>
@@ -344,26 +343,26 @@ function ConnectModal({ platform, onClose, onConnected }: {
       <ModalBox title={`חיבור ${platform.name}`} icon="link" onClose={onClose}>
         {step === 'info' && (
           <div className="space-y-4">
-            <div className="flex items-center gap-3 p-4 rounded-xl" style={{ backgroundColor: '#f3f4f5' }}>
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-surface-container-low">
               <span className="material-symbols-outlined text-[28px] icon-filled" style={{ color: platform.color }}>
                 {platform.icon}
               </span>
               <div>
-                <p className="text-sm font-bold" style={{ color: '#00113a' }}>{platform.name}</p>
-                <p className="text-xs" style={{ color: '#757682' }}>אנחנו נסנכרן ביקורות אוטומטית</p>
+                <p className="text-sm font-bold text-primary">{platform.name}</p>
+                <p className="text-xs text-outline">אנחנו נסנכרן ביקורות אוטומטית</p>
               </div>
             </div>
-            <ol className="space-y-2 text-sm" style={{ color: '#444650' }}>
+            <ol className="space-y-2 text-sm text-on-surface-variant">
               <li className="flex items-start gap-2">
-                <span className="font-bold text-xs w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ backgroundColor: 'rgba(135,29,211,0.1)', color: '#871dd3' }}>1</span>
+                <span className="font-bold text-xs w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 bg-secondary/10 text-secondary">1</span>
                 לחץ "הפעל חיבור" כדי להתחיל
               </li>
               <li className="flex items-start gap-2">
-                <span className="font-bold text-xs w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ backgroundColor: 'rgba(135,29,211,0.1)', color: '#871dd3' }}>2</span>
+                <span className="font-bold text-xs w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 bg-secondary/10 text-secondary">2</span>
                 אשר גישה לחשבון {platform.name} שלך
               </li>
               <li className="flex items-start gap-2">
-                <span className="font-bold text-xs w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ backgroundColor: 'rgba(135,29,211,0.1)', color: '#871dd3' }}>3</span>
+                <span className="font-bold text-xs w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 bg-secondary/10 text-secondary">3</span>
                 ביקורות יסונכרנו אוטומטית מעתה
               </li>
             </ol>
@@ -375,8 +374,7 @@ function ConnectModal({ platform, onClose, onConnected }: {
                 הפעל חיבור
               </button>
               <button onClick={onClose}
-                className="px-5 py-2.5 rounded-xl font-bold text-sm cursor-pointer border"
-                style={{ color: '#444650', borderColor: 'rgba(197,198,210,0.5)' }}>
+                className="px-5 py-2.5 rounded-xl font-bold text-sm cursor-pointer border text-on-surface-variant border-outline-variant/50">
                 ביטול
               </button>
             </div>
@@ -388,20 +386,19 @@ function ConnectModal({ platform, onClose, onConnected }: {
               style={{ background: 'linear-gradient(135deg,#002366,#871dd3)' }}>
               <span className="material-symbols-outlined text-white text-[24px] icon-filled">link</span>
             </div>
-            <p className="font-bold" style={{ color: '#00113a' }}>מתחבר ל-{platform.name}...</p>
-            <p className="text-sm" style={{ color: '#757682' }}>מאמת הרשאות</p>
+            <p className="font-bold text-primary">מתחבר ל-{platform.name}...</p>
+            <p className="text-sm text-outline">מאמת הרשאות</p>
           </div>
         )}
         {step === 'done' && (
           <div className="flex flex-col items-center py-8 gap-3">
-            <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: '#dcfce7' }}>
-              <span className="material-symbols-outlined text-[28px] icon-filled" style={{ color: '#16a34a' }}>check_circle</span>
+            <div className="w-14 h-14 rounded-full flex items-center justify-center bg-green-100">
+              <span className="material-symbols-outlined text-[28px] icon-filled text-green-600">check_circle</span>
             </div>
-            <p className="font-bold" style={{ color: '#00113a' }}>מחובר בהצלחה!</p>
-            <p className="text-sm" style={{ color: '#757682' }}>ביקורות יסונכרנו אוטומטית</p>
+            <p className="font-bold text-primary">מחובר בהצלחה!</p>
+            <p className="text-sm text-outline">ביקורות יסונכרנו אוטומטית</p>
             <button onClick={onClose}
-              className="mt-2 px-6 py-2.5 rounded-xl font-bold text-sm cursor-pointer hover:opacity-90"
-              style={{ backgroundColor: '#16a34a', color: '#fff' }}>
+              className="mt-2 px-6 py-2.5 rounded-xl font-bold text-sm cursor-pointer hover:opacity-90 bg-green-600 text-white">
               סגור
             </button>
           </div>
@@ -422,13 +419,13 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
 
   return (
     <Overlay onClose={onClose}>
-      <div className="w-full max-w-xl rounded-2xl overflow-hidden" style={{ backgroundColor: '#fff', boxShadow: '0 24px 80px rgba(0,0,0,0.2)' }}>
-        <div className="px-6 py-5 flex items-center justify-between border-b" style={{ borderColor: 'rgba(197,198,210,0.3)', background: 'linear-gradient(135deg,#00113a,#002366)' }}>
+      <div className="w-full max-w-xl rounded-2xl overflow-hidden bg-white" style={{ boxShadow: '0 24px 80px rgba(0,0,0,0.2)' }}>
+        <div className="px-6 py-5 flex items-center justify-between border-b border-outline-variant/30" style={{ background: 'linear-gradient(135deg,#00113a,#002366)' }}>
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-[20px] icon-filled text-white">stars</span>
             <h2 className="text-lg font-bold text-white">שדרוג תוכנית</h2>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg cursor-pointer" style={{ color: 'rgba(255,255,255,0.7)' }}>
+          <button onClick={onClose} aria-label="סגור" className="p-2 rounded-lg cursor-pointer text-white/70">
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
@@ -436,13 +433,14 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
         {step === 'plans' && (
           <div className="p-6">
             {/* Period toggle */}
-            <div className="flex items-center justify-center gap-1 p-1 rounded-xl mb-5 w-fit mx-auto" style={{ backgroundColor: '#f3f4f5' }}>
+            <div className="flex items-center justify-center gap-1 p-1 rounded-xl mb-5 w-fit mx-auto bg-surface-container-low">
               {(['monthly', 'yearly'] as const).map((p) => (
                 <button key={p} onClick={() => setPeriod(p)}
-                  className="px-5 py-2 rounded-lg text-sm font-semibold cursor-pointer transition-all"
-                  style={period === p ? { backgroundColor: '#fff', color: '#00113a', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' } : { color: '#757682' }}>
+                  className={`px-5 py-2 rounded-lg text-sm font-semibold cursor-pointer transition-all ${
+                    period === p ? 'bg-white text-primary shadow-sm' : 'text-outline'
+                  }`}>
                   {p === 'monthly' ? 'חודשי' : 'שנתי'}
-                  {p === 'yearly' && <span className="mr-1 text-xs font-bold" style={{ color: '#16a34a' }}>חסוך 20%</span>}
+                  {p === 'yearly' && <span className="mr-1 text-xs font-bold text-green-600">חסוך 20%</span>}
                 </button>
               ))}
             </div>
@@ -453,18 +451,18 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
                 <button key={p} onClick={() => setPlan(p)}
                   className="p-4 rounded-2xl text-right transition-all cursor-pointer"
                   style={{ border: `2px solid ${plan === p ? '#871dd3' : 'rgba(197,198,210,0.4)'}`, backgroundColor: plan === p ? 'rgba(135,29,211,0.04)' : '#f8f9fa' }}>
-                  <p className="text-sm font-bold mb-0.5" style={{ color: plan === p ? '#871dd3' : '#00113a' }}>
+                  <p className={`text-sm font-bold mb-0.5 ${plan === p ? 'text-secondary' : 'text-primary'}`}>
                     {p === 'pro' ? 'Pro' : 'Enterprise'}
                   </p>
-                  <p className="text-2xl font-extrabold" style={{ color: '#00113a' }}>{prices[p][period]}</p>
-                  <p className="text-xs mt-0.5" style={{ color: '#757682' }}>לחודש</p>
-                  <ul className="mt-3 space-y-1 text-xs" style={{ color: '#444650' }}>
+                  <p className="text-2xl font-extrabold text-primary">{prices[p][period]}</p>
+                  <p className="text-xs mt-0.5 text-outline">לחודש</p>
+                  <ul className="mt-3 space-y-1 text-xs text-on-surface-variant">
                     {(p === 'pro'
                       ? ['ביקורות ללא הגבלה', '5 משתמשים', 'AI תגובות מתקדם', 'דוחות מותאמים']
                       : ['הכל ב-Pro', 'משתמשים ללא הגבלה', 'API גישה', 'תמיכה VIP 24/7']
                     ).map((f) => (
                       <li key={f} className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[12px] icon-filled" style={{ color: '#16a34a' }}>check</span>
+                        <span className="material-symbols-outlined text-[12px] icon-filled text-green-600">check</span>
                         {f}
                       </li>
                     ))}
@@ -484,14 +482,13 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
 
         {step === 'done' && (
           <div className="flex flex-col items-center py-12 gap-4 px-6">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: '#dcfce7' }}>
-              <span className="material-symbols-outlined text-[32px] icon-filled" style={{ color: '#16a34a' }}>check_circle</span>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center bg-green-100">
+              <span className="material-symbols-outlined text-[32px] icon-filled text-green-600">check_circle</span>
             </div>
-            <p className="text-lg font-bold" style={{ color: '#00113a' }}>ברוך הבא לתוכנית Pro!</p>
-            <p className="text-sm text-center" style={{ color: '#757682' }}>חשבונך שודרג בהצלחה. כל הפיצ'רים זמינים מיידית.</p>
+            <p className="text-lg font-bold text-primary">ברוך הבא לתוכנית Pro!</p>
+            <p className="text-sm text-center text-outline">חשבונך שודרג בהצלחה. כל הפיצ'רים זמינים מיידית.</p>
             <button onClick={onClose}
-              className="mt-2 px-6 py-2.5 rounded-xl font-bold text-sm cursor-pointer hover:opacity-90"
-              style={{ backgroundColor: '#16a34a', color: '#fff' }}>
+              className="mt-2 px-6 py-2.5 rounded-xl font-bold text-sm cursor-pointer hover:opacity-90 bg-green-600 text-white">
               התחל להשתמש
             </button>
           </div>
@@ -523,14 +520,14 @@ function Overlay({ onClose, children }: { onClose: () => void; children: React.R
 
 function ModalBox({ title, icon, onClose, children }: { title: string; icon: string; onClose: () => void; children: React.ReactNode }) {
   return (
-    <div className="w-full max-w-md rounded-2xl overflow-hidden" style={{ backgroundColor: '#fff', boxShadow: '0 24px 80px rgba(0,0,0,0.2)' }}>
-      <div className="px-6 py-5 flex items-center justify-between border-b" style={{ borderColor: 'rgba(197,198,210,0.3)' }}>
+    <div className="w-full max-w-md rounded-2xl overflow-hidden bg-white" style={{ boxShadow: '0 24px 80px rgba(0,0,0,0.2)' }}>
+      <div className="px-6 py-5 flex items-center justify-between border-b border-outline-variant/30">
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-[20px] icon-filled" style={{ color: '#871dd3' }}>{icon}</span>
-          <h2 className="text-base font-bold" style={{ color: '#00113a' }}>{title}</h2>
+          <span className="material-symbols-outlined text-[20px] icon-filled text-secondary">{icon}</span>
+          <h2 className="text-base font-bold text-primary">{title}</h2>
         </div>
-        <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
-          <span className="material-symbols-outlined" style={{ color: '#444650' }}>close</span>
+        <button onClick={onClose} aria-label="סגור" className="p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+          <span className="material-symbols-outlined text-on-surface-variant">close</span>
         </button>
       </div>
       <div className="p-6">{children}</div>
@@ -540,52 +537,65 @@ function ModalBox({ title, icon, onClose, children }: { title: string; icon: str
 
 // ── Tab: Profile ───────────────────────────────────────────────────────────────
 
+interface ProfileForm {
+  name: string;
+  email: string;
+  phone: string;
+  website: string;
+  category: string;
+}
+
 function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type']) => void }) {
   const { user, isDemo, signOut } = useAuth();
-  const { business, loading: businessLoading, refetch: refetchBusiness } = useBusiness();
+  const { business, refetch: refetchBusiness } = useBusiness();
 
-  const [profile, setProfile] = useState({
-    name: '',
-    email: user?.email ?? '',
-    phone: '',
-    website: '',
-    category: 'קמעונאות',
+  // Demo values saved on a previous visit — read once on mount
+  const [demoSaved] = useState<Partial<ProfileForm>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('rp_demo_profile') ?? '{}');
+    } catch {
+      return {};
+    }
   });
+  // User edits override the loaded base profile
+  const [draft, setDraft] = useState<ProfileForm | null>(null);
   const [saved, setSaved] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
 
-  // Load profile once data is available
-  useEffect(() => {
-    if (businessLoading) return;
+  const baseProfile = useMemo<ProfileForm>(() => {
     if (business) {
-      // Existing user — load from Supabase
-      setProfile((p) => ({
-        ...p,
-        name:     business.name     ?? p.name,
-        category: business.category ?? p.category,
-        phone:    business.phone    ?? p.phone,
-        website:  business.website  ?? p.website,
-      }));
-    } else if (isDemo) {
-      // Demo — start with defaults, then override with any previously saved values
-      try {
-        const savedStr = localStorage.getItem('rp_demo_profile');
-        const savedData = savedStr ? JSON.parse(savedStr) : {};
-        setProfile((p) => ({ ...p, phone: '+972534777375', ...savedData }));
-      } catch {
-        setProfile((p) => ({ ...p, phone: '+972534777375' }));
-      }
-    } else if (user) {
-      // New real user — prefill from registration metadata
-      const meta = user.user_metadata as Record<string, string> | undefined;
-      setProfile((p) => ({
-        ...p,
-        name: meta?.business_name || meta?.full_name || p.name,
-      }));
+      // Existing user — loaded from Supabase
+      return {
+        name:     business.name     ?? '',
+        email:    user?.email ?? '',
+        phone:    business.phone    ?? '',
+        website:  business.website  ?? '',
+        category: business.category ?? 'קמעונאות',
+      };
     }
-  // Only re-run when business record itself changes (new load / first save)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [business?.id, businessLoading]);
+    if (isDemo) {
+      return {
+        name: '',
+        email: user?.email ?? '',
+        phone: '+972534777375',
+        website: '',
+        category: 'קמעונאות',
+        ...demoSaved,
+      };
+    }
+    // New real user — prefill from registration metadata
+    const meta = (user?.user_metadata ?? {}) as Record<string, string>;
+    return {
+      name: meta.business_name || meta.full_name || '',
+      email: user?.email ?? '',
+      phone: '',
+      website: '',
+      category: 'קמעונאות',
+    };
+  }, [business, isDemo, user, demoSaved]);
+
+  const profile = draft ?? baseProfile;
+  const setProfile = setDraft;
 
   const initials = profile.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase() || 'מנ';
 
@@ -634,15 +644,15 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
 
       <SectionCard title="פרטים אישיים">
         {/* Avatar */}
-        <div className="flex items-center gap-4 mb-6 pb-6 border-b" style={{ borderColor: 'rgba(197,198,210,0.3)' }}>
+        <div className="flex items-center gap-4 mb-6 pb-6 border-b border-outline-variant/30">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-extrabold flex-shrink-0"
             style={{ background: 'linear-gradient(135deg,#002366,#871dd3)', color: '#fff' }}>
             {initials}
           </div>
           <div>
-            <p className="font-bold" style={{ color: '#00113a' }}>{profile.name || 'שם מלא'}</p>
-            <p className="text-sm" style={{ color: '#757682' }}>{profile.email}</p>
-            <button className="text-xs font-semibold mt-1 cursor-pointer hover:underline" style={{ color: '#871dd3' }}>
+            <p className="font-bold text-primary">{profile.name || 'שם מלא'}</p>
+            <p className="text-sm text-outline">{profile.email}</p>
+            <button className="text-xs font-semibold mt-1 cursor-pointer hover:underline text-secondary">
               שנה תמונת פרופיל
             </button>
           </div>
@@ -654,14 +664,12 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
           <InputField label="טלפון" value={profile.phone} onChange={(v) => setProfile({ ...profile, phone: v })} type="tel" dir="ltr" placeholder="+972-50-0000000" />
           <InputField label="אתר אינטרנט" value={profile.website} onChange={(v) => setProfile({ ...profile, website: v })} dir="ltr" placeholder="https://example.co.il" />
           <div>
-            <label className="block text-xs font-semibold mb-1" style={{ color: '#444650' }}>קטגוריה</label>
+            <label htmlFor="profile-category" className="block text-xs font-semibold mb-1 text-on-surface-variant">קטגוריה</label>
             <select
+              id="profile-category"
               value={profile.category}
               onChange={(e) => setProfile({ ...profile, category: e.target.value })}
-              className="w-full px-3 py-2.5 rounded-xl text-sm outline-none cursor-pointer"
-              style={{ backgroundColor: '#f3f4f5', border: '1px solid rgba(197,198,210,0.5)', color: '#191c1d' }}
-              onFocus={(e) => { e.target.style.borderColor = '#871dd3'; }}
-              onBlur={(e) => { e.target.style.borderColor = 'rgba(197,198,210,0.5)'; }}
+              className="w-full px-3 py-2.5 rounded-xl text-sm outline-none cursor-pointer bg-surface-container-low border border-outline-variant/50 text-on-surface focus:border-secondary"
             >
               {['קמעונאות', 'מסעדנות', 'שירותים', 'בריאות', 'אחר'].map((c) => (
                 <option key={c}>{c}</option>
@@ -674,24 +682,22 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
       <SectionCard title="אבטחה">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-semibold" style={{ color: '#191c1d' }}>סיסמה</p>
-            <p className="text-xs mt-0.5" style={{ color: '#757682' }}>עודכנה לאחרונה לפני 30 יום</p>
+            <p className="text-sm font-semibold text-on-surface">סיסמה</p>
+            <p className="text-xs mt-0.5 text-outline">עודכנה לאחרונה לפני 30 יום</p>
           </div>
           <button onClick={() => setShowPwd(true)}
-            className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl cursor-pointer transition-all hover:opacity-80"
-            style={{ backgroundColor: 'rgba(135,29,211,0.08)', color: '#871dd3' }}>
+            className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl cursor-pointer transition-all hover:opacity-80 bg-secondary/8 text-secondary">
             <span className="material-symbols-outlined text-[16px]">lock</span>
             שנה סיסמה
           </button>
         </div>
-        <div className="flex items-center justify-between mt-4 pt-4 border-t" style={{ borderColor: 'rgba(197,198,210,0.3)' }}>
+        <div className="flex items-center justify-between mt-4 pt-4 border-t border-outline-variant/30">
           <div>
-            <p className="text-sm font-semibold" style={{ color: '#191c1d' }}>אימות דו-שלבי (2FA)</p>
-            <p className="text-xs mt-0.5" style={{ color: '#757682' }}>הגן על החשבון שלך עם שכבת אבטחה נוספת</p>
+            <p className="text-sm font-semibold text-on-surface">אימות דו-שלבי (2FA)</p>
+            <p className="text-xs mt-0.5 text-outline">הגן על החשבון שלך עם שכבת אבטחה נוספת</p>
           </div>
           <button
-            className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl cursor-pointer transition-all hover:opacity-80"
-            style={{ backgroundColor: '#f3f4f5', color: '#444650', border: '1px solid rgba(197,198,210,0.5)' }}>
+            className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl cursor-pointer transition-all hover:opacity-80 bg-surface-container-low text-on-surface-variant border border-outline-variant/50">
             הפעל
           </button>
         </div>
@@ -703,8 +709,7 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
       <div className="flex justify-end mt-2">
         <button
           onClick={handleSignOut}
-          className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl cursor-pointer transition-all hover:opacity-80"
-          style={{ backgroundColor: '#fee2e2', color: '#dc2626' }}
+          className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl cursor-pointer transition-all hover:opacity-80 bg-red-100 text-red-600"
         >
           <span className="material-symbols-outlined text-[16px]">logout</span>
           התנתק
@@ -722,29 +727,36 @@ const NOTIFS_DEFAULTS = {
 
 function NotificationsTab({ showToast }: { showToast: (m: string, t?: ToastProps['type']) => void }) {
   const { user, isDemo } = useAuth();
-  const [notifs, setNotifs] = useState(NOTIFS_DEFAULTS);
-  const [loading, setLoading] = useState(!isDemo);
+  const userId = isDemo ? null : user?.id ?? null;
+  const [fetched, setFetched] = useState<{ key: string; notifs: typeof NOTIFS_DEFAULTS } | null>(null);
+  // User toggles override the loaded settings
+  const [draft, setDraft] = useState<typeof NOTIFS_DEFAULTS | null>(null);
 
   useEffect(() => {
-    if (isDemo || !user) { setLoading(false); return; }
+    if (!userId) return;
+    let cancelled = false;
     supabase
       .from('user_settings')
       .select('notifs')
-      .eq('owner_id', user.id)
+      .eq('owner_id', userId)
       .maybeSingle()
       .then(({ data }) => {
-        if (data?.notifs) setNotifs({ ...NOTIFS_DEFAULTS, ...(data.notifs as object) });
-        setLoading(false);
+        if (cancelled) return;
+        setFetched({ key: userId, notifs: { ...NOTIFS_DEFAULTS, ...((data?.notifs as object) ?? {}) } });
       });
-  }, [user?.id, isDemo]);
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  const loading = userId != null && (fetched == null || fetched.key !== userId);
+  const notifs = draft ?? (fetched != null && fetched.key === userId ? fetched.notifs : NOTIFS_DEFAULTS);
 
   const toggle = async (key: keyof typeof notifs) => {
     const next = { ...notifs, [key]: !notifs[key] };
-    setNotifs(next);
-    if (!isDemo && user) {
+    setDraft(next);
+    if (userId) {
       await supabase
         .from('user_settings')
-        .upsert({ owner_id: user.id, notifs: next, updated_at: new Date().toISOString() }, { onConflict: 'owner_id' });
+        .upsert({ owner_id: userId, notifs: next, updated_at: new Date().toISOString() }, { onConflict: 'owner_id' });
     }
     showToast(next[key] ? 'התראה הופעלה' : 'התראה הושבתה', 'info');
   };
@@ -776,37 +788,48 @@ const AI_DEFAULTS = { enabled: false, default_tone: 'soft' as ToneType, whatsapp
 function AITab({ showToast }: { showToast: (m: string, t?: ToastProps['type']) => void }) {
   const { isDemo } = useAuth();
   const { business } = useBusiness();
-  const [ai, setAI] = useState(AI_DEFAULTS);
-  const [loading, setLoading] = useState(!isDemo);
+  const businessId = isDemo ? null : business?.id ?? null;
+  const [fetched, setFetched] = useState<{ key: string; ai: typeof AI_DEFAULTS } | null>(null);
+  // User edits override the loaded settings
+  const [draft, setDraft] = useState<typeof AI_DEFAULTS | null>(null);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    if (isDemo || !business) { setLoading(false); return; }
+    if (!businessId) return;
+    let cancelled = false;
     supabase
       .from('auto_reply_settings')
       .select('*')
-      .eq('business_id', business.id)
+      .eq('business_id', businessId)
       .maybeSingle()
       .then(({ data }) => {
-        if (data) {
-          setAI({
-            enabled:         data.enabled ?? false,
-            default_tone:    (data.default_tone as ToneType) ?? 'soft',
-            whatsapp_number: data.whatsapp_number ?? '',
-            auto_publish:    (data as Record<string, unknown>).auto_publish as boolean ?? false,
-          });
-        }
-        setLoading(false);
+        if (cancelled) return;
+        setFetched({
+          key: businessId,
+          ai: data
+            ? {
+                enabled:         data.enabled ?? false,
+                default_tone:    (data.default_tone as ToneType) ?? 'soft',
+                whatsapp_number: data.whatsapp_number ?? '',
+                auto_publish:    (data as Record<string, unknown>).auto_publish as boolean ?? false,
+              }
+            : AI_DEFAULTS,
+        });
       });
-  }, [business?.id, isDemo]);
+    return () => { cancelled = true; };
+  }, [businessId]);
+
+  const loading = businessId != null && (fetched == null || fetched.key !== businessId);
+  const ai = draft ?? (fetched != null && fetched.key === businessId ? fetched.ai : AI_DEFAULTS);
+  const setAI = setDraft;
 
   const handleSave = async () => {
-    if (!isDemo && business) {
+    if (businessId) {
       const { error } = await supabase
         .from('auto_reply_settings')
         .upsert(
           {
-            business_id:     business.id,
+            business_id:     businessId,
             enabled:         ai.enabled,
             default_tone:    ai.default_tone,
             whatsapp_number: ai.whatsapp_number,
@@ -833,7 +856,7 @@ function AITab({ showToast }: { showToast: (m: string, t?: ToastProps['type']) =
           disabled={!ai.enabled} />
 
         <div className="pt-5">
-          <p className="text-sm font-semibold mb-3" style={{ color: '#00113a' }}>סגנון תגובה ברירת מחדל</p>
+          <p className="text-sm font-semibold mb-3 text-primary">סגנון תגובה ברירת מחדל</p>
           <div className="grid grid-cols-2 gap-2">
             {TONES.map((t) => {
               const info = TONE_LABELS[t];
@@ -846,7 +869,7 @@ function AITab({ showToast }: { showToast: (m: string, t?: ToastProps['type']) =
                     <span className="font-bold text-sm" style={{ color: info.color }}>{info.he}</span>
                     {active && <span className="material-symbols-outlined text-[14px] icon-filled" style={{ color: info.color }}>check_circle</span>}
                   </div>
-                  <p className="text-xs" style={{ color: '#757682' }}>{info.desc}</p>
+                  <p className="text-xs text-outline">{info.desc}</p>
                 </button>
               );
             })}
@@ -860,12 +883,11 @@ function AITab({ showToast }: { showToast: (m: string, t?: ToastProps['type']) =
           <input type="tel" value={ai.whatsapp_number}
             onChange={(e) => setAI({ ...ai, whatsapp_number: e.target.value })}
             placeholder="+972501234567"
-            className="flex-1 px-3 py-2.5 rounded-xl text-sm outline-none"
-            style={{ backgroundColor: '#f3f4f5', border: '1px solid rgba(197,198,210,0.5)', color: '#191c1d', direction: 'ltr' }}
-            onFocus={(e) => { e.target.style.borderColor = '#25D366'; }}
-            onBlur={(e) => { e.target.style.borderColor = 'rgba(197,198,210,0.5)'; }} />
+            dir="ltr"
+            aria-label="מספר WhatsApp"
+            className="flex-1 px-3 py-2.5 rounded-xl text-sm outline-none bg-surface-container-low border border-outline-variant/50 text-on-surface focus:border-[#25D366] transition-colors" />
         </div>
-        <p className="text-xs mt-2" style={{ color: '#757682' }}>פורמט: +972 ואז מספר הטלפון (ללא 0 בהתחלה)</p>
+        <p className="text-xs mt-2 text-outline">פורמט: +972 ואז מספר הטלפון (ללא 0 בהתחלה)</p>
       </SectionCard>
 
       <SaveBtn onSave={handleSave} saved={saved} />
@@ -878,28 +900,35 @@ function AITab({ showToast }: { showToast: (m: string, t?: ToastProps['type']) =
 function TeamTab({ showToast }: { showToast: (m: string, t?: ToastProps['type']) => void }) {
   const { user, isDemo } = useAuth();
   const { business } = useBusiness();
-  const [members, setMembers] = useState<TeamMember[]>([]);
-  const [loading, setLoading]           = useState(!isDemo);
+  const userId = isDemo ? null : user?.id ?? null;
+  const [members, setMembers] = useState<TeamMember[]>(
+    () => (isDemo ? INITIAL_MEMBERS.filter(m => m.id !== 'u1') : [])
+  );
+  const [fetchedKey, setFetchedKey]     = useState<string | null>(null);
   const [showInvite, setShowInvite]     = useState(false);
   const [removeId, setRemoveId]         = useState<string | null>(null);
   const [showPermissions, setShowPerms] = useState(false);
 
   useEffect(() => {
-    if (isDemo) { setMembers(INITIAL_MEMBERS.filter(m => m.id !== 'u1')); setLoading(false); return; }
-    if (!user) { setLoading(false); return; }
+    if (!userId) return;
+    let cancelled = false;
     supabase
       .from('team_members')
       .select('*')
-      .eq('owner_id', user.id)
+      .eq('owner_id', userId)
       .order('joined_at', { ascending: true })
       .then(({ data }) => {
+        if (cancelled) return;
         if (data) setMembers(data.map(m => ({
           ...m,
           initials: (m.name as string).split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || (m.email as string).slice(0, 2).toUpperCase(),
         })));
-        setLoading(false);
+        setFetchedKey(userId);
       });
-  }, [user?.id, isDemo]);
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  const loading = userId != null && fetchedKey !== userId;
 
   // Owner row — derived from auth, always shown first, not removable
   const meta = (user?.user_metadata ?? {}) as Record<string, string>;
@@ -972,20 +1001,18 @@ function TeamTab({ showToast }: { showToast: (m: string, t?: ToastProps['type'])
       {removeId && (
         <Overlay onClose={() => setRemoveId(null)}>
           <ModalBox title="הסרת חבר צוות" icon="person_remove" onClose={() => setRemoveId(null)}>
-            <p className="text-sm mb-5" style={{ color: '#444650' }}>
+            <p className="text-sm mb-5 text-on-surface-variant">
               האם אתה בטוח שברצונך להסיר את{' '}
-              <strong style={{ color: '#00113a' }}>{members.find(m => m.id === removeId)?.name}</strong> מהצוות?
+              <strong className="text-primary">{members.find(m => m.id === removeId)?.name}</strong> מהצוות?
               הפעולה לא ניתנת לביטול.
             </p>
             <div className="flex gap-3">
               <button onClick={() => handleRemove(removeId!)}
-                className="flex-1 py-2.5 rounded-xl font-bold text-sm cursor-pointer hover:opacity-80"
-                style={{ backgroundColor: '#fee2e2', color: '#991b1b' }}>
+                className="flex-1 py-2.5 rounded-xl font-bold text-sm cursor-pointer hover:opacity-80 bg-red-100 text-red-800">
                 הסר מהצוות
               </button>
               <button onClick={() => setRemoveId(null)}
-                className="px-5 py-2.5 rounded-xl font-bold text-sm cursor-pointer border"
-                style={{ color: '#444650', borderColor: 'rgba(197,198,210,0.5)' }}>
+                className="px-5 py-2.5 rounded-xl font-bold text-sm cursor-pointer border text-on-surface-variant border-outline-variant/50">
                 ביטול
               </button>
             </div>
@@ -996,8 +1023,7 @@ function TeamTab({ showToast }: { showToast: (m: string, t?: ToastProps['type'])
       <SectionCard title="חברי הצוות" subtitle={`${activeMembers.length} חברים פעילים${pendingMembers.length ? ` · ${pendingMembers.length} ממתינים` : ''}`}>
         <div className="flex justify-between items-center mb-5">
           <button onClick={() => setShowPerms(!showPermissions)}
-            className="flex items-center gap-1.5 text-xs font-semibold cursor-pointer"
-            style={{ color: '#871dd3' }}>
+            className="flex items-center gap-1.5 text-xs font-semibold cursor-pointer text-secondary">
             <span className="material-symbols-outlined text-[14px]">info</span>
             {showPermissions ? 'הסתר הרשאות' : 'הצג מטריצת הרשאות'}
           </button>
@@ -1010,11 +1036,11 @@ function TeamTab({ showToast }: { showToast: (m: string, t?: ToastProps['type'])
         </div>
 
         {showPermissions && (
-          <div className="mb-5 rounded-xl overflow-hidden border" style={{ borderColor: 'rgba(197,198,210,0.3)' }}>
+          <div className="mb-5 rounded-xl overflow-hidden border border-outline-variant/30">
             <table className="w-full text-sm">
               <thead>
-                <tr style={{ backgroundColor: '#f3f4f5' }}>
-                  <th className="px-4 py-2.5 text-right text-xs font-semibold" style={{ color: '#444650' }}>פיצ'ר</th>
+                <tr className="bg-surface-container-low">
+                  <th className="px-4 py-2.5 text-right text-xs font-semibold text-on-surface-variant">פיצ'ר</th>
                   {(['admin', 'manager', 'viewer'] as MemberRole[]).map(r => (
                     <th key={r} className="px-3 py-2.5 text-center text-xs font-bold" style={{ color: ROLE_META[r].color }}>
                       {ROLE_META[r].label}
@@ -1025,7 +1051,7 @@ function TeamTab({ showToast }: { showToast: (m: string, t?: ToastProps['type'])
               <tbody>
                 {PERMISSIONS.map(({ feature, admin, manager, viewer }, i) => (
                   <tr key={feature} style={{ backgroundColor: i % 2 === 0 ? '#fff' : '#fafafa', borderTop: '1px solid rgba(197,198,210,0.2)' }}>
-                    <td className="px-4 py-2.5 text-xs" style={{ color: '#191c1d' }}>{feature}</td>
+                    <td className="px-4 py-2.5 text-xs text-on-surface">{feature}</td>
                     {[admin, manager, viewer].map((allowed, j) => (
                       <td key={j} className="px-3 py-2.5 text-center">
                         <span className="material-symbols-outlined text-[16px] icon-filled" style={{ color: allowed ? '#16a34a' : '#c5c6d2' }}>
@@ -1042,20 +1068,19 @@ function TeamTab({ showToast }: { showToast: (m: string, t?: ToastProps['type'])
 
         <div className="space-y-2">
           {activeMembers.map(m => (
-            <div key={m.id} className="flex items-center gap-3 p-3 rounded-xl transition-colors"
-              style={{ backgroundColor: '#f8f9fa', border: '1px solid rgba(197,198,210,0.3)' }}>
+            <div key={m.id} className="flex items-center gap-3 p-3 rounded-xl transition-colors bg-background border border-outline-variant/30">
               <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
                 style={{ backgroundColor: m.id === OWNER_ID ? 'rgba(135,29,211,0.15)' : '#edeeef', color: m.id === OWNER_ID ? '#871dd3' : '#444650' }}>
                 {m.initials}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-semibold truncate" style={{ color: '#00113a' }}>{m.name}</p>
+                  <p className="text-sm font-semibold truncate text-primary">{m.name}</p>
                   {m.id === OWNER_ID && (
-                    <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: '#edeeef', color: '#757682' }}>אתה</span>
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-surface-container text-outline">אתה</span>
                   )}
                 </div>
-                <p className="text-xs truncate" style={{ color: '#757682', direction: 'ltr' }}>{m.email}</p>
+                <p dir="ltr" className="text-xs truncate text-outline">{m.email}</p>
               </div>
               {m.id === OWNER_ID ? (
                 <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ backgroundColor: ROLE_META[m.role].bg, color: ROLE_META[m.role].color }}>
@@ -1075,10 +1100,8 @@ function TeamTab({ showToast }: { showToast: (m: string, t?: ToastProps['type'])
               )}
               {m.id !== OWNER_ID && (
                 <button onClick={() => setRemoveId(m.id)}
-                  className="p-1.5 rounded-lg cursor-pointer transition-colors flex-shrink-0"
-                  style={{ color: '#ba1a1a' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '#fee2e2'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; }}>
+                  aria-label={`הסר את ${m.name}`}
+                  className="p-1.5 rounded-lg cursor-pointer transition-colors flex-shrink-0 text-error hover:bg-red-100">
                   <span className="material-symbols-outlined text-[18px]">person_remove</span>
                 </button>
               )}
@@ -1095,8 +1118,8 @@ function TeamTab({ showToast }: { showToast: (m: string, t?: ToastProps['type'])
                 style={{ backgroundColor: '#fef9c3', border: '1px solid rgba(234,179,8,0.3)' }}>
                 <span className="material-symbols-outlined text-[20px] icon-filled" style={{ color: '#d97706' }}>schedule</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold truncate" style={{ color: '#00113a' }}>{m.email}</p>
-                  <p className="text-xs" style={{ color: '#757682' }}>
+                  <p className="text-sm font-semibold truncate text-primary">{m.email}</p>
+                  <p className="text-xs text-outline">
                     הוזמן בתפקיד {ROLE_META[m.role].label} · {new Date(m.joined_at).toLocaleDateString('he-IL')}
                   </p>
                 </div>
@@ -1121,23 +1144,29 @@ function TeamTab({ showToast }: { showToast: (m: string, t?: ToastProps['type'])
 
 function IntegrationsTab({ showToast }: { showToast: (m: string, t?: ToastProps['type']) => void }) {
   const { user, isDemo } = useAuth();
+  const userId = isDemo ? null : user?.id ?? null;
   const [connected, setConnected]       = useState<string[]>(isDemo ? ['google'] : []);
-  const [loading, setLoading]           = useState(!isDemo);
+  const [fetchedKey, setFetchedKey]     = useState<string | null>(null);
   const [syncing, setSyncing]           = useState<string | null>(null);
   const [connecting, setConnecting]     = useState<typeof INTEGRATIONS_CONFIG[number] | null>(null);
   const [disconnectId, setDisconnectId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isDemo || !user) { setLoading(false); return; }
+    if (!userId) return;
+    let cancelled = false;
     supabase
       .from('platform_connections')
       .select('platform')
-      .eq('owner_id', user.id)
+      .eq('owner_id', userId)
       .then(({ data }) => {
+        if (cancelled) return;
         if (data) setConnected(data.map(r => r.platform as string));
-        setLoading(false);
+        setFetchedKey(userId);
       });
-  }, [user?.id, isDemo]);
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  const loading = userId != null && fetchedKey !== userId;
 
   const handleSync = (id: string) => {
     setSyncing(id);
@@ -1179,18 +1208,16 @@ function IntegrationsTab({ showToast }: { showToast: (m: string, t?: ToastProps[
       {disconnectId && (
         <Overlay onClose={() => setDisconnectId(null)}>
           <ModalBox title="ניתוק פלטפורמה" icon="link_off" onClose={() => setDisconnectId(null)}>
-            <p className="text-sm mb-5" style={{ color: '#444650' }}>
+            <p className="text-sm mb-5 text-on-surface-variant">
               ניתוק הפלטפורמה יפסיק את סנכרון הביקורות. הביקורות הקיימות לא יימחקו.
             </p>
             <div className="flex gap-3">
               <button onClick={() => handleDisconnect(disconnectId)}
-                className="flex-1 py-2.5 rounded-xl font-bold text-sm cursor-pointer hover:opacity-80"
-                style={{ backgroundColor: '#fee2e2', color: '#991b1b' }}>
+                className="flex-1 py-2.5 rounded-xl font-bold text-sm cursor-pointer hover:opacity-80 bg-red-100 text-red-800">
                 נתק
               </button>
               <button onClick={() => setDisconnectId(null)}
-                className="px-5 py-2.5 rounded-xl font-bold text-sm cursor-pointer border"
-                style={{ color: '#444650', borderColor: 'rgba(197,198,210,0.5)' }}>
+                className="px-5 py-2.5 rounded-xl font-bold text-sm cursor-pointer border text-on-surface-variant border-outline-variant/50">
                 ביטול
               </button>
             </div>
@@ -1212,16 +1239,16 @@ function IntegrationsTab({ showToast }: { showToast: (m: string, t?: ToastProps[
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold" style={{ color: '#00113a' }}>{p.name}</p>
+                    <p className="text-sm font-semibold text-primary">{p.name}</p>
                     {isConnected && (
-                      <span className="flex items-center gap-0.5 text-xs font-bold" style={{ color: '#16a34a' }}>
-                        <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ backgroundColor: '#16a34a' }} />
+                      <span className="flex items-center gap-0.5 text-xs font-bold text-green-600">
+                        <span className="w-1.5 h-1.5 rounded-full inline-block bg-green-600" />
                         מחובר
                       </span>
                     )}
                   </div>
                   {isConnected && p.reviews > 0 && (
-                    <p className="text-xs" style={{ color: '#757682' }}>{p.reviews} ביקורות · סונכרן {p.lastSync}</p>
+                    <p className="text-xs text-outline">{p.reviews} ביקורות · סונכרן {p.lastSync}</p>
                   )}
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -1277,8 +1304,7 @@ function BillingTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
               <p className="text-white/70 text-xs">חידוש ב-1 בינואר 2025</p>
             </div>
             <button onClick={() => setShowUpgrade(true)}
-              className="bg-white px-4 py-2 rounded-xl text-xs font-bold cursor-pointer hover:opacity-90 flex items-center gap-1.5"
-              style={{ color: '#871dd3' }}>
+              className="bg-white px-4 py-2 rounded-xl text-xs font-bold cursor-pointer hover:opacity-90 flex items-center gap-1.5 text-secondary">
               <span className="material-symbols-outlined text-[14px] icon-filled">stars</span>
               שדרג ל-Pro
             </button>
@@ -1293,15 +1319,15 @@ function BillingTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
             return (
               <div key={label}>
                 <div className="flex justify-between items-center mb-1.5">
-                  <p className="text-sm font-semibold" style={{ color: '#191c1d' }}>{label}</p>
-                  <p className="text-xs font-bold" style={{ color: critical ? '#dc2626' : '#757682' }}>{used} / {limit}</p>
+                  <p className="text-sm font-semibold text-on-surface">{label}</p>
+                  <p className={`text-xs font-bold ${critical ? 'text-red-600' : 'text-outline'}`}>{used} / {limit}</p>
                 </div>
-                <div className="h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: '#f3f4f5' }}>
+                <div className="h-2.5 rounded-full overflow-hidden bg-surface-container-low">
                   <div className="h-full rounded-full transition-all duration-700"
                     style={{ width: `${pct}%`, backgroundColor: critical ? '#dc2626' : color }} />
                 </div>
                 {critical && (
-                  <p className="text-xs mt-1 font-semibold flex items-center gap-1" style={{ color: '#dc2626' }}>
+                  <p className="text-xs mt-1 font-semibold flex items-center gap-1 text-red-600">
                     <span className="material-symbols-outlined text-[13px]">warning</span>
                     מתקרב למגבלה — שדרג לגישה ללא הגבלה
                   </p>
@@ -1322,9 +1348,9 @@ function BillingTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
             { icon: 'link',           label: 'כל הפלטפורמות' },
             { icon: 'support_agent',  label: 'תמיכה מועדפת' },
           ].map(({ icon, label }) => (
-            <div key={label} className="flex items-center gap-2.5 p-3 rounded-xl" style={{ backgroundColor: '#f8f9fa' }}>
-              <span className="material-symbols-outlined text-[18px] icon-filled" style={{ color: '#871dd3' }}>{icon}</span>
-              <span className="text-sm font-medium" style={{ color: '#191c1d' }}>{label}</span>
+            <div key={label} className="flex items-center gap-2.5 p-3 rounded-xl bg-background">
+              <span className="material-symbols-outlined text-[18px] icon-filled text-secondary">{icon}</span>
+              <span className="text-sm font-medium text-on-surface">{label}</span>
             </div>
           ))}
         </div>
@@ -1348,22 +1374,20 @@ export default function Settings() {
   const { toast, show: showToast } = useToast();
 
   return (
-    <div className="min-h-screen px-6 md:px-16 py-8" style={{ backgroundColor: '#f8f9fa' }}>
+    <div className="min-h-screen px-6 md:px-16 py-8 bg-background">
       <div className="max-w-screen-lg mx-auto">
-        <h1 className="text-4xl font-extrabold mb-1" style={{ color: '#00113a' }}>הגדרות</h1>
-        <p className="text-sm mb-6" style={{ color: '#444650' }}>נהל את הגדרות החשבון, הצוות והמערכת</p>
+        <h1 className="text-4xl font-extrabold mb-1 text-primary">הגדרות</h1>
+        <p className="text-sm mb-6 text-on-surface-variant">נהל את הגדרות החשבון, הצוות והמערכת</p>
 
         <div className="flex flex-col md:flex-row gap-6">
           {/* Sidebar tabs */}
-          <div className="md:w-52 rounded-2xl p-2 flex flex-row md:flex-col gap-1 h-fit overflow-x-auto md:overflow-visible md:sticky md:top-6"
-            style={{ backgroundColor: '#fff', boxShadow: '0 2px 12px rgba(0,0,0,0.05)', border: '1px solid rgba(197,198,210,0.3)', scrollbarWidth: 'none' }}>
+          <div className="md:w-52 rounded-2xl p-2 flex flex-row md:flex-col gap-1 h-fit overflow-x-auto md:overflow-visible md:sticky md:top-6 bg-white border border-outline-variant/30"
+            style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.05)', scrollbarWidth: 'none' }}>
             {TABS.map(({ id, label, icon }) => (
               <button key={id} onClick={() => setTab(id)}
-                className="flex flex-col md:flex-row items-center md:items-center gap-1 md:gap-2.5 px-2 md:px-3 py-2 md:py-2.5 rounded-xl font-medium transition-all text-center md:text-right cursor-pointer flex-shrink-0 min-w-[56px] md:min-w-0 md:w-full"
-                style={tab === id
-                  ? { backgroundColor: 'rgba(135,29,211,0.08)', color: '#871dd3', fontWeight: 700 }
-                  : { color: '#444650' }
-                }>
+                className={`flex flex-col md:flex-row items-center md:items-center gap-1 md:gap-2.5 px-2 md:px-3 py-2 md:py-2.5 rounded-xl transition-all text-center md:text-right cursor-pointer flex-shrink-0 min-w-[56px] md:min-w-0 md:w-full ${
+                  tab === id ? 'bg-secondary/8 text-secondary font-bold' : 'text-on-surface-variant font-medium'
+                }`}>
                 <span className={`material-symbols-outlined text-[20px] md:text-[18px] ${tab === id ? 'icon-filled' : ''}`}>{icon}</span>
                 <span className="text-[10px] md:text-sm whitespace-nowrap leading-tight">{label}</span>
               </button>

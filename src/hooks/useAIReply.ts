@@ -24,7 +24,7 @@ export function useAIReply() {
   const generate = async (
     review: { id: string; reviewer_name: string; rating: number; content: string },
     tone: ToneType,
-  ) => {
+  ): Promise<string[]> => {
     setState((s) => ({ ...s, isLoading: true, error: null, suggestions: [], whatsAppSent: false }));
     try {
       const { data, error } = await supabase.functions.invoke('generate-replies', {
@@ -37,24 +37,27 @@ export function useAIReply() {
         },
       });
       if (error) throw error;
+      const suggestions: string[] = data.suggestions ?? [];
       setState((s) => ({
         ...s,
-        suggestions: data.suggestions ?? [],
+        suggestions,
         sessionId: data.session_id ?? null,
         isLoading: false,
       }));
+      return suggestions;
     } catch {
       // Demo fallback when edge function is not deployed yet
       const demo = buildDemoSuggestions(review.reviewer_name, review.rating, review.content, tone);
       setState((s) => ({ ...s, suggestions: demo, isLoading: false, error: null }));
+      return demo;
     }
   };
 
   const sendWhatsApp = async (
     to: string,
     review: { reviewer_name: string; rating: number; content: string },
-  ) => {
-    if (!state.suggestions.length) return;
+  ): Promise<boolean> => {
+    if (!state.suggestions.length) return false;
     setState((s) => ({ ...s, isSendingWhatsApp: true, error: null }));
 
     try {
@@ -70,12 +73,14 @@ export function useAIReply() {
       });
       if (error) throw error;
       setState((s) => ({ ...s, isSendingWhatsApp: false, whatsAppSent: true }));
-    } catch (err) {
+      return true;
+    } catch {
       setState((s) => ({
         ...s,
         isSendingWhatsApp: false,
         error: 'שגיאה בשליחת WhatsApp — בדוק את הגדרות GREEN API',
       }));
+      return false;
     }
   };
 

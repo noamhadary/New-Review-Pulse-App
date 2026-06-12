@@ -19,30 +19,30 @@ function validate(form: { name: string; business: string; email: string; passwor
 
 // ── Shared input ───────────────────────────────────────────────────────────────
 
+const INPUT_CLASS =
+  'w-full px-4 py-3 rounded-xl text-sm outline-none transition-all bg-surface-container-low text-on-surface border-2';
+
 function Field({
-  label, value, onChange, type = 'text', placeholder, dir = 'rtl', error,
+  id, label, value, onChange, type = 'text', placeholder, dir = 'rtl', error, autoComplete,
 }: {
-  label: string; value: string; onChange: (v: string) => void;
-  type?: string; placeholder?: string; dir?: 'ltr' | 'rtl'; error?: boolean;
+  id: string; label: string; value: string; onChange: (v: string) => void;
+  type?: string; placeholder?: string; dir?: 'ltr' | 'rtl'; error?: boolean; autoComplete?: string;
 }) {
   return (
     <div>
-      <label className="block text-sm font-semibold mb-1.5" style={{ color: '#00113a' }}>{label}</label>
+      <label htmlFor={id} className="block text-sm font-semibold mb-1.5 text-primary">{label}</label>
       <input
+        id={id}
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         required
-        className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
-        style={{
-          backgroundColor: '#f3f4f5',
-          border: `2px solid ${error ? '#dc2626' : 'rgba(197,198,210,0.5)'}`,
-          color: '#191c1d',
-          direction: dir,
-        }}
-        onFocus={(e) => { e.target.style.borderColor = error ? '#dc2626' : '#871dd3'; }}
-        onBlur={(e)  => { e.target.style.borderColor = error ? '#dc2626' : 'rgba(197,198,210,0.5)'; }}
+        dir={dir}
+        autoComplete={autoComplete}
+        className={`${INPUT_CLASS} ${error
+          ? 'border-red-600 focus:border-red-600'
+          : 'border-outline-variant/50 focus:border-secondary'}`}
       />
     </div>
   );
@@ -92,20 +92,18 @@ function VerifyScreen({ email, onResend, onBack, resendCooldown }: {
         <span className="material-symbols-outlined text-white text-[36px] icon-filled">mark_email_read</span>
       </div>
 
-      <h2 className="text-2xl font-extrabold mb-2" style={{ color: '#00113a' }}>בדוק את האימייל שלך</h2>
-      <p className="text-sm mb-1" style={{ color: '#444650' }}>שלחנו לינק אימות לכתובת:</p>
-      <p className="font-bold text-sm mb-4 px-3 py-2 rounded-xl inline-block"
-        style={{ color: '#871dd3', backgroundColor: 'rgba(135,29,211,0.08)', direction: 'ltr' }}>
+      <h2 className="text-2xl font-extrabold mb-2 text-primary">בדוק את האימייל שלך</h2>
+      <p className="text-sm mb-1 text-on-surface-variant">שלחנו לינק אימות לכתובת:</p>
+      <p dir="ltr" className="font-bold text-sm mb-4 px-3 py-2 rounded-xl inline-block text-secondary bg-secondary/8">
         {email}
       </p>
-      <p className="text-sm leading-relaxed mb-6" style={{ color: '#757682' }}>
+      <p className="text-sm leading-relaxed mb-6 text-outline">
         לחץ על הלינק באימייל כדי לאמת את החשבון ולהתחבר למערכת.
         <br />הלינק תקף ל-24 שעות.
       </p>
 
       {/* Tips */}
-      <div className="text-right rounded-xl p-4 mb-6 text-sm space-y-1.5"
-        style={{ backgroundColor: '#f3f4f5', color: '#444650' }}>
+      <div className="text-right rounded-xl p-4 mb-6 text-sm space-y-1.5 bg-surface-container-low text-on-surface-variant">
         <p className="flex items-center gap-2">
           <span className="material-symbols-outlined text-[16px] icon-filled" style={{ color: '#d97706' }}>info</span>
           לא מצאת? בדוק גם בתיקיית הספאם
@@ -120,12 +118,11 @@ function VerifyScreen({ email, onResend, onBack, resendCooldown }: {
       <button
         onClick={onResend}
         disabled={resendCooldown > 0}
-        className="w-full py-3 rounded-xl font-bold text-sm cursor-pointer transition-all hover:opacity-80 disabled:opacity-50 mb-3"
-        style={{ backgroundColor: 'rgba(135,29,211,0.1)', color: '#871dd3' }}>
+        className="w-full py-3 rounded-xl font-bold text-sm cursor-pointer transition-all hover:opacity-80 disabled:opacity-50 mb-3 bg-secondary/10 text-secondary">
         {resendCooldown > 0 ? `שלח שוב בעוד ${resendCooldown} שניות` : 'שלח אימייל מחדש'}
       </button>
 
-      <button onClick={onBack} className="text-sm cursor-pointer hover:underline" style={{ color: '#757682' }}>
+      <button onClick={onBack} className="text-sm cursor-pointer hover:underline text-outline">
         חזור לטופס הרשמה
       </button>
     </div>
@@ -234,13 +231,13 @@ export default function Register() {
             style={{ width: 130, maxWidth: '42%', height: 'auto', objectFit: 'contain', display: 'block', margin: '0 auto', filter: 'drop-shadow(0 0 20px rgba(135,29,211,0.55))' }}
             onClick={() => navigate('/')}
           />
-          <p className="mt-2 text-sm" style={{ color: '#758dd5' }}>
+          <p className="mt-2 text-sm text-on-primary-container">
             {stage === 'form' ? 'הצטרף לאלפי עסקים שמנהלים את המוניטין שלהם' : 'כמעט סיימנו!'}
           </p>
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl p-8" style={{ backgroundColor: '#ffffff', boxShadow: '0 25px 50px rgba(0,0,0,0.4)' }}>
+        <div className="rounded-2xl p-8 bg-white" style={{ boxShadow: '0 25px 50px rgba(0,0,0,0.4)' }}>
 
           {stage === 'verify' ? (
             <VerifyScreen
@@ -251,12 +248,11 @@ export default function Register() {
             />
           ) : (
             <>
-              <h2 className="text-2xl font-bold mb-6 text-center" style={{ color: '#00113a' }}>יצירת חשבון</h2>
+              <h2 className="text-2xl font-bold mb-6 text-center text-primary">יצירת חשבון</h2>
 
               {/* Global error */}
               {error && (
-                <div className="mb-4 px-4 py-3 rounded-xl text-sm flex items-center gap-2"
-                  style={{ backgroundColor: '#ffdad6', color: '#93000a' }}>
+                <div className="mb-4 px-4 py-3 rounded-xl text-sm flex items-center gap-2 bg-error-container text-on-error-container">
                   <span className="material-symbols-outlined text-[18px] flex-shrink-0">error</span>
                   {error}
                 </div>
@@ -273,37 +269,31 @@ export default function Register() {
 
               <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-4" noValidate>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Field label="שם מלא"   value={form.name}     onChange={set('name')}     placeholder="ישראל ישראלי" />
-                  <Field label="שם העסק"  value={form.business} onChange={set('business')} placeholder="קפה ישראל" />
+                  <Field id="reg-name"     label="שם מלא"   value={form.name}     onChange={set('name')}     placeholder="ישראל ישראלי" autoComplete="name" />
+                  <Field id="reg-business" label="שם העסק"  value={form.business} onChange={set('business')} placeholder="קפה ישראל" autoComplete="organization" />
                 </div>
 
-                <Field label="אימייל" value={form.email} onChange={set('email')}
-                  type="email" placeholder="your@email.com" dir="ltr" />
+                <Field id="reg-email" label="אימייל" value={form.email} onChange={set('email')}
+                  type="email" placeholder="your@email.com" dir="ltr" autoComplete="email" />
 
                 {/* Password with toggle */}
                 <div>
-                  <label className="block text-sm font-semibold mb-1.5" style={{ color: '#00113a' }}>סיסמה</label>
+                  <label htmlFor="reg-password" className="block text-sm font-semibold mb-1.5 text-primary">סיסמה</label>
                   <div className="relative">
                     <input
+                      id="reg-password"
                       type={showPassword ? 'text' : 'password'}
                       value={form.password}
                       onChange={(e) => set('password')(e.target.value)}
                       placeholder="לפחות 8 תווים"
                       required
-                      className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
-                      style={{
-                        backgroundColor: '#f3f4f5',
-                        border: '2px solid rgba(197,198,210,0.5)',
-                        color: '#191c1d',
-                        direction: 'ltr',
-                        paddingLeft: '44px',
-                      }}
-                      onFocus={(e) => { e.target.style.borderColor = '#871dd3'; }}
-                      onBlur={(e)  => { e.target.style.borderColor = 'rgba(197,198,210,0.5)'; }}
+                      dir="ltr"
+                      autoComplete="new-password"
+                      className={`${INPUT_CLASS} pl-11 border-outline-variant/50 focus:border-secondary`}
                     />
                     <button type="button" onClick={() => setShowPassword(!showPassword)}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 cursor-pointer"
-                      style={{ color: '#757682' }}>
+                      aria-label={showPassword ? 'הסתר סיסמה' : 'הצג סיסמה'}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 cursor-pointer text-outline">
                       <span className="material-symbols-outlined text-[18px]">
                         {showPassword ? 'visibility_off' : 'visibility'}
                       </span>
@@ -314,25 +304,22 @@ export default function Register() {
 
                 {/* Confirm password */}
                 <div>
-                  <label className="block text-sm font-semibold mb-1.5" style={{ color: '#00113a' }}>אימות סיסמה</label>
+                  <label htmlFor="reg-confirm" className="block text-sm font-semibold mb-1.5 text-primary">אימות סיסמה</label>
                   <input
+                    id="reg-confirm"
                     type={showPassword ? 'text' : 'password'}
                     value={form.confirm}
                     onChange={(e) => set('confirm')(e.target.value)}
                     placeholder="הזן שוב את הסיסמה"
                     required
-                    className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
-                    style={{
-                      backgroundColor: '#f3f4f5',
-                      border: `2px solid ${form.confirm && form.confirm !== form.password ? '#dc2626' : 'rgba(197,198,210,0.5)'}`,
-                      color: '#191c1d',
-                      direction: 'ltr',
-                    }}
-                    onFocus={(e) => { e.target.style.borderColor = form.confirm !== form.password ? '#dc2626' : '#871dd3'; }}
-                    onBlur={(e)  => { e.target.style.borderColor = form.confirm && form.confirm !== form.password ? '#dc2626' : 'rgba(197,198,210,0.5)'; }}
+                    dir="ltr"
+                    autoComplete="new-password"
+                    className={`${INPUT_CLASS} ${form.confirm && form.confirm !== form.password
+                      ? 'border-red-600 focus:border-red-600'
+                      : 'border-outline-variant/50 focus:border-secondary'}`}
                   />
                   {form.confirm && form.confirm !== form.password && (
-                    <p className="text-xs mt-1" style={{ color: '#dc2626' }}>הסיסמאות אינן תואמות</p>
+                    <p className="text-xs mt-1 text-red-600">הסיסמאות אינן תואמות</p>
                   )}
                   {form.confirm && form.confirm === form.password && form.password.length >= 8 && (
                     <p className="text-xs mt-1 flex items-center gap-1" style={{ color: '#16a34a' }}>
@@ -345,8 +332,8 @@ export default function Register() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3.5 rounded-xl font-bold text-sm transition-all hover:opacity-90 active:scale-95 cursor-pointer disabled:opacity-60 mt-2 flex items-center justify-center gap-2"
-                  style={{ background: 'linear-gradient(135deg,#002366,#871dd3)', color: '#ffffff' }}>
+                  className="w-full py-3.5 rounded-xl font-bold text-sm transition-all hover:opacity-90 active:scale-95 cursor-pointer disabled:opacity-60 mt-2 flex items-center justify-center gap-2 text-white"
+                  style={{ background: 'linear-gradient(135deg,#002366,#871dd3)' }}>
                   {loading ? (
                     <>
                       <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
@@ -361,9 +348,9 @@ export default function Register() {
                 </button>
               </form>
 
-              <p className="text-center text-sm mt-5" style={{ color: '#444650' }}>
+              <p className="text-center text-sm mt-5 text-on-surface-variant">
                 יש לך כבר חשבון?{' '}
-                <Link to="/auth/login" className="font-bold" style={{ color: '#871dd3' }}>התחבר</Link>
+                <Link to="/auth/login" className="font-bold text-secondary">התחבר</Link>
               </p>
             </>
           )}

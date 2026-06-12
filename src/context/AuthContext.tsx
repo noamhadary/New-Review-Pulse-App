@@ -1,26 +1,7 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import type { Session, User } from '@supabase/supabase-js';
+import { useEffect, useState, type ReactNode } from 'react';
+import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-
-interface AuthContextValue {
-  session: Session | null;
-  user: User | null;
-  loading: boolean;
-  signOut: () => Promise<void>;
-  /** True when running without Supabase credentials (demo mode) */
-  isDemo: boolean;
-  /** Activate demo session at runtime (e.g. "try demo" button) */
-  loginAsDemo: () => void;
-}
-
-const AuthContext = createContext<AuthContextValue>({
-  session: null,
-  user: null,
-  loading: true,
-  signOut: async () => {},
-  isDemo: false,
-  loginAsDemo: () => {},
-});
+import { AuthContext } from './auth-context';
 
 const DEMO_MODE =
   !import.meta.env.VITE_SUPABASE_URL ||
@@ -28,17 +9,14 @@ const DEMO_MODE =
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  // In demo mode there is nothing to load — pretend we're logged in so the app is usable
+  const [loading, setLoading] = useState(!DEMO_MODE);
   const [runtimeDemo, setRuntimeDemo] = useState(
     () => sessionStorage.getItem('rp_demo') === '1'
   );
 
   useEffect(() => {
-    if (DEMO_MODE) {
-      // In demo mode pretend we're logged in so the app is usable
-      setLoading(false);
-      return;
-    }
+    if (DEMO_MODE) return;
 
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
@@ -80,8 +58,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  return useContext(AuthContext);
 }

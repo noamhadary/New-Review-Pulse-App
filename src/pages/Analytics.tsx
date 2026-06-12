@@ -14,10 +14,7 @@ function DarkTooltip({ active, payload, label }: {
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div
-      className="rounded-xl px-4 py-3 shadow-xl text-sm"
-      style={{ backgroundColor: '#00113a', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }}
-    >
+    <div className="rounded-xl px-4 py-3 shadow-xl text-sm bg-primary text-white border border-white/10">
       <p className="font-semibold mb-1">{label}</p>
       {payload.map((p, i) => (
         <p key={i} style={{ color: p.color ?? '#fff' }}>
@@ -37,8 +34,8 @@ function MetricCard({ label, value, sub, icon, color }: {
 }) {
   return (
     <div
-      className="rounded-2xl p-6 flex items-start gap-4"
-      style={{ backgroundColor: '#fff', boxShadow: '0 2px 12px rgba(0,0,0,0.05)', border: '1px solid rgba(197,198,210,0.3)' }}
+      className="rounded-2xl p-6 flex items-start gap-4 bg-white border border-outline-variant/30"
+      style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.05)' }}
     >
       <div
         className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -49,9 +46,9 @@ function MetricCard({ label, value, sub, icon, color }: {
         </span>
       </div>
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wider mb-0.5" style={{ color: '#444650' }}>{label}</p>
-        <p className="text-3xl font-extrabold leading-none" style={{ color: '#00113a' }}>{value}</p>
-        <p className="text-xs mt-1" style={{ color: '#757682' }}>{sub}</p>
+        <p className="text-xs font-semibold uppercase tracking-wider mb-0.5 text-on-surface-variant">{label}</p>
+        <p className="text-3xl font-extrabold leading-none text-primary">{value}</p>
+        <p className="text-xs mt-1 text-outline">{sub}</p>
       </div>
     </div>
   );
@@ -62,15 +59,15 @@ function RatingBar({ rating, count, pct, maxCount }: { rating: string; count: nu
   const color = pct >= 50 ? '#16a34a' : pct >= 20 ? '#d97706' : '#dc2626';
   return (
     <div className="flex items-center gap-3">
-      <span className="text-sm font-semibold w-10 text-left flex-shrink-0" style={{ color: '#00113a', direction: 'ltr' }}>{rating}</span>
-      <div className="flex-1 h-3 rounded-full overflow-hidden" style={{ backgroundColor: '#f3f4f5' }}>
+      <span dir="ltr" className="text-sm font-semibold w-10 text-left flex-shrink-0 text-primary">{rating}</span>
+      <div className="flex-1 h-3 rounded-full overflow-hidden bg-surface-container-low">
         <div
           className="h-full rounded-full transition-all duration-700"
           style={{ width: `${width}%`, backgroundColor: color }}
         />
       </div>
-      <span className="text-xs font-bold w-9 text-left flex-shrink-0" style={{ color: '#444650' }}>{pct}%</span>
-      <span className="text-xs w-8 text-left flex-shrink-0" style={{ color: '#757682' }}>{count}</span>
+      <span className="text-xs font-bold w-9 text-left flex-shrink-0 text-on-surface-variant">{pct}%</span>
+      <span className="text-xs w-8 text-left flex-shrink-0 text-outline">{count}</span>
     </div>
   );
 }
@@ -95,7 +92,7 @@ export default function Analytics() {
   const maxRatingCount = Math.max(...RATING_DIST.map((r) => r.count), 1);
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#f8f9fa' }}>
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <section
         className="px-6 md:px-16 py-10"
@@ -104,7 +101,7 @@ export default function Analytics() {
         <div className="max-w-screen-xl mx-auto flex flex-col md:flex-row justify-between items-end gap-4">
           <div>
             <h2 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">ניתוח מעמיק</h2>
-            <p className="mt-2 text-base" style={{ color: '#758dd5' }}>
+            <p className="mt-2 text-base text-on-primary-container">
               מגמות, פלטפורמות ותובנות על הביקורות שלך
             </p>
           </div>
@@ -113,11 +110,9 @@ export default function Analytics() {
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
-                className="px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer"
-                style={period === p
-                  ? { backgroundColor: '#fff', color: '#00113a' }
-                  : { color: 'rgba(255,255,255,0.7)' }
-                }
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+                  period === p ? 'bg-white text-primary' : 'text-white/70'
+                }`}
               >
                 {p === '3m' ? '3 חודשים' : p === '6m' ? '6 חודשים' : 'שנה'}
               </button>
@@ -141,11 +136,11 @@ export default function Analytics() {
 
           {/* Rating trend */}
           <div
-            className="lg:col-span-2 rounded-2xl p-6 md:p-8"
-            style={{ backgroundColor: '#fff', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid rgba(197,198,210,0.2)' }}
+            className="lg:col-span-2 rounded-2xl p-6 md:p-8 bg-white border border-outline-variant/20"
+            style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}
           >
-            <h3 className="text-xl font-bold mb-1" style={{ color: '#00113a' }}>מגמת ציון לאורך זמן</h3>
-            <p className="text-xs mb-6" style={{ color: '#757682' }}>ציון ממוצע חודשי</p>
+            <h3 className="text-xl font-bold mb-1 text-primary">מגמת ציון לאורך זמן</h3>
+            <p className="text-xs mb-6 text-outline">ציון ממוצע חודשי</p>
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={periodData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
                 <defs>
@@ -174,11 +169,11 @@ export default function Analytics() {
 
           {/* Rating distribution */}
           <div
-            className="rounded-2xl p-6 md:p-8"
-            style={{ backgroundColor: '#fff', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid rgba(197,198,210,0.2)' }}
+            className="rounded-2xl p-6 md:p-8 bg-white border border-outline-variant/20"
+            style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}
           >
-            <h3 className="text-xl font-bold mb-1" style={{ color: '#00113a' }}>פילוג דירוגים</h3>
-            <p className="text-xs mb-6" style={{ color: '#757682' }}>התפלגות לפי כוכבים</p>
+            <h3 className="text-xl font-bold mb-1 text-primary">פילוג דירוגים</h3>
+            <p className="text-xs mb-6 text-outline">התפלגות לפי כוכבים</p>
             <div className="space-y-4">
               {RATING_DIST.map((r) => (
                 <RatingBar key={r.rating} {...r} maxCount={maxRatingCount} />
@@ -194,10 +189,10 @@ export default function Analytics() {
 
           {/* Platform breakdown */}
           <div
-            className="rounded-2xl p-6 md:p-8"
-            style={{ backgroundColor: '#fff', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid rgba(197,198,210,0.2)' }}
+            className="rounded-2xl p-6 md:p-8 bg-white border border-outline-variant/20"
+            style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}
           >
-            <h3 className="text-xl font-bold mb-6" style={{ color: '#00113a' }}>לפי פלטפורמה</h3>
+            <h3 className="text-xl font-bold mb-6 text-primary">לפי פלטפורמה</h3>
             <div className="space-y-4">
               {PLATFORM_DATA.map(({ name, icon, reviews, positive, color }) => (
                 <div key={name}>
@@ -206,14 +201,14 @@ export default function Analytics() {
                       <span className="material-symbols-outlined text-[18px]" style={{ color }}>
                         {icon}
                       </span>
-                      <span className="text-sm font-semibold" style={{ color: '#191c1d' }}>{name}</span>
+                      <span className="text-sm font-semibold text-on-surface">{name}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold" style={{ color: '#16a34a' }}>{positive}%</span>
-                      <span className="text-xs" style={{ color: '#757682' }}>{reviews} ביקורות</span>
+                      <span className="text-xs font-bold text-green-600">{positive}%</span>
+                      <span className="text-xs text-outline">{reviews} ביקורות</span>
                     </div>
                   </div>
-                  <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: '#f3f4f5' }}>
+                  <div className="h-2 rounded-full overflow-hidden bg-surface-container-low">
                     <div
                       className="h-full rounded-full transition-all duration-700"
                       style={{ width: `${(reviews / 247) * 100}%`, backgroundColor: color }}
@@ -226,10 +221,10 @@ export default function Analytics() {
 
           {/* Response rate trend */}
           <div
-            className="rounded-2xl p-6 md:p-8"
-            style={{ backgroundColor: '#fff', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid rgba(197,198,210,0.2)' }}
+            className="rounded-2xl p-6 md:p-8 bg-white border border-outline-variant/20"
+            style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}
           >
-            <h3 className="text-xl font-bold mb-1" style={{ color: '#00113a' }}>שיעור תגובה</h3>
+            <h3 className="text-xl font-bold mb-1 text-primary">שיעור תגובה</h3>
             <p className="text-xs mb-4" style={{ color: '#757682' }}>אחוז ביקורות שקיבלו תגובה</p>
             <ResponsiveContainer width="100%" height={170}>
               <LineChart data={periodData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
@@ -252,10 +247,10 @@ export default function Analytics() {
 
           {/* Hot topics */}
           <div
-            className="rounded-2xl p-6 md:p-8"
-            style={{ backgroundColor: '#fff', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid rgba(197,198,210,0.2)' }}
+            className="rounded-2xl p-6 md:p-8 bg-white border border-outline-variant/20"
+            style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}
           >
-            <h3 className="text-xl font-bold mb-6" style={{ color: '#00113a' }}>נושאים נפוצים</h3>
+            <h3 className="text-xl font-bold mb-6 text-primary">נושאים נפוצים</h3>
             <div className="flex flex-wrap gap-2">
               {TOPICS.map(({ topic, count, positive }) => (
                 <span
@@ -285,7 +280,7 @@ export default function Analytics() {
 
             {/* Volume chart */}
             <div className="mt-6">
-              <p className="text-xs font-semibold mb-3" style={{ color: '#444650' }}>נפח ביקורות חודשי</p>
+              <p className="text-xs font-semibold mb-3 text-on-surface-variant">נפח ביקורות חודשי</p>
               <ResponsiveContainer width="100%" height={100}>
                 <BarChart data={periodData} margin={{ top: 0, right: 0, left: -30, bottom: 0 }}>
                   <XAxis dataKey="month" tick={{ fill: '#444650', fontSize: 10 }} axisLine={false} tickLine={false} />

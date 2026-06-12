@@ -5,7 +5,7 @@ import PulseGauge from '../components/dashboard/PulseGauge';
 import NeedsAttention from '../components/dashboard/NeedsAttention';
 import RecentActivity from '../components/dashboard/RecentActivity';
 import { useDashboard } from '../hooks/useDashboard';
-import { useBusiness } from '../context/BusinessContext';
+import { useBusiness } from '../context/business-context';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -13,21 +13,21 @@ export default function Dashboard() {
   const { business } = useBusiness();
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#f8f9fa' }}>
+    <div className="min-h-screen bg-background">
       <section className="px-6 md:px-16 py-10" style={{ background: 'linear-gradient(135deg, #00113a 0%, #002366 60%, #3a0a6e 100%)' }}>
         <div className="max-w-screen-xl mx-auto flex flex-col md:flex-row justify-between items-end gap-4">
           <div>
             <h2 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">
               {business?.name ? `שלום, ${business.name}` : 'שלום, מנהל המערכת'}
             </h2>
-            <p className="mt-2 text-base" style={{ color: '#758dd5' }}>הנה סקירה של הביצועים שלך להיום.</p>
+            <p className="mt-2 text-base text-on-primary-container">הנה סקירה של הביצועים שלך להיום.</p>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/analytics')} className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all hover:opacity-90 active:scale-95 cursor-pointer" style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.25)' }}>
+            <button onClick={() => navigate('/analytics')} className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all hover:opacity-90 active:scale-95 cursor-pointer bg-white/15 text-white border border-white/25">
               <span className="material-symbols-outlined text-[20px]">analytics</span>
               ניתוח מעמיק
             </button>
-            <button onClick={() => navigate('/reports')} className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all hover:opacity-90 active:scale-95 cursor-pointer shadow-lg" style={{ backgroundColor: '#871dd3', color: '#ffffff' }}>
+            <button onClick={() => navigate('/reports')} className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all hover:opacity-90 active:scale-95 cursor-pointer shadow-lg bg-secondary text-white">
               <span className="material-symbols-outlined text-[20px]">add</span>
               ייצור דוח חדש
             </button>

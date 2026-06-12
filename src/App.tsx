@@ -1,41 +1,53 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { BusinessProvider } from './context/BusinessContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Layout from './components/layout/Layout';
-import Dashboard from './pages/Dashboard';
-import Reviews from './pages/Reviews';
-import Analytics from './pages/Analytics';
-import Reports from './pages/Reports';
-import Onboarding from './pages/Onboarding';
-import Settings from './pages/Settings';
-import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
-import AuthCallback from './pages/auth/AuthCallback';
-import LandingPage from './pages/LandingPage';
+
+const Dashboard    = lazy(() => import('./pages/Dashboard'));
+const Reviews      = lazy(() => import('./pages/Reviews'));
+const Analytics    = lazy(() => import('./pages/Analytics'));
+const Reports      = lazy(() => import('./pages/Reports'));
+const Onboarding   = lazy(() => import('./pages/Onboarding'));
+const Settings     = lazy(() => import('./pages/Settings'));
+const Login        = lazy(() => import('./pages/auth/Login'));
+const Register     = lazy(() => import('./pages/auth/Register'));
+const AuthCallback = lazy(() => import('./pages/auth/AuthCallback'));
+const LandingPage  = lazy(() => import('./pages/LandingPage'));
+
+function PageLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <span className="material-symbols-outlined animate-spin text-secondary text-[32px]">progress_activity</span>
+    </div>
+  );
+}
 
 export default function App() {
   return (
     <AuthProvider>
       <BusinessProvider>
         <BrowserRouter>
-          <Routes>
-            <Route path="/"              element={<LandingPage />} />
-            <Route path="/auth/login"     element={<Login />} />
-            <Route path="/auth/register"  element={<Register />} />
-            <Route path="/auth/callback"  element={<AuthCallback />} />
-            <Route element={<ProtectedRoute />}>
-              <Route element={<Layout />}>
-                <Route path="/dashboard"  element={<Dashboard />} />
-                <Route path="/reviews"    element={<Reviews />} />
-                <Route path="/analytics"  element={<Analytics />} />
-                <Route path="/reports"    element={<Reports />} />
-                <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="/settings"   element={<Settings />} />
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/"              element={<LandingPage />} />
+              <Route path="/auth/login"     element={<Login />} />
+              <Route path="/auth/register"  element={<Register />} />
+              <Route path="/auth/callback"  element={<AuthCallback />} />
+              <Route element={<ProtectedRoute />}>
+                <Route element={<Layout />}>
+                  <Route path="/dashboard"  element={<Dashboard />} />
+                  <Route path="/reviews"    element={<Reviews />} />
+                  <Route path="/analytics"  element={<Analytics />} />
+                  <Route path="/reports"    element={<Reports />} />
+                  <Route path="/onboarding" element={<Onboarding />} />
+                  <Route path="/settings"   element={<Settings />} />
+                </Route>
               </Route>
-            </Route>
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </BusinessProvider>
     </AuthProvider>

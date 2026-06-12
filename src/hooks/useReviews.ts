@@ -1,8 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { MOCK_REVIEWS } from '../lib/mockData';
-import { useBusiness } from '../context/BusinessContext';
+import { useBusiness } from '../context/business-context';
 import type { Review, Platform, Sentiment, ReviewStatus } from '../types';
+
+const IS_DEMO =
+  !import.meta.env.VITE_SUPABASE_URL ||
+  import.meta.env.VITE_SUPABASE_URL === 'https://placeholder.supabase.co';
 
 export interface ReviewFilters {
   platform: Platform | 'all';
@@ -19,74 +23,87 @@ export interface UseReviewsResult {
   updateReview: (id: string, patch: Partial<Review>) => void;
 }
 
+function applyFilters(data: Review[], filters?: Partial<ReviewFilters>): Review[] {
+  let out = data;
+  if (filters?.platform && filters.platform !== 'all')
+    out = out.filter((r) => r.platform === filters.platform);
+  if (filters?.sentiment && filters.sentiment !== 'all')
+    out = out.filter((r) => r.sentiment === filters.sentiment);
+  if (filters?.status && filters.status !== 'all')
+    out = out.filter((r) => r.status === filters.status);
+  if (filters?.search)
+    out = out.filter(
+      (r) =>
+        r.reviewer_name.includes(filters.search!) ||
+        r.content.includes(filters.search!),
+    );
+  return out;
+}
+
 export function useReviews(filters?: Partial<ReviewFilters>): UseReviewsResult {
-  const { business, isDemo } = { ...useBusiness(), isDemo: !import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL === 'https://placeholder.supabase.co' };
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { business } = useBusiness();
   const [tick, setTick] = useState(0);
+  const [fetched, setFetched] = useState<{ key: string; reviews: Review[]; error: string | null } | null>(null);
+  // Local optimistic updates (e.g. marking a review as replied), applied on top of the data
+  const [patches, setPatches] = useState<Record<string, Partial<Review>>>({});
 
-  const fetch = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const demo = IS_DEMO || !business;
+  // Everything the fetch needs is encoded in the key, so the effect depends only on it
+  const fetchKey = demo
+    ? null
+    : JSON.stringify({
+        businessId: business.id,
+        tick,
+        platform: filters?.platform ?? 'all',
+        sentiment: filters?.sentiment ?? 'all',
+        status: filters?.status ?? 'all',
+        search: filters?.search ?? '',
+      });
 
-    if (isDemo || !business) {
-      // Demo mode — use mock data
-      let data = [...MOCK_REVIEWS];
-      if (filters?.platform && filters.platform !== 'all')
-        data = data.filter((r) => r.platform === filters.platform);
-      if (filters?.sentiment && filters.sentiment !== 'all')
-        data = data.filter((r) => r.sentiment === filters.sentiment);
-      if (filters?.status && filters.status !== 'all')
-        data = data.filter((r) => r.status === filters.status);
-      if (filters?.search)
-        data = data.filter(
-          (r) =>
-            r.reviewer_name.includes(filters.search!) ||
-            r.content.includes(filters.search!),
-        );
-      setReviews(data);
-      setLoading(false);
-      return;
-    }
+  useEffect(() => {
+    if (!fetchKey) return;
+    const { businessId, platform, sentiment, status, search } = JSON.parse(fetchKey);
+    let cancelled = false;
 
-    try {
-      let query = supabase
-        .from('reviews')
-        .select('*')
-        .eq('business_id', business.id)
-        .order('created_at', { ascending: false });
+    (async () => {
+      try {
+        let query = supabase
+          .from('reviews')
+          .select('*')
+          .eq('business_id', businessId)
+          .order('created_at', { ascending: false });
 
-      if (filters?.platform && filters.platform !== 'all')
-        query = query.eq('platform', filters.platform);
-      if (filters?.sentiment && filters.sentiment !== 'all')
-        query = query.eq('sentiment', filters.sentiment);
-      if (filters?.status && filters.status !== 'all')
-        query = query.eq('status', filters.status);
-      if (filters?.search)
-        query = query.or(
-          `reviewer_name.ilike.%${filters.search}%,content.ilike.%${filters.search}%`,
-        );
+        if (platform !== 'all') query = query.eq('platform', platform);
+        if (sentiment !== 'all') query = query.eq('sentiment', sentiment);
+        if (status !== 'all') query = query.eq('status', status);
+        if (search)
+          query = query.or(
+            `reviewer_name.ilike.%${search}%,content.ilike.%${search}%`,
+          );
 
-      const { data, error: err } = await query;
-      if (err) throw err;
-      setReviews((data ?? []) as Review[]);
-    } catch (e) {
-      setError((e as Error).message);
-      setReviews(MOCK_REVIEWS); // fallback
-    } finally {
-      setLoading(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [business?.id, isDemo, tick,
-    filters?.platform, filters?.sentiment, filters?.status, filters?.search]);
+        const { data, error: err } = await query;
+        if (err) throw err;
+        if (!cancelled) setFetched({ key: fetchKey, reviews: (data ?? []) as Review[], error: null });
+      } catch (e) {
+        if (!cancelled) setFetched({ key: fetchKey, reviews: MOCK_REVIEWS, error: (e as Error).message }); // fallback
+      }
+    })();
 
-  useEffect(() => { fetch(); }, [fetch]);
+    return () => { cancelled = true; };
+  }, [fetchKey]);
+
+  const base = demo
+    ? applyFilters(MOCK_REVIEWS, filters)
+    : fetched?.key === fetchKey
+      ? fetched.reviews
+      : [];
+
+  const reviews = base.map((r) => (patches[r.id] ? { ...r, ...patches[r.id] } : r));
+  const loading = fetchKey != null && fetched?.key !== fetchKey;
+  const error = !demo && fetched?.key === fetchKey ? fetched.error : null;
 
   const updateReview = (id: string, patch: Partial<Review>) => {
-    setReviews((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, ...patch } : r)),
-    );
+    setPatches((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
   };
 
   return { reviews, loading, error, refetch: () => setTick((t) => t + 1), updateReview };

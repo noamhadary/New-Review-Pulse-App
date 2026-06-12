@@ -7,15 +7,12 @@ export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#f8f9fa' }}>
+    <div className="min-h-screen bg-background">
       <TopBar onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main content — offset for fixed topbar and sidebar */}
-      <main
-        className="pt-28 md:pr-64 min-h-screen"
-        style={{ backgroundColor: '#f8f9fa' }}
-      >
+      <main className="pt-28 md:pr-64 min-h-screen bg-background">
         <Outlet />
       </main>
     </div>

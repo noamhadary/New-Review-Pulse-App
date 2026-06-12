@@ -38,20 +38,16 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       <aside
         className={`
           fixed top-28 right-0 h-[calc(100vh-112px)] w-64 z-40
-          flex flex-col border-l
+          flex flex-col border-l bg-background border-outline-variant
           transition-transform duration-300 ease-in-out
           ${open ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}
         `}
-        style={{
-          backgroundColor: '#f8f9fa',
-          borderColor: '#c5c6d2',
-          boxShadow: '-2px 0 8px rgba(0,0,0,0.06)',
-        }}
+        style={{ boxShadow: '-2px 0 8px rgba(0,0,0,0.06)' }}
       >
         {/* Brand */}
-        <div className="px-5 py-5 border-b" style={{ borderColor: '#c5c6d2' }}>
+        <div className="px-5 py-5 border-b border-outline-variant">
           <img src="/logo.png" alt="Review Pulse" style={{ height: 38, width: 'auto', maxWidth: '100%', objectFit: 'contain' }} />
-          <p className="text-xs mt-1.5" style={{ color: '#757682' }}>ניהול מוניטין</p>
+          <p className="text-xs mt-1.5 text-outline">ניהול מוניטין</p>
         </div>
 
         {/* Navigation */}
@@ -66,14 +62,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                   w-full flex items-center gap-3 px-4 py-3 rounded-lg
                   transition-all duration-200 cursor-pointer text-right
                   ${active
-                    ? 'font-bold'
-                    : 'hover:bg-surface-container-high'
+                    ? 'font-bold bg-secondary/8 text-secondary'
+                    : 'text-on-surface-variant hover:bg-surface-container-high'
                   }
                 `}
-                style={active
-                  ? { backgroundColor: 'rgba(135,29,211,0.08)', color: '#871dd3' }
-                  : { color: '#444650' }
-                }
               >
                 <span
                   className={`material-symbols-outlined text-[22px] ${active ? 'icon-filled' : ''}`}
@@ -82,10 +74,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                 </span>
                 <span className="text-sm font-medium">{label}</span>
                 {active && (
-                  <span
-                    className="mr-auto w-1.5 h-1.5 rounded-full"
-                    style={{ backgroundColor: '#871dd3' }}
-                  />
+                  <span className="mr-auto w-1.5 h-1.5 rounded-full bg-secondary" />
                 )}
               </button>
             );
@@ -93,7 +82,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         </nav>
 
         {/* Upgrade CTA */}
-        <div className="p-4 border-t" style={{ borderColor: '#c5c6d2' }}>
+        <div className="p-4 border-t border-outline-variant">
           <div
             className="rounded-xl p-4 mb-3"
             style={{ background: 'linear-gradient(135deg, #00113a 0%, #871dd3 100%)' }}
@@ -102,16 +91,14 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             <p className="text-white/70 text-xs mb-3">קבל גישה לכל הכלים המתקדמים</p>
             <button
               onClick={() => { navigate('/settings?tab=billing'); onClose(); }}
-              className="w-full bg-white text-xs font-bold py-2 rounded-lg transition-opacity hover:opacity-90 cursor-pointer"
-              style={{ color: '#871dd3' }}
+              className="w-full bg-white text-secondary text-xs font-bold py-2 rounded-lg transition-opacity hover:opacity-90 cursor-pointer"
             >
               שדרג עכשיו
             </button>
           </div>
           <button
             onClick={() => navigate('/auth/login')}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-surface-container cursor-pointer"
-            style={{ color: '#444650' }}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-surface-container cursor-pointer text-on-surface-variant"
           >
             <span className="material-symbols-outlined text-[18px]">logout</span>
             יציאה

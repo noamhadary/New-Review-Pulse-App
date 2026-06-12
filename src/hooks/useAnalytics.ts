@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { useBusiness } from '../context/BusinessContext';
+import { useBusiness } from '../context/business-context';
 
 const IS_DEMO =
   !import.meta.env.VITE_SUPABASE_URL ||
@@ -86,19 +86,24 @@ const PLATFORM_META: Record<string, { icon: string; color: string }> = {
 
 const HE_MONTHS = ['ינו','פבר','מרץ','אפר','מאי','יוני','יול','אוג','ספט','אוק','נוב','דצמ'];
 
+interface FetchResult {
+  key: string;
+  monthlyTrend: MonthlyPoint[] | null;
+  ratingDist: RatingDist[] | null;
+  platformData: PlatformStat[] | null;
+}
+
 export function useAnalytics(): AnalyticsData {
   const { business } = useBusiness();
-  const [monthlyTrend, setMonthlyTrend]   = useState<MonthlyPoint[]>(MOCK_MONTHLY);
-  const [ratingDist, setRatingDist]       = useState<RatingDist[]>(MOCK_RATING_DIST);
-  const [platformData, setPlatformData]   = useState<PlatformStat[]>(MOCK_PLATFORMS);
-  const [topics]                          = useState<TopicStat[]>(MOCK_TOPICS);
-  const [loading, setLoading]             = useState(true);
+  const fetchKey = IS_DEMO || !business ? null : business.id;
+  const [real, setReal] = useState<FetchResult | null>(null);
 
   useEffect(() => {
-    if (IS_DEMO || !business) { setLoading(false); return; }
+    if (!fetchKey) return;
+    let cancelled = false;
 
     const run = async () => {
-      setLoading(true);
+      const result: FetchResult = { key: fetchKey, monthlyTrend: null, ratingDist: null, platformData: null };
       try {
         // ── Monthly trend (last 6 months) ──────────────────────────────────────
         const sixMonthsAgo = new Date();
@@ -107,7 +112,7 @@ export function useAnalytics(): AnalyticsData {
         const { data: reviews } = await supabase
           .from('reviews')
           .select('rating, sentiment, status, replied_at, created_at, platform')
-          .eq('business_id', business.id)
+          .eq('business_id', fetchKey)
           .gte('created_at', sixMonthsAgo.toISOString());
 
         if (reviews?.length) {
@@ -122,7 +127,7 @@ export function useAnalytics(): AnalyticsData {
             if (r.status === 'replied') byMonth[key].replied++;
           });
 
-          const trend = Object.entries(byMonth)
+          result.monthlyTrend = Object.entries(byMonth)
             .sort(([a], [b]) => a.localeCompare(b))
             .map(([key, val]) => {
               const [, monthIdx] = key.split('-').map(Number);
@@ -134,19 +139,16 @@ export function useAnalytics(): AnalyticsData {
                 response_rate: Math.round((val.replied / val.total) * 100),
               };
             });
-          setMonthlyTrend(trend);
 
           // Rating distribution
           const dist: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
           reviews.forEach((r) => { dist[r.rating] = (dist[r.rating] ?? 0) + 1; });
           const total = reviews.length;
-          setRatingDist(
-            [5, 4, 3, 2, 1].map((stars) => ({
-              rating: `${stars} ★`,
-              count: dist[stars] ?? 0,
-              pct: total > 0 ? Math.round(((dist[stars] ?? 0) / total) * 100) : 0,
-            })),
-          );
+          result.ratingDist = [5, 4, 3, 2, 1].map((stars) => ({
+            rating: `${stars} ★`,
+            count: dist[stars] ?? 0,
+            pct: total > 0 ? Math.round(((dist[stars] ?? 0) / total) * 100) : 0,
+          }));
 
           // Platform breakdown
           const byPlatform: Record<string, { total: number; positive: number }> = {};
@@ -158,28 +160,34 @@ export function useAnalytics(): AnalyticsData {
               byPlatform[p].positive++;
           });
 
-          setPlatformData(
-            Object.entries(byPlatform).map(([platform, val]) => ({
-              name: platform.charAt(0).toUpperCase() + platform.slice(1),
-              icon: PLATFORM_META[platform]?.icon ?? 'star',
-              color: PLATFORM_META[platform]?.color ?? '#871dd3',
-              reviews: val.total,
-              positive:
-                val.total > 0
-                  ? Math.round((val.positive / val.total) * 100)
-                  : 0,
-            })),
-          );
+          result.platformData = Object.entries(byPlatform).map(([platform, val]) => ({
+            name: platform.charAt(0).toUpperCase() + platform.slice(1),
+            icon: PLATFORM_META[platform]?.icon ?? 'star',
+            color: PLATFORM_META[platform]?.color ?? '#871dd3',
+            reviews: val.total,
+            positive:
+              val.total > 0
+                ? Math.round((val.positive / val.total) * 100)
+                : 0,
+          }));
         }
       } catch {
         // silently keep mock data
-      } finally {
-        setLoading(false);
       }
+      if (!cancelled) setReal(result);
     };
 
     run();
-  }, [business?.id]);
+    return () => { cancelled = true; };
+  }, [fetchKey]);
 
-  return { monthlyTrend, ratingDist, platformData, topics, loading };
+  const ready = real !== null && real.key === fetchKey;
+
+  return {
+    monthlyTrend: ready && real.monthlyTrend ? real.monthlyTrend : MOCK_MONTHLY,
+    ratingDist: ready && real.ratingDist ? real.ratingDist : MOCK_RATING_DIST,
+    platformData: ready && real.platformData ? real.platformData : MOCK_PLATFORMS,
+    topics: MOCK_TOPICS,
+    loading: fetchKey != null && !ready,
+  };
 }

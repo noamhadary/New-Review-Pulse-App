@@ -87,22 +87,19 @@ function CreateModal({ onClose, onCreate }: CreateModalProps) {
       style={{ backgroundColor: 'rgba(0,17,58,0.5)', backdropFilter: 'blur(4px)' }}
     >
       <div
-        className="w-full max-w-lg rounded-2xl overflow-hidden"
-        style={{ backgroundColor: '#fff', boxShadow: '0 24px 80px rgba(0,0,0,0.2)' }}
+        className="w-full max-w-lg rounded-2xl overflow-hidden bg-white"
+        style={{ boxShadow: '0 24px 80px rgba(0,0,0,0.2)' }}
       >
         {/* Modal header */}
-        <div
-          className="px-6 py-5 flex items-center justify-between border-b"
-          style={{ borderColor: 'rgba(197,198,210,0.3)' }}
-        >
+        <div className="px-6 py-5 flex items-center justify-between border-b border-outline-variant/30">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[20px] icon-filled" style={{ color: '#871dd3' }}>
+            <span className="material-symbols-outlined text-[20px] icon-filled text-secondary">
               description
             </span>
-            <h2 className="text-lg font-bold" style={{ color: '#00113a' }}>יצירת דוח חדש</h2>
+            <h2 className="text-lg font-bold text-primary">יצירת דוח חדש</h2>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
-            <span className="material-symbols-outlined" style={{ color: '#444650' }}>close</span>
+          <button onClick={onClose} aria-label="סגור" className="p-2 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
+            <span className="material-symbols-outlined text-on-surface-variant">close</span>
           </button>
         </div>
 
@@ -110,7 +107,7 @@ function CreateModal({ onClose, onCreate }: CreateModalProps) {
           {step === 'form' && (
             <>
               {/* Type selector */}
-              <p className="text-sm font-semibold mb-3" style={{ color: '#00113a' }}>סוג הדוח</p>
+              <p className="text-sm font-semibold mb-3 text-primary">סוג הדוח</p>
               <div className="grid grid-cols-2 gap-2 mb-5">
                 {(['weekly', 'monthly', 'platform', 'yearly'] as ReportType[]).map((t) => {
                   const meta = TYPE_META[t];
@@ -140,12 +137,12 @@ function CreateModal({ onClose, onCreate }: CreateModalProps) {
               </div>
 
               {/* Date range */}
-              <p className="text-sm font-semibold mb-2" style={{ color: '#00113a' }}>טווח תאריכים</p>
+              <p className="text-sm font-semibold mb-2 text-primary">טווח תאריכים</p>
               <select
                 value={range}
+                aria-label="טווח תאריכים"
                 onChange={(e) => setRange(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none mb-5 cursor-pointer"
-                style={{ backgroundColor: '#f3f4f5', border: '1px solid rgba(197,198,210,0.5)', color: '#191c1d' }}
+                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none mb-5 cursor-pointer bg-surface-container-low border border-outline-variant/50 text-on-surface"
               >
                 {RANGE_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
@@ -153,17 +150,17 @@ function CreateModal({ onClose, onCreate }: CreateModalProps) {
               </select>
 
               {/* Format */}
-              <p className="text-sm font-semibold mb-2" style={{ color: '#00113a' }}>פורמט</p>
+              <p className="text-sm font-semibold mb-2 text-primary">פורמט</p>
               <div className="flex gap-2 mb-6">
                 {(['pdf', 'excel', 'csv'] as const).map((f) => (
                   <button
                     key={f}
                     onClick={() => setFormat(f)}
-                    className="flex-1 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer"
-                    style={format === f
-                      ? { backgroundColor: '#871dd3', color: '#fff' }
-                      : { backgroundColor: '#f3f4f5', color: '#444650', border: '1px solid rgba(197,198,210,0.5)' }
-                    }
+                    className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${
+                      format === f
+                        ? 'bg-secondary text-white'
+                        : 'bg-surface-container-low text-on-surface-variant border border-outline-variant/50'
+                    }`}
                   >
                     {f.toUpperCase()}
                   </button>
@@ -172,8 +169,8 @@ function CreateModal({ onClose, onCreate }: CreateModalProps) {
 
               <button
                 onClick={handleGenerate}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm cursor-pointer transition-all hover:opacity-90"
-                style={{ background: 'linear-gradient(135deg,#002366,#871dd3)', color: '#fff' }}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm cursor-pointer transition-all hover:opacity-90 text-white"
+                style={{ background: 'linear-gradient(135deg,#002366,#871dd3)' }}
               >
                 <span className="material-symbols-outlined text-[18px] icon-filled">auto_awesome</span>
                 צור דוח
@@ -189,9 +186,9 @@ function CreateModal({ onClose, onCreate }: CreateModalProps) {
               >
                 <span className="material-symbols-outlined text-white text-[28px] icon-filled">description</span>
               </div>
-              <p className="text-base font-bold" style={{ color: '#00113a' }}>מייצר את הדוח...</p>
-              <p className="text-sm" style={{ color: '#757682' }}>אוסף נתונים ומנתח מגמות</p>
-              <div className="w-48 h-1.5 rounded-full overflow-hidden mt-2" style={{ backgroundColor: '#edeeef' }}>
+              <p className="text-base font-bold text-primary">מייצר את הדוח...</p>
+              <p className="text-sm text-outline">אוסף נתונים ומנתח מגמות</p>
+              <div className="w-48 h-1.5 rounded-full overflow-hidden mt-2 bg-surface-container">
                 <div
                   className="h-full rounded-full"
                   style={{ width: '60%', background: 'linear-gradient(90deg,#002366,#871dd3)', animation: 'pulse 1.5s ease-in-out infinite' }}
@@ -202,20 +199,16 @@ function CreateModal({ onClose, onCreate }: CreateModalProps) {
 
           {step === 'done' && (
             <div className="flex flex-col items-center py-10 gap-4">
-              <div
-                className="w-16 h-16 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: '#dcfce7' }}
-              >
-                <span className="material-symbols-outlined text-[32px] icon-filled" style={{ color: '#16a34a' }}>
+              <div className="w-16 h-16 rounded-full flex items-center justify-center bg-green-100">
+                <span className="material-symbols-outlined text-[32px] icon-filled text-green-600">
                   check_circle
                 </span>
               </div>
-              <p className="text-base font-bold" style={{ color: '#00113a' }}>הדוח מוכן!</p>
-              <p className="text-sm" style={{ color: '#757682' }}>הדוח נוצר בהצלחה וזמין להורדה</p>
+              <p className="text-base font-bold text-primary">הדוח מוכן!</p>
+              <p className="text-sm text-outline">הדוח נוצר בהצלחה וזמין להורדה</p>
               <button
                 onClick={onClose}
-                className="mt-2 px-6 py-2.5 rounded-xl font-bold text-sm cursor-pointer transition-all hover:opacity-90"
-                style={{ backgroundColor: '#16a34a', color: '#fff' }}
+                className="mt-2 px-6 py-2.5 rounded-xl font-bold text-sm cursor-pointer transition-all hover:opacity-90 bg-green-600 text-white"
               >
                 סגור
               </button>
@@ -238,12 +231,7 @@ function ReportRow({ report, onDelete, onDownload }: {
   const dateStr = new Date(report.date).toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
 
   return (
-    <tr
-      className="transition-colors"
-      style={{ borderBottom: '1px solid rgba(197,198,210,0.2)' }}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = '#f8f9fa'; }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = 'transparent'; }}
-    >
+    <tr className="transition-colors border-b border-outline-variant/20 hover:bg-background">
       <td className="px-5 py-4">
         <div className="flex items-center gap-3">
           <div
@@ -254,7 +242,7 @@ function ReportRow({ report, onDelete, onDownload }: {
               {meta.icon}
             </span>
           </div>
-          <span className="text-sm font-semibold" style={{ color: '#00113a' }}>{report.name}</span>
+          <span className="text-sm font-semibold text-primary">{report.name}</span>
         </div>
       </td>
       <td className="px-5 py-4">
@@ -266,26 +254,26 @@ function ReportRow({ report, onDelete, onDownload }: {
         </span>
       </td>
       <td className="px-5 py-4">
-        <span className="text-sm" style={{ color: '#444650' }}>{dateStr}</span>
+        <span className="text-sm text-on-surface-variant">{dateStr}</span>
       </td>
       <td className="px-5 py-4">
-        <span className="text-sm font-medium" style={{ color: '#191c1d' }}>
+        <span className="text-sm font-medium text-on-surface">
           {report.reviews.toLocaleString('he-IL')}
         </span>
       </td>
       <td className="px-5 py-4">
         {report.status === 'ready' ? (
-          <span className="flex items-center gap-1.5 text-xs font-bold" style={{ color: '#16a34a' }}>
+          <span className="flex items-center gap-1.5 text-xs font-bold text-green-600">
             <span className="material-symbols-outlined text-[14px] icon-filled">check_circle</span>
             מוכן
           </span>
         ) : report.status === 'scheduled' ? (
-          <span className="flex items-center gap-1.5 text-xs font-bold" style={{ color: '#d97706' }}>
+          <span className="flex items-center gap-1.5 text-xs font-bold text-amber-600">
             <span className="material-symbols-outlined text-[14px] icon-filled">schedule</span>
             מתוזמן
           </span>
         ) : (
-          <span className="flex items-center gap-1.5 text-xs font-bold" style={{ color: '#871dd3' }}>
+          <span className="flex items-center gap-1.5 text-xs font-bold text-secondary">
             <span className="material-symbols-outlined text-[14px] animate-spin">refresh</span>
             מייצר...
           </span>
@@ -296,16 +284,15 @@ function ReportRow({ report, onDelete, onDownload }: {
           <button
             onClick={() => onDownload(report)}
             disabled={report.status !== 'ready'}
-            className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer transition-all hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ backgroundColor: 'rgba(135,29,211,0.1)', color: '#871dd3' }}
+            className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer transition-all hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed bg-secondary/10 text-secondary"
           >
             <span className="material-symbols-outlined text-[14px]">download</span>
             הורד
           </button>
           <button
             onClick={() => onDelete(report.id)}
-            className="p-1.5 rounded-lg cursor-pointer transition-colors hover:bg-red-50"
-            style={{ color: '#ba1a1a' }}
+            aria-label="מחק דוח"
+            className="p-1.5 rounded-lg cursor-pointer transition-colors hover:bg-red-50 text-error"
           >
             <span className="material-symbols-outlined text-[18px]">delete_outline</span>
           </button>
@@ -360,7 +347,7 @@ export default function Reports() {
   const totalReviews   = reports.reduce((s, r) => s + r.reviews, 0);
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#f8f9fa' }}>
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <section
         className="px-6 md:px-16 py-10"
@@ -369,14 +356,13 @@ export default function Reports() {
         <div className="max-w-screen-xl mx-auto flex flex-col md:flex-row justify-between items-end gap-4">
           <div>
             <h2 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">דוחות</h2>
-            <p className="mt-2 text-base" style={{ color: '#758dd5' }}>
+            <p className="mt-2 text-base text-on-primary-container">
               ניהול, יצירה והורדת דוחות ביצועים
             </p>
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all hover:opacity-90 active:scale-95 cursor-pointer shadow-lg"
-            style={{ backgroundColor: '#871dd3', color: '#fff' }}
+            className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all hover:opacity-90 active:scale-95 cursor-pointer shadow-lg bg-secondary text-white"
           >
             <span className="material-symbols-outlined text-[20px]">add</span>
             ייצור דוח חדש
@@ -394,15 +380,15 @@ export default function Reports() {
           ].map(({ label, value, icon, color }) => (
             <div
               key={label}
-              className="rounded-xl p-5 flex items-center gap-4"
-              style={{ backgroundColor: '#fff', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid rgba(197,198,210,0.3)' }}
+              className="rounded-xl p-5 flex items-center gap-4 bg-white border border-outline-variant/30"
+              style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}
             >
               <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${color}18` }}>
                 <span className="material-symbols-outlined text-[22px] icon-filled" style={{ color }}>{icon}</span>
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#444650' }}>{label}</p>
-                <p className="text-2xl font-extrabold leading-none mt-0.5" style={{ color: '#00113a' }}>{value}</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">{label}</p>
+                <p className="text-2xl font-extrabold leading-none mt-0.5 text-primary">{value}</p>
               </div>
             </div>
           ))}
@@ -413,26 +399,25 @@ export default function Reports() {
       <section className="px-6 md:px-16 pb-12">
         <div className="max-w-screen-xl mx-auto">
           <div
-            className="rounded-2xl overflow-hidden"
-            style={{ backgroundColor: '#fff', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid rgba(197,198,210,0.2)' }}
+            className="rounded-2xl overflow-hidden bg-white border border-outline-variant/20"
+            style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}
           >
             {/* Filter tabs */}
-            <div className="px-5 pt-5 pb-0 flex items-center gap-2 border-b" style={{ borderColor: 'rgba(197,198,210,0.3)' }}>
+            <div className="px-5 pt-5 pb-0 flex items-center gap-2 border-b border-outline-variant/30">
               {TABS.map(({ id, label }) => (
                 <button
                   key={id}
                   onClick={() => setFilter(id)}
-                  className="px-4 py-2.5 text-sm font-semibold border-b-2 transition-all cursor-pointer"
-                  style={filter === id
-                    ? { borderColor: '#871dd3', color: '#871dd3' }
-                    : { borderColor: 'transparent', color: '#444650' }
-                  }
+                  className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-all cursor-pointer ${
+                    filter === id ? 'border-secondary text-secondary' : 'border-transparent text-on-surface-variant'
+                  }`}
                 >
                   {label}
                   {id === 'all' && (
                     <span
-                      className="mr-1.5 text-xs px-1.5 py-0.5 rounded-full font-bold"
-                      style={{ backgroundColor: filter === 'all' ? 'rgba(135,29,211,0.1)' : '#edeeef', color: filter === 'all' ? '#871dd3' : '#757682' }}
+                      className={`mr-1.5 text-xs px-1.5 py-0.5 rounded-full font-bold ${
+                        filter === 'all' ? 'bg-secondary/10 text-secondary' : 'bg-surface-container text-outline'
+                      }`}
                     >
                       {reports.length}
                     </span>
@@ -445,9 +430,9 @@ export default function Reports() {
             <div className="overflow-x-auto">
               <table className="w-full text-right border-collapse">
                 <thead>
-                  <tr style={{ backgroundColor: '#f8f9fa' }}>
+                  <tr className="bg-background">
                     {['שם הדוח', 'סוג', 'תאריך', 'ביקורות', 'סטטוס', ''].map((h) => (
-                      <th key={h} className="px-5 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: '#444650' }}>
+                      <th key={h} className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
                         {h}
                       </th>
                     ))}
@@ -465,7 +450,7 @@ export default function Reports() {
                   {visible.length === 0 && (
                     <tr>
                       <td colSpan={6} className="px-5 py-12 text-center">
-                        <p className="text-sm" style={{ color: '#757682' }}>אין דוחות בקטגוריה זו</p>
+                        <p className="text-sm text-outline">אין דוחות בקטגוריה זו</p>
                       </td>
                     </tr>
                   )}

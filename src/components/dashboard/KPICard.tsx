@@ -17,19 +17,12 @@ export default function KPICard({
 }: KPICardProps) {
   return (
     <div
-      className="rounded-xl p-6 flex flex-col justify-between relative overflow-hidden cursor-default"
-      style={{
-        backgroundColor: '#ffffff',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-        border: '1px solid rgba(197,198,210,0.3)',
-      }}
+      className="rounded-xl p-6 flex flex-col justify-between relative overflow-hidden cursor-default bg-white border border-outline-variant/30"
+      style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}
     >
       {/* Top row */}
       <div className="flex justify-between items-start mb-4">
-        <span
-          className="text-xs font-semibold uppercase tracking-wider"
-          style={{ color: '#444650' }}
-        >
+        <span className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
           {label}
         </span>
         <div
@@ -47,10 +40,7 @@ export default function KPICard({
 
       {/* Value */}
       <div className="flex items-baseline gap-2">
-        <span
-          className="text-5xl font-extrabold leading-none tracking-tight"
-          style={{ color: '#00113a' }}
-        >
+        <span className="text-5xl font-extrabold leading-none tracking-tight text-primary">
           {value}
         </span>
         {badge && (
@@ -73,7 +63,7 @@ export default function KPICard({
             {trend.positive ? 'trending_up' : 'trending_down'}
           </span>
           <span>{trend.value}</span>
-          <span className="font-normal" style={{ color: '#444650' }}>
+          <span className="font-normal text-on-surface-variant">
             {trend.label}
           </span>
         </div>
