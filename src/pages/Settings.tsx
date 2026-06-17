@@ -65,6 +65,24 @@ const INTEGRATIONS_CONFIG = [
   { id: 'wolt',        name: 'Wolt',            icon: 'delivery_dining',color: '#FF6B35', reviews: 0,   lastSync: null },
 ];
 
+type CredField = { key: string; label: string; placeholder: string; dir?: 'ltr' | 'rtl'; type?: string; hint: string };
+
+const PLATFORM_CREDENTIAL_FIELDS: Record<string, CredField[]> = {
+  google: [
+    { key: 'place_id', label: 'מזהה מיקום Google (Place ID)', placeholder: 'ChIJrTLr-GyuEmsRBfy61i59si4', dir: 'ltr', hint: 'ניתן למצוא ב-Google Maps → שתף → העתק קישור' },
+  ],
+  facebook: [
+    { key: 'page_id',      label: 'מזהה הדף (Page ID)',         placeholder: '123456789012345',  dir: 'ltr',           hint: 'הגדרות הדף ← מידע כללי' },
+    { key: 'access_token', label: 'טוקן גישה (Access Token)',   placeholder: 'EAAxxxxxxxx...',   dir: 'ltr', type: 'password', hint: 'ניתן להנפיק דרך Facebook Developers' },
+  ],
+  tripadvisor: [
+    { key: 'location_url', label: 'קישור לדף TripAdvisor', placeholder: 'https://www.tripadvisor.com/Restaurant_Review-...', dir: 'ltr', hint: 'העתק את הכתובת מהדפדפן כשאתה בדף העסק' },
+  ],
+  wolt: [
+    { key: 'restaurant_url', label: 'קישור לדף Wolt', placeholder: 'https://wolt.com/he/isr/tel-aviv/restaurant/...', dir: 'ltr', hint: 'העתק את הכתובת מהדפדפן כשאתה בדף המסעדה' },
+  ],
+};
+
 // ── Persistence hook ───────────────────────────────────────────────────────────
 
 
@@ -329,19 +347,33 @@ function InviteModal({ onClose, onInvite }: {
 function ConnectModal({ platform, onClose, onConnected }: {
   platform: typeof INTEGRATIONS_CONFIG[number];
   onClose: () => void;
-  onConnected: () => void;
+  onConnected: (creds: Record<string, string>) => void;
 }) {
-  const [step, setStep] = useState<'info' | 'connecting' | 'done'>('info');
+  const [step, setStep] = useState<'form' | 'connecting' | 'done'>('form');
+  const [creds, setCreds] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const fields = PLATFORM_CREDENTIAL_FIELDS[platform.id] ?? [];
+
+  const validate = () => {
+    const next: Record<string, string> = {};
+    fields.forEach((f) => {
+      if (!creds[f.key]?.trim()) next[f.key] = 'שדה חובה';
+    });
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
 
   const handleConnect = () => {
+    if (!validate()) return;
     setStep('connecting');
-    setTimeout(() => { setStep('done'); onConnected(); }, 2000);
+    setTimeout(() => { setStep('done'); onConnected(creds); }, 1800);
   };
 
   return (
     <Overlay onClose={onClose}>
       <ModalBox title={`חיבור ${platform.name}`} icon="link" onClose={onClose}>
-        {step === 'info' && (
+        {step === 'form' && (
           <div className="space-y-4">
             <div className="flex items-center gap-3 p-4 rounded-xl bg-surface-container-low">
               <span className="material-symbols-outlined text-[28px] icon-filled" style={{ color: platform.color }}>
@@ -349,23 +381,52 @@ function ConnectModal({ platform, onClose, onConnected }: {
               </span>
               <div>
                 <p className="text-sm font-bold text-primary">{platform.name}</p>
-                <p className="text-xs text-outline">אנחנו נסנכרן ביקורות אוטומטית</p>
+                <p className="text-xs text-outline">הזן את פרטי הגישה לסנכרון ביקורות אוטומטי</p>
               </div>
             </div>
-            <ol className="space-y-2 text-sm text-on-surface-variant">
-              <li className="flex items-start gap-2">
-                <span className="font-bold text-xs w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 bg-secondary/10 text-secondary">1</span>
-                לחץ "הפעל חיבור" כדי להתחיל
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="font-bold text-xs w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 bg-secondary/10 text-secondary">2</span>
-                אשר גישה לחשבון {platform.name} שלך
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="font-bold text-xs w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 bg-secondary/10 text-secondary">3</span>
-                ביקורות יסונכרנו אוטומטית מעתה
-              </li>
-            </ol>
+
+            {fields.length > 0 ? (
+              <div className="space-y-4">
+                {fields.map((f) => (
+                  <div key={f.key}>
+                    <label className="block text-xs font-semibold mb-1 text-on-surface-variant">{f.label}</label>
+                    <input
+                      type={f.type ?? 'text'}
+                      value={creds[f.key] ?? ''}
+                      onChange={(e) => {
+                        setCreds((prev) => ({ ...prev, [f.key]: e.target.value }));
+                        if (errors[f.key]) setErrors((prev) => ({ ...prev, [f.key]: '' }));
+                      }}
+                      placeholder={f.placeholder}
+                      dir={f.dir}
+                      className={`w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-colors border ${
+                        errors[f.key] ? 'border-red-400 bg-red-50' : 'border-outline-variant/50 bg-surface-container-low focus:border-secondary'
+                      } text-on-surface`}
+                    />
+                    {errors[f.key]
+                      ? <p className="text-xs mt-1 font-semibold text-red-500">{errors[f.key]}</p>
+                      : <p className="text-xs mt-1 text-outline">{f.hint}</p>
+                    }
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <ol className="space-y-2 text-sm text-on-surface-variant">
+                <li className="flex items-start gap-2">
+                  <span className="font-bold text-xs w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 bg-secondary/10 text-secondary">1</span>
+                  לחץ "הפעל חיבור" כדי להתחיל
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold text-xs w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 bg-secondary/10 text-secondary">2</span>
+                  אשר גישה לחשבון {platform.name} שלך
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold text-xs w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 bg-secondary/10 text-secondary">3</span>
+                  ביקורות יסונכרנו אוטומטית מעתה
+                </li>
+              </ol>
+            )}
+
             <div className="flex gap-3 pt-1">
               <button onClick={handleConnect}
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm cursor-pointer hover:opacity-90"
@@ -1173,11 +1234,11 @@ function IntegrationsTab({ showToast }: { showToast: (m: string, t?: ToastProps[
     setTimeout(() => { setSyncing(null); showToast('הביקורות סונכרנו בהצלחה'); }, 2000);
   };
 
-  const handleConnected = async (id: string) => {
+  const handleConnected = async (id: string, creds: Record<string, string>) => {
     if (!isDemo && user) {
       await supabase
         .from('platform_connections')
-        .upsert({ owner_id: user.id, platform: id }, { onConflict: 'owner_id,platform' });
+        .upsert({ owner_id: user.id, platform: id, credentials: creds }, { onConflict: 'owner_id,platform' });
     }
     setConnected(prev => [...prev, id]);
     setConnecting(null);
@@ -1201,7 +1262,7 @@ function IntegrationsTab({ showToast }: { showToast: (m: string, t?: ToastProps[
         <ConnectModal
           platform={connecting}
           onClose={() => setConnecting(null)}
-          onConnected={() => handleConnected(connecting.id)}
+          onConnected={(creds) => handleConnected(connecting.id, creds)}
         />
       )}
 

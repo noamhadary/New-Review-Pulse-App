@@ -32,11 +32,29 @@ const STEPS = [
 ];
 
 const PLATFORMS = [
-  { id: 'google', name: 'Google Business', icon: 'language', connected: false },
-  { id: 'facebook', name: 'Facebook Pages', icon: 'groups', connected: false },
-  { id: 'tripadvisor', name: 'TripAdvisor', icon: 'flight', connected: false },
-  { id: 'wolt', name: 'Wolt', icon: 'delivery_dining', connected: false },
+  { id: 'google',      name: 'Google Business', icon: 'language',        color: '#4285F4' },
+  { id: 'facebook',    name: 'Facebook Pages',  icon: 'groups',          color: '#1877F2' },
+  { id: 'tripadvisor', name: 'TripAdvisor',     icon: 'flight',          color: '#34E0A1' },
+  { id: 'wolt',        name: 'Wolt',            icon: 'delivery_dining', color: '#FF6B35' },
 ];
+
+type OnbCredField = { key: string; label: string; placeholder: string; dir?: 'ltr' | 'rtl'; type?: string; hint: string };
+
+const PLATFORM_CREDENTIAL_FIELDS: Record<string, OnbCredField[]> = {
+  google: [
+    { key: 'place_id', label: 'מזהה מיקום Google (Place ID)', placeholder: 'ChIJrTLr-GyuEmsRBfy61i59si4', dir: 'ltr', hint: 'ניתן למצוא ב-Google Maps → שתף → העתק קישור' },
+  ],
+  facebook: [
+    { key: 'page_id',      label: 'מזהה הדף (Page ID)',       placeholder: '123456789012345',  dir: 'ltr',           hint: 'הגדרות הדף ← מידע כללי' },
+    { key: 'access_token', label: 'טוקן גישה (Access Token)', placeholder: 'EAAxxxxxxxx...',   dir: 'ltr', type: 'password', hint: 'ניתן להנפיק דרך Facebook Developers' },
+  ],
+  tripadvisor: [
+    { key: 'location_url', label: 'קישור לדף TripAdvisor', placeholder: 'https://www.tripadvisor.com/Restaurant_Review-...', dir: 'ltr', hint: 'העתק את הכתובת מהדפדפן כשאתה בדף העסק' },
+  ],
+  wolt: [
+    { key: 'restaurant_url', label: 'קישור לדף Wolt', placeholder: 'https://wolt.com/he/isr/tel-aviv/restaurant/...', dir: 'ltr', hint: 'העתק את הכתובת מהדפדפן כשאתה בדף המסעדה' },
+  ],
+};
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -46,6 +64,7 @@ export default function Onboarding() {
   const [step, setStep] = useState(1);
   const [business, setBusiness] = useState({ name: '', category: '', phone: '', website: '' });
   const [connected, setConnected] = useState<string[]>([]);
+  const [platformCreds, setPlatformCreds] = useState<Record<string, Record<string, string>>>({});
   const [notifs, setNotifs] = useState({ email: true, new_review: true, critical: true, weekly: false });
   const [saving, setSaving] = useState(false);
 
@@ -156,45 +175,78 @@ export default function Onboarding() {
 
           {/* Step 2: Platforms */}
           {step === 2 && (
-            <div className="space-y-4">
+            <div className="space-y-3">
               <h2 className="text-xl font-bold mb-4 text-primary">חיבור פלטפורמות</h2>
               {PLATFORMS.map((p) => {
                 const isConnected = connected.includes(p.id);
+                const fields = PLATFORM_CREDENTIAL_FIELDS[p.id] ?? [];
+                const creds = platformCreds[p.id] ?? {};
                 return (
-                  <div
-                    key={p.id}
-                    className="flex items-center justify-between p-4 rounded-xl transition-all cursor-pointer"
-                    style={{
-                      border: `2px solid ${isConnected ? '#871dd3' : 'rgba(197,198,210,0.4)'}`,
-                      backgroundColor: isConnected ? 'rgba(135,29,211,0.04)' : '#f8f9fa',
-                    }}
-                    onClick={() => togglePlatform(p.id)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center"
-                        style={{ backgroundColor: isConnected ? 'rgba(135,29,211,0.1)' : '#edeeef' }}
-                      >
-                        <span
-                          className="material-symbols-outlined text-[20px]"
-                          style={{ color: isConnected ? '#871dd3' : '#444650' }}
-                        >
-                          {p.icon}
-                        </span>
-                      </div>
-                      <span className="font-semibold text-sm text-primary">{p.name}</span>
-                    </div>
+                  <div key={p.id}>
                     <div
-                      className="w-6 h-6 rounded-full flex items-center justify-center"
-                      style={isConnected
-                        ? { backgroundColor: '#871dd3' }
-                        : { border: '2px solid #c5c6d2', backgroundColor: 'transparent' }
-                      }
+                      className="flex items-center justify-between p-4 rounded-xl transition-all cursor-pointer"
+                      style={{
+                        border: `2px solid ${isConnected ? p.color : 'rgba(197,198,210,0.4)'}`,
+                        backgroundColor: isConnected ? `${p.color}08` : '#f8f9fa',
+                      }}
+                      onClick={() => togglePlatform(p.id)}
                     >
-                      {isConnected && (
-                        <span className="material-symbols-outlined text-white text-[14px] icon-filled">check</span>
-                      )}
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-10 h-10 rounded-xl flex items-center justify-center"
+                          style={{ backgroundColor: isConnected ? `${p.color}18` : '#edeeef' }}
+                        >
+                          <span
+                            className="material-symbols-outlined text-[20px]"
+                            style={{ color: isConnected ? p.color : '#444650' }}
+                          >
+                            {p.icon}
+                          </span>
+                        </div>
+                        <span className="font-semibold text-sm text-primary">{p.name}</span>
+                      </div>
+                      <div
+                        className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={isConnected
+                          ? { backgroundColor: p.color }
+                          : { border: '2px solid #c5c6d2', backgroundColor: 'transparent' }
+                        }
+                      >
+                        {isConnected && (
+                          <span className="material-symbols-outlined text-white text-[14px] icon-filled">check</span>
+                        )}
+                      </div>
                     </div>
+
+                    {isConnected && fields.length > 0 && (
+                      <div
+                        className="mt-1 p-4 rounded-xl space-y-3"
+                        style={{ border: `1.5px solid ${p.color}30`, backgroundColor: `${p.color}05` }}
+                      >
+                        {fields.map((f) => (
+                          <div key={f.key}>
+                            <label className="block text-xs font-semibold mb-1 text-on-surface-variant">
+                              {f.label}
+                            </label>
+                            <input
+                              type={f.type ?? 'text'}
+                              value={creds[f.key] ?? ''}
+                              onChange={(e) =>
+                                setPlatformCreds((prev) => ({
+                                  ...prev,
+                                  [p.id]: { ...(prev[p.id] ?? {}), [f.key]: e.target.value },
+                                }))
+                              }
+                              placeholder={f.placeholder}
+                              dir={f.dir}
+                              onClick={(e) => e.stopPropagation()}
+                              className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-colors border border-outline-variant/50 bg-white text-on-surface focus:border-secondary"
+                            />
+                            <p className="text-xs mt-1 text-outline">{f.hint}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               })}
