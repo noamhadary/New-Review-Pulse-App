@@ -1,4 +1,4 @@
-import { useState, useEffect, useId, useMemo } from 'react';
+import { useState, useEffect, useId, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { TONE_LABELS, type ToneType } from '../types';
 import { supabase } from '../lib/supabase';
@@ -344,13 +344,14 @@ function InviteModal({ onClose, onInvite }: {
 
 // ── Connect platform modal ─────────────────────────────────────────────────────
 
-function ConnectModal({ platform, onClose, onConnected }: {
+function ConnectModal({ platform, onClose, onConnected, initialCreds }: {
   platform: typeof INTEGRATIONS_CONFIG[number];
   onClose: () => void;
   onConnected: (creds: Record<string, string>) => void;
+  initialCreds?: Record<string, string>;
 }) {
   const [step, setStep] = useState<'form' | 'connecting' | 'done'>('form');
-  const [creds, setCreds] = useState<Record<string, string>>({});
+  const [creds, setCreds] = useState<Record<string, string>>(initialCreds ?? {});
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const fields = PLATFORM_CREDENTIAL_FIELDS[platform.id] ?? [];
@@ -622,6 +623,37 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
   const [draft, setDraft] = useState<ProfileForm | null>(null);
   const [saved, setSaved] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string | null>(business?.logo_url ?? null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (business?.logo_url) setLogoUrl(business.logo_url);
+  }, [business?.logo_url]);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setUploadingAvatar(true);
+    const ext = file.name.split('.').pop() ?? 'jpg';
+    const path = `${user.id}/logo.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from('business-logos')
+      .upload(path, file, { upsert: true });
+    if (uploadError) {
+      console.error('Avatar upload error:', uploadError);
+      showToast(`שגיאה בהעלאת התמונה: ${uploadError.message}`, 'error');
+      setUploadingAvatar(false);
+      return;
+    }
+    const { data: { publicUrl } } = supabase.storage.from('business-logos').getPublicUrl(path);
+    await supabase.from('businesses').update({ logo_url: publicUrl }).eq('owner_id', user.id);
+    setLogoUrl(publicUrl);
+    refetchBusiness();
+    setUploadingAvatar(false);
+    showToast('תמונת הפרופיל עודכנה בהצלחה');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const baseProfile = useMemo<ProfileForm>(() => {
     if (business) {
@@ -672,15 +704,15 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
     if (user) {
       const payload = {
         owner_id: user.id,
-        name:     profile.name,
-        category: profile.category,
-        phone:    profile.phone  || null,
-        website:  profile.website || null,
+        name:     profile.name.trim()     || 'העסק שלי',
+        category: profile.category.trim() || 'קמעונאות',
+        phone:    profile.phone.trim()    || null,
+        website:  profile.website.trim()  || null,
       };
 
-      const { error } = business?.id
-        ? await supabase.from('businesses').update(payload).eq('id', business.id).eq('owner_id', user.id)
-        : await supabase.from('businesses').insert(payload);
+      const { error } = await supabase
+        .from('businesses')
+        .upsert(payload, { onConflict: 'owner_id' });
 
       if (error) {
         console.error('businesses save error:', error);
@@ -706,16 +738,45 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
       <SectionCard title="פרטים אישיים">
         {/* Avatar */}
         <div className="flex items-center gap-4 mb-6 pb-6 border-b border-outline-variant/30">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-extrabold flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg,#002366,#871dd3)', color: '#fff' }}>
-            {initials}
+          <div className="relative flex-shrink-0">
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt="לוגו העסק"
+                className="w-16 h-16 rounded-2xl object-cover"
+                style={{ border: '2px solid rgba(135,29,211,0.2)' }}
+              />
+            ) : (
+              <div
+                className="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-extrabold"
+                style={{ background: 'linear-gradient(135deg,#002366,#871dd3)', color: '#fff' }}
+              >
+                {initials}
+              </div>
+            )}
+            {uploadingAvatar && (
+              <div className="absolute inset-0 rounded-2xl flex items-center justify-center bg-black/40">
+                <span className="material-symbols-outlined text-white text-[20px] animate-spin">progress_activity</span>
+              </div>
+            )}
           </div>
           <div>
             <p className="font-bold text-primary">{profile.name || 'שם מלא'}</p>
             <p className="text-sm text-outline">{profile.email}</p>
-            <button className="text-xs font-semibold mt-1 cursor-pointer hover:underline text-secondary">
-              שנה תמונת פרופיל
+            <button
+              onClick={() => !isDemo && fileInputRef.current?.click()}
+              disabled={uploadingAvatar || isDemo}
+              className="text-xs font-semibold mt-1 cursor-pointer hover:underline text-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {uploadingAvatar ? 'מעלה...' : 'שנה תמונת פרופיל'}
             </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleAvatarChange}
+            />
           </div>
         </div>
 
@@ -1206,22 +1267,58 @@ function TeamTab({ showToast }: { showToast: (m: string, t?: ToastProps['type'])
 function IntegrationsTab({ showToast }: { showToast: (m: string, t?: ToastProps['type']) => void }) {
   const { user, isDemo } = useAuth();
   const userId = isDemo ? null : user?.id ?? null;
-  const [connected, setConnected]       = useState<string[]>(isDemo ? ['google'] : []);
-  const [fetchedKey, setFetchedKey]     = useState<string | null>(null);
-  const [syncing, setSyncing]           = useState<string | null>(null);
-  const [connecting, setConnecting]     = useState<typeof INTEGRATIONS_CONFIG[number] | null>(null);
-  const [disconnectId, setDisconnectId] = useState<string | null>(null);
+  const [connected, setConnected]           = useState<string[]>(isDemo ? ['google'] : []);
+  const [savedCreds, setSavedCreds]         = useState<Record<string, Record<string, string>>>({});
+  const [fetchedKey, setFetchedKey]         = useState<string | null>(null);
+  const [syncing, setSyncing]               = useState<string | null>(null);
+  const [savingPlatform, setSavingPlatform] = useState<string | null>(null);
+  const [connecting, setConnecting]         = useState<typeof INTEGRATIONS_CONFIG[number] | null>(null);
+  const [disconnectId, setDisconnectId]     = useState<string | null>(null);
+
+  const updateCred = (platformId: string, key: string, value: string) =>
+    setSavedCreds(prev => ({ ...prev, [platformId]: { ...(prev[platformId] ?? {}), [key]: value } }));
+
+  const savePlatformCreds = async (platformId: string) => {
+    const creds = savedCreds[platformId] ?? {};
+    setSavingPlatform(platformId);
+    if (!isDemo && user) {
+      await supabase.from('platform_connections').upsert(
+        { owner_id: user.id, platform: platformId, credentials: creds },
+        { onConflict: 'owner_id,platform' },
+      );
+    }
+    setSavingPlatform(null);
+    const hasCredentials = Object.values(creds).some((v) => v?.trim());
+    if (hasCredentials) {
+      setConnected(prev => prev.includes(platformId) ? prev : [...prev, platformId]);
+    }
+    showToast('הפרטים נשמרו בהצלחה');
+  };
 
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
     supabase
       .from('platform_connections')
-      .select('platform')
+      .select('platform, credentials')
       .eq('owner_id', userId)
       .then(({ data }) => {
         if (cancelled) return;
-        if (data) setConnected(data.map(r => r.platform as string));
+        if (data) {
+          const creds: Record<string, Record<string, string>> = {};
+          data.forEach(r => {
+            if (r.credentials) creds[r.platform as string] = r.credentials as Record<string, string>;
+          });
+          setSavedCreds(creds);
+          setConnected(
+            data
+              .filter(r => {
+                const c = r.credentials as Record<string, string> | null;
+                return c && Object.values(c).some((v) => v?.trim());
+              })
+              .map(r => r.platform as string),
+          );
+        }
         setFetchedKey(userId);
       });
     return () => { cancelled = true; };
@@ -1240,7 +1337,8 @@ function IntegrationsTab({ showToast }: { showToast: (m: string, t?: ToastProps[
         .from('platform_connections')
         .upsert({ owner_id: user.id, platform: id, credentials: creds }, { onConflict: 'owner_id,platform' });
     }
-    setConnected(prev => [...prev, id]);
+    setConnected(prev => prev.includes(id) ? prev : [...prev, id]);
+    setSavedCreds(prev => ({ ...prev, [id]: creds }));
     setConnecting(null);
     showToast(`${INTEGRATIONS_CONFIG.find(p => p.id === id)?.name} חובר בהצלחה!`);
   };
@@ -1250,6 +1348,7 @@ function IntegrationsTab({ showToast }: { showToast: (m: string, t?: ToastProps[
       await supabase.from('platform_connections').delete().eq('owner_id', user.id).eq('platform', id);
     }
     setConnected(prev => prev.filter(c => c !== id));
+    setSavedCreds(prev => { const next = { ...prev }; delete next[id]; return next; });
     setDisconnectId(null);
     showToast('הפלטפורמה נותקה', 'info');
   };
@@ -1263,6 +1362,7 @@ function IntegrationsTab({ showToast }: { showToast: (m: string, t?: ToastProps[
           platform={connecting}
           onClose={() => setConnecting(null)}
           onConnected={(creds) => handleConnected(connecting.id, creds)}
+          initialCreds={savedCreds[connecting.id]}
         />
       )}
 
@@ -1291,48 +1391,89 @@ function IntegrationsTab({ showToast }: { showToast: (m: string, t?: ToastProps[
           {INTEGRATIONS_CONFIG.map((p) => {
             const isConnected = connected.includes(p.id);
             const isSyncing   = syncing === p.id;
+            const isSaving    = savingPlatform === p.id;
+            const credFields  = PLATFORM_CREDENTIAL_FIELDS[p.id] ?? [];
+            const creds       = savedCreds[p.id] ?? {};
             return (
-              <div key={p.id} className="flex items-center gap-3 p-4 rounded-xl"
-                style={{ backgroundColor: isConnected ? `${p.color}08` : '#f8f9fa', border: `1px solid ${isConnected ? `${p.color}30` : 'rgba(197,198,210,0.3)'}` }}>
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: isConnected ? `${p.color}15` : '#edeeef' }}>
-                  <span className="material-symbols-outlined text-[20px] icon-filled" style={{ color: isConnected ? p.color : '#757682' }}>{p.icon}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold text-primary">{p.name}</p>
-                    {isConnected && (
-                      <span className="flex items-center gap-0.5 text-xs font-bold text-green-600">
-                        <span className="w-1.5 h-1.5 rounded-full inline-block bg-green-600" />
-                        מחובר
-                      </span>
+              <div key={p.id} className="rounded-xl overflow-hidden"
+                style={{ border: `1px solid ${isConnected ? `${p.color}30` : 'rgba(197,198,210,0.3)'}` }}>
+
+                {/* Header row */}
+                <div className="flex items-center gap-3 p-4"
+                  style={{ backgroundColor: isConnected ? `${p.color}08` : '#f8f9fa' }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: isConnected ? `${p.color}15` : '#edeeef' }}>
+                    <span className="material-symbols-outlined text-[20px] icon-filled" style={{ color: isConnected ? p.color : '#757682' }}>{p.icon}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-primary">{p.name}</p>
+                      {isConnected && (
+                        <span className="flex items-center gap-0.5 text-xs font-bold text-green-600">
+                          <span className="w-1.5 h-1.5 rounded-full inline-block bg-green-600" />
+                          מחובר
+                        </span>
+                      )}
+                    </div>
+                    {isConnected && p.reviews > 0 && (
+                      <p className="text-xs text-outline">{p.reviews} ביקורות · סונכרן {p.lastSync}</p>
                     )}
                   </div>
-                  {isConnected && p.reviews > 0 && (
-                    <p className="text-xs text-outline">{p.reviews} ביקורות · סונכרן {p.lastSync}</p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {isConnected && (
-                    <button onClick={() => handleSync(p.id)} disabled={isSyncing}
-                      className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer transition-all hover:opacity-80 disabled:opacity-50"
-                      style={{ backgroundColor: `${p.color}15`, color: p.color }}>
-                      <span className={`material-symbols-outlined text-[13px] ${isSyncing ? 'animate-spin' : ''}`}>
-                        {isSyncing ? 'refresh' : 'sync'}
-                      </span>
-                      {isSyncing ? 'מסנכרן...' : 'סנכרן'}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {isConnected && (
+                      <button onClick={() => handleSync(p.id)} disabled={isSyncing}
+                        className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer transition-all hover:opacity-80 disabled:opacity-50"
+                        style={{ backgroundColor: `${p.color}15`, color: p.color }}>
+                        <span className={`material-symbols-outlined text-[13px] ${isSyncing ? 'animate-spin' : ''}`}>
+                          {isSyncing ? 'refresh' : 'sync'}
+                        </span>
+                        {isSyncing ? 'מסנכרן...' : 'סנכרן'}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => isConnected ? setDisconnectId(p.id) : setConnecting(p)}
+                      className="text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer transition-all hover:opacity-80"
+                      style={isConnected
+                        ? { backgroundColor: '#fee2e2', color: '#991b1b' }
+                        : { background: 'linear-gradient(135deg,#002366,#871dd3)', color: '#fff' }
+                      }>
+                      {isConnected ? 'נתק' : 'חבר'}
                     </button>
-                  )}
-                  <button
-                    onClick={() => isConnected ? setDisconnectId(p.id) : setConnecting(p)}
-                    className="text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer transition-all hover:opacity-80"
-                    style={isConnected
-                      ? { backgroundColor: '#fee2e2', color: '#991b1b' }
-                      : { background: 'linear-gradient(135deg,#002366,#871dd3)', color: '#fff' }
-                    }>
-                    {isConnected ? 'נתק' : 'חבר'}
-                  </button>
+                  </div>
                 </div>
+
+                {/* Credential fields — shown when connected and platform has configurable fields */}
+                {isConnected && credFields.length > 0 && (
+                  <div className="px-4 py-4 space-y-3"
+                    style={{ borderTop: `1px solid ${p.color}20`, backgroundColor: `${p.color}04` }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {credFields.map((f) => (
+                        <div key={f.key}>
+                          <label className="block text-xs font-semibold mb-1 text-on-surface-variant">{f.label}</label>
+                          <input
+                            type={f.type ?? 'text'}
+                            value={creds[f.key] ?? ''}
+                            onChange={(e) => updateCred(p.id, f.key, e.target.value)}
+                            placeholder={f.placeholder}
+                            dir={f.dir}
+                            className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-colors border border-outline-variant/50 bg-white text-on-surface focus:border-secondary"
+                          />
+                          <p className="text-xs mt-1 text-outline">{f.hint}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => savePlatformCreds(p.id)}
+                      disabled={isSaving}
+                      className="flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-lg cursor-pointer transition-all hover:opacity-90 disabled:opacity-50"
+                      style={{ background: 'linear-gradient(135deg,#002366,#871dd3)', color: '#fff' }}>
+                      <span className="material-symbols-outlined text-[14px] icon-filled">
+                        {isSaving ? 'hourglass_empty' : 'save'}
+                      </span>
+                      {isSaving ? 'שומר...' : 'שמור פרטים'}
+                    </button>
+                  </div>
+                )}
               </div>
             );
           })}

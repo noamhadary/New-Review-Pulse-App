@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useBusiness } from '../../context/business-context';
 
 const STORES = ['חנות מרכזית', 'סניף תל אביב', 'סניף חיפה', 'סניף ירושלים'];
 
@@ -39,6 +40,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
   const [storeOpen, setStoreOpen]   = useState(false);
   const [activeStore, setActiveStore] = useState(STORES[0]);
   const navigate  = useNavigate();
+  const { business } = useBusiness();
   const notifRef  = useRef<HTMLDivElement>(null);
   const storeRef  = useRef<HTMLDivElement>(null);
 
@@ -160,11 +162,26 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
 
         {/* Profile */}
         <button
-          className="p-2.5 rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+          className="rounded-full hover:opacity-80 transition-opacity cursor-pointer flex-shrink-0"
           aria-label="פרופיל"
           onClick={() => navigate('/settings')}
+          style={{ width: 38, height: 38 }}
         >
-          <span className="material-symbols-outlined text-white">account_circle</span>
+          {business?.logo_url ? (
+            <img
+              src={business.logo_url}
+              alt="לוגו העסק"
+              className="w-full h-full rounded-full object-cover"
+              style={{ border: '2px solid rgba(255,255,255,0.4)' }}
+            />
+          ) : (
+            <div
+              className="w-full h-full rounded-full flex items-center justify-center text-sm font-extrabold"
+              style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: '2px solid rgba(255,255,255,0.3)' }}
+            >
+              {business?.name ? business.name.charAt(0).toUpperCase() : <span className="material-symbols-outlined text-[20px]">account_circle</span>}
+            </div>
+          )}
         </button>
 
         {/* Mobile menu */}

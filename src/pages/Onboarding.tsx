@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/auth-context';
@@ -59,14 +59,52 @@ const PLATFORM_CREDENTIAL_FIELDS: Record<string, OnbCredField[]> = {
 export default function Onboarding() {
   const navigate = useNavigate();
   const { user, isDemo } = useAuth();
-  const { refetch: refetchBusiness } = useBusiness();
+  const { business: existingBusiness, refetch: refetchBusiness } = useBusiness();
 
   const [step, setStep] = useState(1);
-  const [business, setBusiness] = useState({ name: '', category: '', phone: '', website: '' });
+  const [business, setBusiness] = useState({ name: '', category: 'קמעונאות', phone: '', website: '' });
   const [connected, setConnected] = useState<string[]>([]);
   const [platformCreds, setPlatformCreds] = useState<Record<string, Record<string, string>>>({});
   const [notifs, setNotifs] = useState({ email: true, new_review: true, critical: true, weekly: false });
   const [saving, setSaving] = useState(false);
+  const prefilled = useRef(false);
+
+  // Pre-fill Step 1 form from existing business record — runs once, never overwrites user edits
+  useEffect(() => {
+    if (!existingBusiness || prefilled.current) return;
+    prefilled.current = true;
+    setBusiness({
+      name:     existingBusiness.name     ?? '',
+      category: existingBusiness.category || 'קמעונאות',
+      phone:    existingBusiness.phone    ?? '',
+      website:  existingBusiness.website  ?? '',
+    });
+  }, [existingBusiness]);
+
+  // Load existing platform connections + credentials so returning users see their data
+  useEffect(() => {
+    if (!user || isDemo) return;
+    supabase
+      .from('platform_connections')
+      .select('platform, credentials')
+      .eq('owner_id', user.id)
+      .then(({ data }) => {
+        if (!data?.length) return;
+        const creds: Record<string, Record<string, string>> = {};
+        data.forEach((r) => {
+          if (r.credentials) creds[r.platform as string] = r.credentials as Record<string, string>;
+        });
+        setPlatformCreds(creds);
+        setConnected(
+          data
+            .filter((r) => {
+              const c = r.credentials as Record<string, string> | null;
+              return c && Object.values(c).some((v) => v?.trim());
+            })
+            .map((r) => r.platform as string),
+        );
+      });
+  }, [user, isDemo]);
 
   const togglePlatform = (id: string) => {
     setConnected((prev) =>
@@ -79,15 +117,33 @@ export default function Onboarding() {
     if (!user) return;
     setSaving(true);
     try {
-      const { error } = await supabase.from('businesses').upsert({
-        owner_id: user.id,
-        name: business.name || 'העסק שלי',
-        category: business.category,
-        phone: business.phone,
-        website: business.website,
-      });
-      if (!error) refetchBusiness();
-    } catch { /* ignore */ } finally {
+      const { error } = await supabase.from('businesses').upsert(
+        {
+          owner_id: user.id,
+          name:     business.name.trim()     || 'העסק שלי',
+          category: business.category.trim() || 'קמעונאות',
+          phone:    business.phone.trim()    || null,
+          website:  business.website.trim()  || null,
+        },
+        { onConflict: 'owner_id' },
+      );
+      if (error) console.error('businesses upsert error:', error);
+      else refetchBusiness();
+
+      // Persist platform credentials so they appear pre-filled on return visits
+      if (connected.length > 0) {
+        await Promise.all(
+          connected.map((platform) =>
+            supabase.from('platform_connections').upsert(
+              { owner_id: user.id, platform, credentials: platformCreds[platform] ?? {} },
+              { onConflict: 'owner_id,platform' },
+            )
+          )
+        );
+      }
+    } catch (err) {
+      console.error('handleComplete error:', err);
+    } finally {
       setSaving(false);
       navigate('/dashboard');
     }
@@ -150,11 +206,11 @@ export default function Onboarding() {
           {step === 1 && (
             <div className="space-y-5">
               <h2 className="text-xl font-bold text-primary">פרטי העסק</h2>
+
               {[
-                { key: 'name', label: 'שם העסק', placeholder: 'קפה ישראל' },
-                { key: 'category', label: 'קטגוריה', placeholder: 'מסעדה / קפה / חנות...' },
-                { key: 'phone', label: 'טלפון', placeholder: '050-0000000' },
-                { key: 'website', label: 'אתר אינטרנט', placeholder: 'https://...' },
+                { key: 'name',    label: 'שם העסק',      placeholder: 'קפה ישראל' },
+                { key: 'phone',   label: 'טלפון',         placeholder: '050-0000000' },
+                { key: 'website', label: 'אתר אינטרנט',  placeholder: 'https://...' },
               ].map(({ key, label, placeholder }) => (
                 <div key={key}>
                   <label htmlFor={`onb-${key}`} className="block text-sm font-semibold mb-1.5 text-primary">
@@ -170,6 +226,22 @@ export default function Onboarding() {
                   />
                 </div>
               ))}
+
+              <div>
+                <label htmlFor="onb-category" className="block text-sm font-semibold mb-1.5 text-primary">
+                  קטגוריה
+                </label>
+                <select
+                  id="onb-category"
+                  value={business.category}
+                  onChange={(e) => setBusiness((b) => ({ ...b, category: e.target.value }))}
+                  className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all cursor-pointer bg-surface-container-low text-on-surface border-2 border-outline-variant/50 focus:border-secondary"
+                >
+                  {['קמעונאות', 'מסעדנות', 'שירותים', 'בריאות', 'אחר'].map((c) => (
+                    <option key={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           )}
 
@@ -325,23 +397,47 @@ export default function Onboarding() {
           )}
 
           {/* Navigation */}
-          <div className="flex gap-3 mt-8">
-            {step > 1 && (
-              <button
-                onClick={() => setStep((s) => s - 1)}
-                className="flex-1 py-3 rounded-xl font-semibold text-sm border cursor-pointer transition-colors hover:bg-surface-container border-outline-variant text-on-surface-variant"
-              >
-                חזור
-              </button>
-            )}
-            <button
-              onClick={() => step < 4 ? setStep((s) => s + 1) : handleComplete()}
-              disabled={saving}
-              className="flex-1 py-3 rounded-xl font-bold text-sm transition-all hover:opacity-90 cursor-pointer bg-secondary text-white"
-            >
-              {step === 4 ? (saving ? 'שומר...' : 'עבור ללוח הבקרה') : 'הבא'}
-            </button>
-          </div>
+          {(() => {
+            const incompletePlatforms = step === 2
+              ? connected.filter((id) => {
+                  const fields = PLATFORM_CREDENTIAL_FIELDS[id] ?? [];
+                  const creds = platformCreds[id] ?? {};
+                  return fields.some((f) => !creds[f.key]?.trim());
+                })
+              : [];
+            const blocked = incompletePlatforms.length > 0;
+            return (
+              <div className="flex flex-col gap-3 mt-8">
+                {blocked && (
+                  <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl text-xs bg-yellow-50 border border-yellow-200 text-yellow-800">
+                    <span className="material-symbols-outlined text-[16px] flex-shrink-0 mt-0.5">warning</span>
+                    <span>
+                      {incompletePlatforms.length === 1
+                        ? `נא למלא את פרטי ההתחברות עבור ${PLATFORMS.find((p) => p.id === incompletePlatforms[0])?.name}`
+                        : `נא למלא את פרטי ההתחברות עבור: ${incompletePlatforms.map((id) => PLATFORMS.find((p) => p.id === id)?.name).join(', ')}`}
+                    </span>
+                  </div>
+                )}
+                <div className="flex gap-3">
+                  {step > 1 && (
+                    <button
+                      onClick={() => setStep((s) => s - 1)}
+                      className="flex-1 py-3 rounded-xl font-semibold text-sm border cursor-pointer transition-colors hover:bg-surface-container border-outline-variant text-on-surface-variant"
+                    >
+                      חזור
+                    </button>
+                  )}
+                  <button
+                    onClick={() => step < 4 ? setStep((s) => s + 1) : handleComplete()}
+                    disabled={saving || blocked}
+                    className="flex-1 py-3 rounded-xl font-bold text-sm transition-all hover:opacity-90 cursor-pointer bg-secondary text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {step === 4 ? (saving ? 'שומר...' : 'עבור ללוח הבקרה') : 'הבא'}
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
     </div>

@@ -5,16 +5,25 @@ import { supabase } from '../../lib/supabase';
 
 type Stage = 'verifying' | 'saving' | 'error';
 
-async function provisionBusiness(user: User) {
+async function provisionBusiness(user: User): Promise<'new' | 'existing'> {
   const meta = user.user_metadata ?? {};
-  await supabase.from('businesses').upsert(
-    {
-      owner_id: user.id,
-      name:     (meta.business_name as string | undefined)?.trim() || 'העסק שלי',
-      category: 'קמעונאות',
-    },
-    { onConflict: 'owner_id', ignoreDuplicates: true },
-  );
+
+  // Check if a business record already exists for this user
+  const { data: existing } = await supabase
+    .from('businesses')
+    .select('id')
+    .eq('owner_id', user.id)
+    .maybeSingle();
+
+  if (existing) return 'existing';
+
+  await supabase.from('businesses').insert({
+    owner_id: user.id,
+    name:     (meta.business_name as string | undefined)?.trim() || 'העסק שלי',
+    category: 'קמעונאות',
+  });
+
+  return 'new';
 }
 
 export default function AuthCallback() {
@@ -68,9 +77,11 @@ export default function AuthCallback() {
         // Create / ensure the business record exists
         setStage('saving');
         setMessage('מכין את החשבון שלך...');
-        await provisionBusiness(session.user);
+        const status = await provisionBusiness(session.user);
 
-        if (!cancelled) navigate('/onboarding', { replace: true });
+        if (!cancelled) {
+          navigate(status === 'new' ? '/onboarding' : '/dashboard', { replace: true });
+        }
 
       } catch (err) {
         if (cancelled) return;
