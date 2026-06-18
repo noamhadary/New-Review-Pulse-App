@@ -17,6 +17,10 @@ export interface Review {
   reply_text?: string;
 }
 
+export interface BranchData {
+  location: string;
+}
+
 export interface Business {
   id: string;
   owner_id: string;
@@ -25,6 +29,8 @@ export interface Business {
   phone?: string;
   website?: string;
   logo_url?: string;
+  description?: string;
+  branches?: BranchData[];
   created_at: string;
 }
 

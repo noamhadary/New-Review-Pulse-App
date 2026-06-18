@@ -11,6 +11,7 @@ const Analytics    = lazy(() => import('./pages/Analytics'));
 const Reports      = lazy(() => import('./pages/Reports'));
 const Onboarding   = lazy(() => import('./pages/Onboarding'));
 const Settings     = lazy(() => import('./pages/Settings'));
+const SeedDemo     = lazy(() => import('./pages/SeedDemo'));
 const Login        = lazy(() => import('./pages/auth/Login'));
 const Register     = lazy(() => import('./pages/auth/Register'));
 const AuthCallback = lazy(() => import('./pages/auth/AuthCallback'));
@@ -43,6 +44,7 @@ export default function App() {
                   <Route path="/reports"    element={<Reports />} />
                   <Route path="/onboarding" element={<Onboarding />} />
                   <Route path="/settings"   element={<Settings />} />
+                  <Route path="/seed"       element={<SeedDemo />} />
                 </Route>
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />

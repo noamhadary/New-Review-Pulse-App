@@ -1,8 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBusiness } from '../../context/business-context';
-
-const STORES = ['חנות מרכזית', 'סניף תל אביב', 'סניף חיפה', 'סניף ירושלים'];
 
 const NOTIFICATIONS = [
   {
@@ -36,13 +34,32 @@ interface TopBarProps {
 }
 
 export default function TopBar({ onMenuToggle }: TopBarProps) {
-  const [notifOpen, setNotifOpen]   = useState(false);
-  const [storeOpen, setStoreOpen]   = useState(false);
-  const [activeStore, setActiveStore] = useState(STORES[0]);
-  const navigate  = useNavigate();
+  const [notifOpen, setNotifOpen]       = useState(false);
+  const [storeOpen, setStoreOpen]       = useState(false);
+  const [activeBranchIdx, setActiveBranchIdx] = useState(0);
+  const navigate   = useNavigate();
   const { business } = useBusiness();
-  const notifRef  = useRef<HTMLDivElement>(null);
-  const storeRef  = useRef<HTMLDivElement>(null);
+  const notifRef   = useRef<HTMLDivElement>(null);
+  const storeRef   = useRef<HTMLDivElement>(null);
+
+  // Build display-ready branch list from saved data
+  const branches = useMemo(() => {
+    const raw = business?.branches;
+    if (Array.isArray(raw) && raw.length > 0) {
+      return raw.map((b, i) => ({
+        label:    i === 0 ? 'סניף ראשי' : `סניף ${i + 1}`,
+        location: (b as { location: string }).location ?? '',
+      }));
+    }
+    // No branches saved yet — derive single entry from business name
+    return [{ label: business?.name ?? 'סניף ראשי', location: '' }];
+  }, [business?.branches, business?.name]);
+
+  const activeBranch = branches[activeBranchIdx] ?? branches[0];
+  const multiBranch  = branches.length > 1;
+
+  // Reset selection when business changes
+  useEffect(() => { setActiveBranchIdx(0); }, [business?.id]);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -67,40 +84,52 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
 
       {/* Actions */}
       <div className="flex items-center gap-2">
-        {/* Store switcher */}
+        {/* Branch switcher */}
         <div ref={storeRef} className="relative hidden sm:block">
           <button
-            onClick={() => setStoreOpen(!storeOpen)}
-            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-colors px-3 py-2.5 rounded-lg cursor-pointer"
+            onClick={() => multiBranch && setStoreOpen(!storeOpen)}
+            className={`flex items-center gap-2 px-3 py-2.5 rounded-lg transition-colors ${multiBranch ? 'bg-white/10 hover:bg-white/20 cursor-pointer' : 'bg-white/5 cursor-default'}`}
           >
             <span className="material-symbols-outlined text-white text-[20px]">store</span>
-            <span className="text-sm font-semibold text-white">{activeStore}</span>
-            <span
-              className="material-symbols-outlined text-white text-[18px] transition-transform duration-200"
-              style={{ transform: storeOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
-            >
-              expand_more
-            </span>
+            <div className="text-right">
+              <p className="text-sm font-semibold text-white leading-tight">{activeBranch.label}</p>
+              {activeBranch.location && (
+                <p className="text-[11px] text-white/70 leading-tight">{activeBranch.location}</p>
+              )}
+            </div>
+            {multiBranch && (
+              <span
+                className="material-symbols-outlined text-white text-[18px] transition-transform duration-200"
+                style={{ transform: storeOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
+              >
+                expand_more
+              </span>
+            )}
           </button>
-          {storeOpen && (
+          {multiBranch && storeOpen && (
             <div
-              className="absolute left-0 top-12 w-48 rounded-xl overflow-hidden bg-white border border-outline-variant/30"
+              className="absolute left-0 top-14 w-56 rounded-xl overflow-hidden bg-white border border-outline-variant/30"
               style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.15)' }}
             >
               <div className="p-2 border-b border-outline-variant/30">
                 <p className="text-xs font-semibold px-2 py-1 text-outline">בחר סניף</p>
               </div>
-              {STORES.map((store) => (
+              {branches.map((branch, i) => (
                 <button
-                  key={store}
-                  onClick={() => { setActiveStore(store); setStoreOpen(false); }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 text-sm text-right transition-colors cursor-pointer hover:bg-background ${
-                    activeStore === store ? 'text-secondary' : 'text-on-surface'
+                  key={i}
+                  onClick={() => { setActiveBranchIdx(i); setStoreOpen(false); }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 text-right transition-colors cursor-pointer hover:bg-background ${
+                    activeBranchIdx === i ? 'text-secondary' : 'text-on-surface'
                   }`}
                 >
-                  <span className="font-medium">{store}</span>
-                  {activeStore === store && (
-                    <span className="material-symbols-outlined text-[16px] icon-filled text-secondary">
+                  <div>
+                    <p className="text-sm font-medium">{branch.label}</p>
+                    {branch.location && (
+                      <p className="text-xs text-outline">{branch.location}</p>
+                    )}
+                  </div>
+                  {activeBranchIdx === i && (
+                    <span className="material-symbols-outlined text-[16px] icon-filled text-secondary flex-shrink-0">
                       check
                     </span>
                   )}

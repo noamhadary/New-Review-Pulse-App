@@ -1,9 +1,10 @@
 import { useState, useEffect, useId, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { TONE_LABELS, type ToneType } from '../types';
+import { TONE_LABELS, type ToneType, type BranchData } from '../types';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/auth-context';
 import { useBusiness } from '../context/business-context';
+import { seedDemoReviews } from '../lib/demoReviews';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -605,6 +606,7 @@ interface ProfileForm {
   phone: string;
   website: string;
   category: string;
+  description: string;
 }
 
 function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type']) => void }) {
@@ -626,10 +628,39 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
   const [logoUrl, setLogoUrl] = useState<string | null>(business?.logo_url ?? null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [branches, setBranches] = useState<BranchData[]>([{ location: '' }]);
+  const [selectedBranchIdx, setSelectedBranchIdx] = useState(0);
 
   useEffect(() => {
     if (business?.logo_url) setLogoUrl(business.logo_url);
   }, [business?.logo_url]);
+
+  // Load branches from DB whenever business changes
+  useEffect(() => {
+    const raw = business?.branches;
+    if (Array.isArray(raw) && raw.length > 0) {
+      setBranches(raw as BranchData[]);
+    } else {
+      setBranches([{ location: '' }]);
+    }
+    setSelectedBranchIdx(0);
+  }, [business?.id]);
+
+  const handleBranchCountChange = (count: number) => {
+    setBranches((prev) => {
+      if (count > prev.length) {
+        return [...prev, ...Array.from({ length: count - prev.length }, () => ({ location: '' }))];
+      }
+      return prev.slice(0, count);
+    });
+    setSelectedBranchIdx((prev) => Math.min(prev, count - 1));
+  };
+
+  const updateBranchLocation = (idx: number, location: string) => {
+    setBranches((prev) => prev.map((b, i) => (i === idx ? { ...b, location } : b)));
+  };
+
+  const branchLabel = (idx: number) => idx === 0 ? 'סניף ראשי' : `סניף ${idx + 1}`;
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -659,11 +690,12 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
     if (business) {
       // Existing user — loaded from Supabase
       return {
-        name:     business.name     ?? '',
-        email:    user?.email ?? '',
-        phone:    business.phone    ?? '',
-        website:  business.website  ?? '',
-        category: business.category ?? 'קמעונאות',
+        name:        business.name        ?? '',
+        email:       user?.email          ?? '',
+        phone:       business.phone       ?? '',
+        website:     business.website     ?? '',
+        category:    business.category    ?? 'קמעונאות',
+        description: business.description ?? '',
       };
     }
     if (isDemo) {
@@ -673,17 +705,19 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
         phone: '+972534777375',
         website: '',
         category: 'קמעונאות',
+        description: '',
         ...demoSaved,
       };
     }
     // New real user — prefill from registration metadata
     const meta = (user?.user_metadata ?? {}) as Record<string, string>;
     return {
-      name: meta.business_name || meta.full_name || '',
-      email: user?.email ?? '',
-      phone: '',
-      website: '',
-      category: 'קמעונאות',
+      name:        meta.business_name || meta.full_name || '',
+      email:       user?.email ?? '',
+      phone:       '',
+      website:     '',
+      category:    'קמעונאות',
+      description: '',
     };
   }, [business, isDemo, user, demoSaved]);
 
@@ -702,24 +736,45 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
       return;
     }
     if (user) {
-      const payload = {
-        owner_id: user.id,
-        name:     profile.name.trim()     || 'העסק שלי',
-        category: profile.category.trim() || 'קמעונאות',
-        phone:    profile.phone.trim()    || null,
-        website:  profile.website.trim()  || null,
+      const prevCategory = business?.category ?? null;
+      const fields = {
+        name:        profile.name.trim()        || 'העסק שלי',
+        category:    profile.category.trim()    || 'קמעונאות',
+        phone:       profile.phone.trim()       || null,
+        website:     profile.website.trim()     || null,
+        description: profile.description.trim() || null,
+        branches,
       };
 
-      const { error } = await supabase
-        .from('businesses')
-        .upsert(payload, { onConflict: 'owner_id' });
+      let businessId = business?.id ?? null;
 
-      if (error) {
-        console.error('businesses save error:', error);
-        showToast(`שגיאה בשמירה: ${error.message}`, 'error');
-        return;
+      if (business?.id) {
+        const { error } = await supabase.from('businesses').update(fields).eq('id', business.id);
+        if (error) {
+          console.error('businesses save error:', error.code, error.message, error.details);
+          showToast(`שגיאה בשמירה: ${error.message}`, 'error');
+          return;
+        }
+      } else {
+        const { data: newBiz, error } = await supabase
+          .from('businesses')
+          .insert({ owner_id: user.id, ...fields })
+          .select('id')
+          .single();
+        if (error) {
+          console.error('businesses save error:', error.code, error.message, error.details);
+          showToast(`שגיאה בשמירה: ${error.message}`, 'error');
+          return;
+        }
+        businessId = newBiz?.id ?? null;
       }
+
       refetchBusiness();
+
+      // Reseed demo reviews when category or business name changes
+      if (businessId && (prevCategory !== fields.category || !prevCategory)) {
+        await seedDemoReviews(businessId, fields.category, fields.name);
+      }
     }
     setSaved(true);
     showToast('הפרופיל נשמר בהצלחה');
@@ -798,7 +853,88 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
               ))}
             </select>
           </div>
+          <div className="sm:col-span-2">
+            <label htmlFor="profile-description" className="block text-xs font-semibold mb-1 text-on-surface-variant">תיאור קצר</label>
+            <textarea
+              id="profile-description"
+              value={profile.description}
+              onChange={(e) => setProfile({ ...profile, description: e.target.value })}
+              placeholder="תיאור קצר של סוג העסק ומה שמייחד אותו..."
+              rows={2}
+              className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-colors border border-outline-variant/50 bg-surface-container-low text-on-surface focus:border-secondary resize-none"
+            />
+          </div>
         </div>
+      </SectionCard>
+
+      <SectionCard title="סניפים" subtitle="הגדר את מספר הסניפים ונהל את פרטי כל סניף">
+        {/* Branch count selector */}
+        <div className="flex items-center gap-4 pb-4 border-b border-outline-variant/20">
+          <label htmlFor="branch-count" className="text-sm font-semibold whitespace-nowrap text-on-surface">מספר סניפים</label>
+          <select
+            id="branch-count"
+            value={branches.length}
+            onChange={(e) => handleBranchCountChange(Number(e.target.value))}
+            className="w-28 px-3 py-2 rounded-xl text-sm outline-none cursor-pointer bg-surface-container-low border border-outline-variant/50 text-on-surface focus:border-secondary"
+          >
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+              <option key={n} value={n}>{n}</option>
+            ))}
+          </select>
+          {branches.length > 1 && (
+            <span className="text-xs text-outline">סניף 1 הוא הסניף הראשי</span>
+          )}
+        </div>
+
+        {/* Branch selector + location — only when more than one branch */}
+        {branches.length > 1 && (
+          <div className="mt-4 space-y-4">
+            {/* Pill-style branch selector */}
+            <div>
+              <p className="text-xs font-semibold mb-2 text-on-surface-variant">בחר סניף</p>
+              <div className="flex flex-wrap gap-2">
+                {branches.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setSelectedBranchIdx(i)}
+                    className="px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer"
+                    style={
+                      selectedBranchIdx === i
+                        ? { background: 'linear-gradient(135deg,#002366,#871dd3)', color: '#fff' }
+                        : { backgroundColor: '#edeeef', color: '#444650' }
+                    }
+                  >
+                    {branchLabel(i)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Selected branch data */}
+            <div
+              className="p-4 rounded-xl"
+              style={{ border: '1.5px solid rgba(135,29,211,0.15)', backgroundColor: 'rgba(135,29,211,0.03)' }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <span className="material-symbols-outlined text-[16px] icon-filled text-secondary">location_on</span>
+                <p className="text-sm font-bold text-primary">{branchLabel(selectedBranchIdx)}</p>
+                {selectedBranchIdx === 0 && (
+                  <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-secondary/10 text-secondary">ראשי</span>
+                )}
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1 text-on-surface-variant">מיקום</label>
+                <input
+                  type="text"
+                  value={branches[selectedBranchIdx]?.location ?? ''}
+                  onChange={(e) => updateBranchLocation(selectedBranchIdx, e.target.value)}
+                  placeholder="עיר, רחוב ומספר"
+                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-colors border border-outline-variant/50 bg-white text-on-surface focus:border-secondary"
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </SectionCard>
 
       <SectionCard title="אבטחה">

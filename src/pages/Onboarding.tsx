@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/auth-context';
 import { useBusiness } from '../context/business-context';
+import { seedDemoReviews } from '../lib/demoReviews';
 
 const STEPS = [
   {
@@ -117,18 +118,34 @@ export default function Onboarding() {
     if (!user) return;
     setSaving(true);
     try {
-      const { error } = await supabase.from('businesses').upsert(
-        {
-          owner_id: user.id,
-          name:     business.name.trim()     || 'העסק שלי',
-          category: business.category.trim() || 'קמעונאות',
-          phone:    business.phone.trim()    || null,
-          website:  business.website.trim()  || null,
-        },
-        { onConflict: 'owner_id' },
-      );
-      if (error) console.error('businesses upsert error:', error);
-      else refetchBusiness();
+      const fields = {
+        name:     business.name.trim()     || 'העסק שלי',
+        category: business.category.trim() || 'קמעונאות',
+        phone:    business.phone.trim()    || null,
+        website:  business.website.trim()  || null,
+      };
+
+      let businessId = existingBusiness?.id ?? null;
+
+      if (existingBusiness?.id) {
+        const { error } = await supabase.from('businesses').update(fields).eq('id', existingBusiness.id);
+        if (error) console.error('businesses save error:', error.code, error.message);
+      } else {
+        const { data: newBiz, error } = await supabase
+          .from('businesses')
+          .insert({ owner_id: user.id, ...fields })
+          .select('id')
+          .single();
+        if (error) console.error('businesses save error:', error.code, error.message);
+        else businessId = newBiz?.id ?? null;
+      }
+
+      refetchBusiness();
+
+      // Seed 10 contextual demo reviews for the business
+      if (businessId) {
+        await seedDemoReviews(businessId, fields.category, fields.name);
+      }
 
       // Persist platform credentials so they appear pre-filled on return visits
       if (connected.length > 0) {
