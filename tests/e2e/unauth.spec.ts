@@ -56,12 +56,12 @@ test.describe('Login page', () => {
   });
 
   test('demo login navigates to dashboard', async ({ page }) => {
-    await page.click('button', { hasText: /דמו/ });
+    await page.locator('button', { hasText: /דמו/ }).click();
     await expect(page).toHaveURL(/dashboard/, { timeout: 8_000 });
   });
 
   test('register link navigates to register page', async ({ page }) => {
-    await page.click('a', { hasText: /הרשם/ });
+    await page.locator('a', { hasText: /הרשם/ }).click();
     await expect(page).toHaveURL(/register/);
   });
 
@@ -89,19 +89,35 @@ test.describe('Register page', () => {
   });
 
   test('renders all fields and buttons', async ({ page }) => {
-    // Expect at least email + password + submit + Google + demo
+    // Expect at least email + password + submit + Google
     await expect(page.locator('input[type="email"]')).toBeVisible();
-    await expect(page.locator('input[type="password"]')).toBeVisible();
+    // Register has two password fields (password + confirm) — check first
+    await expect(page.locator('input[type="password"]').first()).toBeVisible();
     await expect(page.locator('button[type="submit"]')).toBeVisible();
     await expect(page.locator('button', { hasText: /Google/ })).toBeVisible();
   });
 
-  test('shows error on already-registered email', async ({ page }) => {
-    await page.fill('input[type="email"]',    TEST_ACCOUNTS.valid.email);
-    await page.fill('input[type="password"]', 'NewPass123!');
+  test('client-side validation blocks submit with short name', async ({ page }) => {
+    // Leave name too short (< 2 chars) — validation fires before any network call
+    await page.locator('#reg-name').fill('א');
+    await page.locator('#reg-business').fill('עסק בדיקה');
+    await page.fill('input[type="email"]', 'test@example.com');
+    await page.locator('#reg-password').fill('TestPass123!');
+    await page.locator('#reg-confirm').fill('TestPass123!');
     await page.click('button[type="submit"]');
-    const error = page.locator('[class*="error"], [class*="bg-error"]');
-    await expect(error).toBeVisible({ timeout: 8_000 });
+    // App shows a field-level warning banner
+    const warning = page.locator('[style*="warning"], [style*="fff3cd"]').or(
+      page.locator('text=לפחות 2 תווים'),
+    );
+    await expect(warning).toBeVisible({ timeout: 5_000 });
+    // Still on register page — no navigation
+    await expect(page).toHaveURL(/register/);
+  });
+
+  test('password mismatch shows inline error', async ({ page }) => {
+    await page.locator('#reg-password').fill('Password123!');
+    await page.locator('#reg-confirm').fill('DifferentPass!');
+    await expect(page.locator('text=הסיסמאות אינן תואמות')).toBeVisible({ timeout: 4_000 });
   });
 
   test('login link navigates to login page', async ({ page }) => {

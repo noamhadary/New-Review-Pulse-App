@@ -30,8 +30,10 @@ export default function ProtectedRoute() {
     );
   }
 
-  // In demo mode, or when the user has a valid session, allow access
-  if (isDemo || session) return <Outlet />;
+  // isDemo comes from React state (async), so also check sessionStorage directly
+  // to avoid a redirect race when loginAsDemo() is called just before navigate()
+  const sessionDemo = sessionStorage.getItem('rp_demo') === '1';
+  if (isDemo || sessionDemo || session) return <Outlet />;
 
   return <Navigate to="/auth/login" replace />;
 }

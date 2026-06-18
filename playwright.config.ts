@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
+import { fileURLToPath } from 'url';
 import path from 'path';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -16,8 +19,15 @@ export default defineConfig({
     ['json', { outputFile: 'tests/e2e/results/report.json' }],
   ],
 
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:5173',
+    reuseExistingServer: true,
+    timeout: 30_000,
+  },
+
   use: {
-    baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:5173',
+    baseURL: process.env['E2E_BASE_URL'] ?? 'http://localhost:5173',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -28,7 +38,6 @@ export default defineConfig({
   },
 
   projects: [
-    // Auth setup — runs first, saves cookies to a file
     {
       name: 'setup',
       testMatch: /.*\.setup\.ts/,
@@ -41,7 +50,6 @@ export default defineConfig({
       },
       dependencies: ['setup'],
     },
-    // Unauthenticated tests run without stored auth
     {
       name: 'unauthenticated',
       testMatch: /.*unauth\.spec\.ts/,
