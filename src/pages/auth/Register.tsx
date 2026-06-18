@@ -190,7 +190,7 @@ export default function Register() {
     }
 
     try {
-      const { error: authError } = await supabase.auth.signUp({
+      const { data: signUpData, error: authError } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
         options: {
@@ -208,6 +208,9 @@ export default function Register() {
         } else {
           setError(authError.message);
         }
+      } else if (signUpData.session) {
+        // auto-confirm is on — user is already signed in
+        navigate('/onboarding');
       } else {
         setStage('verify');
         startCooldown();

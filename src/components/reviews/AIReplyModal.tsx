@@ -7,24 +7,21 @@ interface Props {
   review: Review;
   onClose: () => void;
   onReplied: (reviewId: string, text: string) => void;
-  defaultWhatsAppNumber?: string;
 }
 
 const TONES: ToneType[] = ['soft', 'gentle', 'firm', 'apologetic'];
 
-export default function AIReplyModal({ review, onClose, onReplied, defaultWhatsAppNumber }: Props) {
+export default function AIReplyModal({ review, onClose, onReplied }: Props) {
   const defaultTone: ToneType = review.rating <= 2 ? 'apologetic' : review.rating === 3 ? 'gentle' : 'soft';
   const [tone, setTone] = useState<ToneType>(defaultTone);
-  const [step, setStep] = useState<'tone' | 'loading' | 'results' | 'sent' | 'chosen'>('tone');
+  const [step, setStep] = useState<'tone' | 'loading' | 'results' | 'chosen'>('tone');
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
   const [editedTexts, setEditedTexts] = useState<string[]>([]);
-  const [whatsAppNum, setWhatsAppNum] = useState(defaultWhatsAppNumber ?? '');
-  const [showWhatsAppInput, setShowWhatsAppInput] = useState(false);
   const [chosenIdx, setChosenIdx] = useState<number | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
-  const { suggestions, isSendingWhatsApp, error, generate, sendWhatsApp, chooseReply } =
-    useAIReply();
+  const { suggestions, generate, chooseReply } = useAIReply();
+
 
   // Close on Escape
   useEffect(() => {
@@ -46,16 +43,6 @@ export default function AIReplyModal({ review, onClose, onReplied, defaultWhatsA
     setChosenIdx(idx);
     setStep('chosen');
     onReplied(review.id, text);
-  };
-
-  const handleSendWhatsApp = async () => {
-    if (!whatsAppNum) { setShowWhatsAppInput(true); return; }
-    const sent = await sendWhatsApp(whatsAppNum, {
-      reviewer_name: review.reviewer_name,
-      rating: review.rating,
-      content: review.content,
-    });
-    if (sent) setStep('sent');
   };
 
   const toneInfo = TONE_LABELS[tone];
@@ -254,81 +241,6 @@ export default function AIReplyModal({ review, onClose, onReplied, defaultWhatsA
                 })}
               </div>
 
-              {/* WhatsApp send section */}
-              <div className="rounded-xl p-4 bg-secondary/5 border border-secondary/20">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="material-symbols-outlined text-[20px] icon-filled" style={{ color: '#25D366' }}>
-                    chat
-                  </span>
-                  <p className="text-sm font-bold text-primary">
-                    בחר דרך WhatsApp
-                  </p>
-                </div>
-                <p className="text-xs mb-3 text-on-surface-variant">
-                  קבל את 4 ההצעות בWhatsApp ובחר בתשובה (שלח 1-4)
-                </p>
-
-                {showWhatsAppInput && (
-                  <input
-                    type="tel"
-                    value={whatsAppNum}
-                    onChange={(e) => setWhatsAppNum(e.target.value)}
-                    placeholder="+972501234567"
-                    dir="ltr"
-                    aria-label="מספר WhatsApp"
-                    className="w-full px-3 py-2.5 rounded-xl text-sm mb-3 outline-none bg-white border border-secondary/30 text-on-surface"
-                  />
-                )}
-
-                {error && (
-                  <p className="text-xs mb-2 text-error">{error}</p>
-                )}
-
-                <button
-                  onClick={handleSendWhatsApp}
-                  disabled={isSendingWhatsApp}
-                  className="w-full py-2.5 rounded-xl text-xs font-bold transition-all hover:opacity-90 cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2 text-white"
-                  style={{ backgroundColor: '#25D366' }}
-                >
-                  {isSendingWhatsApp ? (
-                    <>
-                      <span className="material-symbols-outlined text-[16px] animate-spin">
-                        progress_activity
-                      </span>
-                      שולח...
-                    </>
-                  ) : (
-                    <>
-                      <span className="material-symbols-outlined text-[16px] icon-filled">send</span>
-                      שלח לWhatsApp
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* ── STEP: WhatsApp Sent ── */}
-          {step === 'sent' && (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-green-100">
-                <span className="material-symbols-outlined text-[32px] icon-filled text-green-600">
-                  check_circle
-                </span>
-              </div>
-              <h3 className="font-bold text-lg mb-2 text-primary">
-                נשלח בWhatsApp!
-              </h3>
-              <p className="text-sm mb-6 text-on-surface-variant">
-                ענה <strong>1–4</strong> בWhatsApp לבחירת התגובה.
-                <br />ההודעה תפוג תוך 24 שעות.
-              </p>
-              <button
-                onClick={onClose}
-                className="px-6 py-2.5 rounded-xl font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity bg-primary-container text-white"
-              >
-                סגור
-              </button>
             </div>
           )}
 
