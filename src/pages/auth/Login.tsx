@@ -45,7 +45,7 @@ export default function Login() {
     try {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: 'https://ciiwsrduofplgahffxay.supabase.co/auth/v1/callback' },
+        options: { redirectTo: 'https://new-review-pulse-app-one.vercel.app/auth/callback' },
       });
       if (oauthError) setError('שגיאה בהתחברות עם Google. נסה שנית.');
     } catch {
