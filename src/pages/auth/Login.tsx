@@ -45,7 +45,7 @@ export default function Login() {
     try {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options: { redirectTo: 'https://ciiwsrduofplgahffxay.supabase.co/auth/v1/callback' },
       });
       if (oauthError) setError('שגיאה בהתחברות עם Google. נסה שנית.');
     } catch {
