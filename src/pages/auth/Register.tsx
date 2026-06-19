@@ -156,7 +156,10 @@ export default function Register() {
     try {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          scopes: 'email profile https://www.googleapis.com/auth/business.manage',
+        },
       });
       if (oauthError) setError('שגיאה בהרשמה עם Google. נסה שנית.');
     } catch {

@@ -2,6 +2,8 @@ import { useState } from 'react';
 import type { Platform, Sentiment, ReviewStatus, Review } from '../types';
 import AIReplyModal from '../components/reviews/AIReplyModal';
 import { useReviews } from '../hooks/useReviews';
+import { useBusiness } from '../context/business-context';
+import { syncGoogleReviews } from '../lib/googleBusinessAPI';
 
 const PLATFORM_OPTIONS: { value: Platform | 'all'; label: string }[] = [
   { value: 'all', label: 'כל הפלטפורמות' },
@@ -55,13 +57,33 @@ export default function Reviews() {
   const [status, setStatus] = useState<ReviewStatus | 'all'>('all');
   const [search, setSearch] = useState('');
   const [aiTarget, setAiTarget] = useState<Review | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState<{ text: string; ok: boolean } | null>(null);
 
-  const { reviews: filtered, updateReview } = useReviews({
+  const { business } = useBusiness();
+  const { reviews: filtered, updateReview, refetch } = useReviews({
     platform, sentiment, status, search,
   });
 
   const handleReplied = (reviewId: string) => {
     updateReview(reviewId, { status: 'replied' });
+  };
+
+  const handleSync = async () => {
+    if (!business?.id) return;
+    setSyncing(true);
+    setSyncMsg(null);
+    const { synced, error } = await syncGoogleReviews(business.id);
+    setSyncing(false);
+    if (error === 'no_token') {
+      setSyncMsg({ text: 'כדי לסנכרן, התחבר מחדש עם Google', ok: false });
+    } else if (error) {
+      setSyncMsg({ text: `שגיאה: ${error}`, ok: false });
+    } else {
+      setSyncMsg({ text: `סונכרנו ${synced} ביקורות מ-Google Business`, ok: true });
+      refetch();
+    }
+    setTimeout(() => setSyncMsg(null), 5000);
   };
 
   return (
@@ -76,12 +98,29 @@ export default function Reviews() {
               {filtered.length} ביקורות נמצאו
             </p>
           </div>
-          <button
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm cursor-pointer transition-opacity hover:opacity-90 bg-secondary text-white"
-          >
-            <span className="material-symbols-outlined text-[18px]">download</span>
-            ייצוא ביקורות
-          </button>
+          <div className="flex items-center gap-3">
+            {syncMsg && (
+              <span className={`text-sm font-semibold px-3 py-1.5 rounded-lg ${syncMsg.ok ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                {syncMsg.text}
+              </span>
+            )}
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm cursor-pointer transition-opacity hover:opacity-90 disabled:opacity-60 border border-outline-variant/50 text-on-surface bg-white"
+            >
+              <span className={`material-symbols-outlined text-[18px] text-[#4285F4] ${syncing ? 'animate-spin' : ''}`}>
+                {syncing ? 'progress_activity' : 'sync'}
+              </span>
+              {syncing ? 'מסנכרן...' : 'סנכרון Google'}
+            </button>
+            <button
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm cursor-pointer transition-opacity hover:opacity-90 bg-secondary text-white"
+            >
+              <span className="material-symbols-outlined text-[18px]">download</span>
+              ייצוא ביקורות
+            </button>
+          </div>
         </div>
 
         {/* Filters bar */}

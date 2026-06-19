@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase';
+import { syncGoogleReviews } from '../../lib/googleBusinessAPI';
 
 type Stage = 'verifying' | 'saving' | 'error';
 
@@ -83,6 +84,17 @@ export default function AuthCallback() {
         const status = await provisionBusiness(session.user);
 
         if (!cancelled) {
+          // Sync Google Business reviews if logged in via Google
+          if (session.provider_token && status === 'existing') {
+            const biz = await supabase
+              .from('businesses')
+              .select('id')
+              .eq('owner_id', session.user.id)
+              .maybeSingle();
+            if (biz.data?.id) {
+              syncGoogleReviews(biz.data.id); // fire-and-forget
+            }
+          }
           navigate(status === 'new' ? '/onboarding' : '/dashboard', { replace: true });
         }
 

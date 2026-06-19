@@ -5,6 +5,7 @@ export type ReviewStatus = 'pending' | 'replied' | 'ignored';
 export interface Review {
   id: string;
   business_id: string;
+  external_id?: string;
   reviewer_name: string;
   reviewer_initials: string;
   platform: Platform;
