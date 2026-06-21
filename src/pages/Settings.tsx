@@ -808,7 +808,7 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
   const [draft, setDraft] = useState<ProfileForm | null>(null);
   const [saved, setSaved] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
-  const [logoUrl, setLogoUrl] = useState<string | null>(business?.logo_url ?? null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [branches, setBranches] = useState<BranchData[]>([{ location: '' }]);
@@ -816,8 +816,9 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
   const [twoFAEnabled, setTwoFAEnabled] = useState(false);
   const [showTwoFA, setShowTwoFA]       = useState(false);
 
+  // Sync logo from business context (handles both initial load and updates)
   useEffect(() => {
-    if (business?.logo_url) setLogoUrl(business.logo_url);
+    setLogoUrl(business?.logo_url ?? null);
   }, [business?.logo_url]);
 
   // Check 2FA status on mount
@@ -871,8 +872,9 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
       return;
     }
     const { data: { publicUrl } } = supabase.storage.from('business-logos').getPublicUrl(path);
-    await supabase.from('businesses').update({ logo_url: publicUrl }).eq('owner_id', user.id);
-    setLogoUrl(publicUrl);
+    const urlWithBust = `${publicUrl}?t=${Date.now()}`;
+    await supabase.from('businesses').update({ logo_url: urlWithBust }).eq('owner_id', user.id);
+    setLogoUrl(urlWithBust);
     refetchBusiness();
     setUploadingAvatar(false);
     showToast('תמונת הפרופיל עודכנה בהצלחה');
@@ -1001,6 +1003,7 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
                 alt="לוגו העסק"
                 className="w-16 h-16 rounded-2xl object-cover"
                 style={{ border: '2px solid rgba(135,29,211,0.2)' }}
+                onError={() => setLogoUrl(null)}
               />
             ) : (
               <div
@@ -1017,8 +1020,12 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
             )}
           </div>
           <div>
-            <p className="font-bold text-primary">{profile.contact_name || 'שם מלא'}</p>
-            <p className="text-sm text-on-surface-variant">{profile.name || 'שם העסק'}</p>
+            <p className="font-bold text-primary">
+              {profile.contact_name || profile.name || user?.email?.split('@')[0] || ''}
+            </p>
+            {profile.contact_name && profile.name && (
+              <p className="text-sm text-on-surface-variant">{profile.name}</p>
+            )}
             <p className="text-xs text-outline">{profile.email}</p>
             <button
               onClick={() => !isDemo && fileInputRef.current?.click()}

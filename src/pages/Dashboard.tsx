@@ -21,7 +21,7 @@ export default function Dashboard() {
         <div className="max-w-screen-xl mx-auto flex flex-col md:flex-row justify-between items-end gap-4">
           <div>
             <h2 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">
-              {personalName ? `שלום, ${personalName} 👋` : 'שלום, מנהל המערכת'}
+              {personalName ? `שלום, ${personalName}` : 'שלום, מנהל המערכת'}
             </h2>
             <p className="mt-2 text-base text-on-primary-container">הנה סקירה של הביצועים שלך להיום.</p>
           </div>

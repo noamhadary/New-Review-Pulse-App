@@ -41,10 +41,15 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
   const navigate   = useNavigate();
   const { business } = useBusiness();
   const { user } = useAuth();
-  const avatarInitial = (() => {
-    const name = (user?.user_metadata?.full_name as string | undefined) || business?.name || '';
-    return name.charAt(0).toUpperCase();
-  })();
+  const avatarInitial = (
+    ((user?.user_metadata?.full_name as string | undefined) ||
+      (user?.user_metadata?.name as string | undefined) ||
+      business?.name ||
+      user?.email ||
+      '')
+      .charAt(0)
+      .toUpperCase()
+  );
   const notifRef   = useRef<HTMLDivElement>(null);
   const storeRef   = useRef<HTMLDivElement>(null);
 
@@ -208,6 +213,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
               alt="לוגו העסק"
               className="w-full h-full rounded-full object-cover"
               style={{ border: '2px solid rgba(255,255,255,0.4)' }}
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
             />
           ) : (
             <div
