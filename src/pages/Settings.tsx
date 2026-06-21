@@ -300,7 +300,13 @@ function TwoFAModal({
     if (action === 'disable') { setStep('confirm'); return; }
     // Enroll a new TOTP factor
     (async () => {
-      const { data, error: e } = await supabase.auth.mfa.enroll({ factorType: 'totp' });
+      const { data: sessionData } = await supabase.auth.getSession();
+      const email = sessionData.session?.user?.email ?? 'המשתמש';
+      const { data, error: e } = await supabase.auth.mfa.enroll({
+        factorType: 'totp',
+        friendlyName: `Review Pulse (${email})`,
+        issuer: 'Review Pulse',
+      });
       if (e || !data) { setError(e?.message ?? 'שגיאה'); setStep('qr'); return; }
       setFactorId(data.id);
       setQrCode(data.totp.qr_code);   // data URI SVG
