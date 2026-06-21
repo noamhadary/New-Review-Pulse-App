@@ -326,13 +326,17 @@ function TwoFAModal({
   };
 
   const handleDisable = async () => {
+    if (code.length !== 6) return;
     setBusy(true); setError('');
     const { data: factors } = await supabase.auth.mfa.listFactors();
     const factor = factors?.totp?.[0];
     if (!factor) { setBusy(false); setError('לא נמצא גורם אימות'); return; }
-    const { error: e } = await supabase.auth.mfa.unenroll({ factorId: factor.id });
+    // Must reach AAL2 before Supabase allows unenrolling a verified factor
+    const { error: verifyErr } = await supabase.auth.mfa.challengeAndVerify({ factorId: factor.id, code });
+    if (verifyErr) { setBusy(false); setError('קוד שגוי — נסה שנית'); return; }
+    const { error: unenrollErr } = await supabase.auth.mfa.unenroll({ factorId: factor.id });
     setBusy(false);
-    if (e) { setError(e.message); return; }
+    if (unenrollErr) { setError(unenrollErr.message); return; }
     setStep('done');
     setTimeout(() => { onSuccess(false); onClose(); }, 1200);
   };
@@ -412,17 +416,27 @@ function TwoFAModal({
             <div className="flex items-center gap-3 p-4 bg-red-50 rounded-xl">
               <span className="material-symbols-outlined text-[24px] text-red-600 icon-filled">warning</span>
               <p className="text-sm text-red-700 font-medium">
-                ביטול האימות הדו-שלבי יחשוף את חשבונך לסיכון מוגבר. האם אתה בטוח?
+                כדי לבטל 2FA הזן את קוד 6 הספרות מאפליקציית האימות שלך:
               </p>
             </div>
-            {error && <p className="text-xs font-semibold text-red-600">{error}</p>}
+            <input
+              type="text"
+              inputMode="numeric"
+              maxLength={6}
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+              placeholder="123456"
+              className="w-full text-center text-2xl font-mono tracking-[0.5em] px-4 py-3 rounded-xl border border-outline-variant/50 outline-none focus:border-red-500 bg-surface-container-low"
+              autoFocus
+            />
+            {error && <p className="text-xs font-semibold text-red-600 text-center">{error}</p>}
             <div className="flex gap-3">
               <button
                 onClick={handleDisable}
-                disabled={busy}
+                disabled={busy || code.length !== 6}
                 className="flex-1 py-2.5 rounded-xl font-bold text-sm cursor-pointer bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
               >
-                {busy ? 'מבטל...' : 'כן, בטל 2FA'}
+                {busy ? 'מבטל...' : 'בטל 2FA'}
               </button>
               <button onClick={onClose}
                 className="px-4 py-2.5 rounded-xl font-bold text-sm cursor-pointer border text-on-surface-variant border-outline-variant/50">
