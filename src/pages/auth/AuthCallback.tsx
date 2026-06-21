@@ -84,17 +84,26 @@ export default function AuthCallback() {
         const status = await provisionBusiness(session.user);
 
         if (!cancelled) {
-          // Sync Google Business reviews if logged in via Google
-          if (session.provider_token && status === 'existing') {
-            const biz = await supabase
+          // Store Google refresh token for background sync
+          if (session.provider_refresh_token) {
+            await supabase
+              .from('user_settings')
+              .upsert(
+                { owner_id: session.user.id, google_refresh_token: session.provider_refresh_token },
+                { onConflict: 'owner_id' },
+              );
+          }
+
+          // Immediately sync Google reviews on login
+          if (session.provider_token) {
+            const { data: biz } = await supabase
               .from('businesses')
               .select('id')
               .eq('owner_id', session.user.id)
               .maybeSingle();
-            if (biz.data?.id) {
-              syncGoogleReviews(biz.data.id); // fire-and-forget
-            }
+            if (biz?.id) syncGoogleReviews(biz.id); // fire-and-forget
           }
+
           navigate(status === 'new' ? '/onboarding' : '/dashboard', { replace: true });
         }
 
