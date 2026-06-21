@@ -277,6 +277,168 @@ function PasswordModal({ onClose, onSave }: { onClose: () => void; onSave: () =>
   );
 }
 
+// ── Two-Factor Authentication modal ────────────────────────────────────────────
+
+function TwoFAModal({
+  action,
+  onClose,
+  onSuccess,
+}: {
+  action: 'enable' | 'disable';
+  onClose: () => void;
+  onSuccess: (enabled: boolean) => void;
+}) {
+  const [step, setStep]         = useState<'loading' | 'qr' | 'verify' | 'confirm' | 'done'>('loading');
+  const [code, setCode]         = useState('');
+  const [error, setError]       = useState('');
+  const [busy, setBusy]         = useState(false);
+  const [factorId, setFactorId] = useState('');
+  const [qrCode, setQrCode]     = useState('');
+  const [secret, setSecret]     = useState('');
+
+  useEffect(() => {
+    if (action === 'disable') { setStep('confirm'); return; }
+    // Enroll a new TOTP factor
+    (async () => {
+      const { data, error: e } = await supabase.auth.mfa.enroll({ factorType: 'totp' });
+      if (e || !data) { setError(e?.message ?? 'שגיאה'); setStep('qr'); return; }
+      setFactorId(data.id);
+      setQrCode(data.totp.qr_code);   // data URI SVG
+      setSecret(data.totp.secret);
+      setStep('qr');
+    })();
+  }, [action]);
+
+  const handleVerify = async () => {
+    if (code.length !== 6) return;
+    setBusy(true); setError('');
+    const { error: e } = await supabase.auth.mfa.challengeAndVerify({ factorId, code });
+    setBusy(false);
+    if (e) { setError('קוד שגוי — נסה שנית'); return; }
+    setStep('done');
+    setTimeout(() => { onSuccess(true); onClose(); }, 1200);
+  };
+
+  const handleDisable = async () => {
+    setBusy(true); setError('');
+    const { data: factors } = await supabase.auth.mfa.listFactors();
+    const factor = factors?.totp?.[0];
+    if (!factor) { setBusy(false); setError('לא נמצא גורם אימות'); return; }
+    const { error: e } = await supabase.auth.mfa.unenroll({ factorId: factor.id });
+    setBusy(false);
+    if (e) { setError(e.message); return; }
+    setStep('done');
+    setTimeout(() => { onSuccess(false); onClose(); }, 1200);
+  };
+
+  return (
+    <Overlay onClose={onClose}>
+      <ModalBox
+        title={action === 'enable' ? 'הפעלת אימות דו-שלבי' : 'ביטול אימות דו-שלבי'}
+        icon={action === 'enable' ? 'verified_user' : 'no_encryption'}
+        onClose={onClose}
+      >
+        {step === 'loading' && (
+          <div className="flex justify-center py-8">
+            <span className="material-symbols-outlined text-[32px] text-secondary animate-spin">progress_activity</span>
+          </div>
+        )}
+
+        {step === 'qr' && (
+          <div className="space-y-4">
+            <p className="text-sm text-on-surface-variant">
+              סרוק את קוד ה-QR עם אפליקציית האימות שלך (Google Authenticator, Authy וכד׳).
+            </p>
+            {qrCode && (
+              <div className="flex justify-center">
+                <img src={qrCode} alt="QR Code" className="w-48 h-48 rounded-xl border border-outline-variant/30 p-2 bg-white" />
+              </div>
+            )}
+            <div className="bg-surface-container-low rounded-xl px-4 py-2 text-center">
+              <p className="text-xs text-outline mb-1">הזנה ידנית של סוד:</p>
+              <p className="text-sm font-mono font-bold tracking-widest text-primary select-all">{secret}</p>
+            </div>
+            <button
+              onClick={() => setStep('verify')}
+              className="w-full py-2.5 rounded-xl font-bold text-sm cursor-pointer hover:opacity-90"
+              style={{ background: 'linear-gradient(135deg,#002366,#871dd3)', color: '#fff' }}
+            >
+              סרקתי — המשך לאימות
+            </button>
+          </div>
+        )}
+
+        {step === 'verify' && (
+          <div className="space-y-4">
+            <p className="text-sm text-on-surface-variant">
+              הזן את קוד 6 הספרות מאפליקציית האימות:
+            </p>
+            <input
+              type="text"
+              inputMode="numeric"
+              maxLength={6}
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+              placeholder="123456"
+              className="w-full text-center text-2xl font-mono tracking-[0.5em] px-4 py-3 rounded-xl border border-outline-variant/50 outline-none focus:border-secondary bg-surface-container-low"
+              autoFocus
+            />
+            {error && <p className="text-xs font-semibold text-red-600 text-center">{error}</p>}
+            <div className="flex gap-3">
+              <button
+                onClick={handleVerify}
+                disabled={busy || code.length !== 6}
+                className="flex-1 py-2.5 rounded-xl font-bold text-sm cursor-pointer hover:opacity-90 disabled:opacity-50"
+                style={{ background: 'linear-gradient(135deg,#002366,#871dd3)', color: '#fff' }}
+              >
+                {busy ? 'מאמת...' : 'אמת ואפשר'}
+              </button>
+              <button onClick={() => setStep('qr')}
+                className="px-4 py-2.5 rounded-xl font-bold text-sm cursor-pointer border text-on-surface-variant border-outline-variant/50">
+                חזור
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 'confirm' && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 p-4 bg-red-50 rounded-xl">
+              <span className="material-symbols-outlined text-[24px] text-red-600 icon-filled">warning</span>
+              <p className="text-sm text-red-700 font-medium">
+                ביטול האימות הדו-שלבי יחשוף את חשבונך לסיכון מוגבר. האם אתה בטוח?
+              </p>
+            </div>
+            {error && <p className="text-xs font-semibold text-red-600">{error}</p>}
+            <div className="flex gap-3">
+              <button
+                onClick={handleDisable}
+                disabled={busy}
+                className="flex-1 py-2.5 rounded-xl font-bold text-sm cursor-pointer bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {busy ? 'מבטל...' : 'כן, בטל 2FA'}
+              </button>
+              <button onClick={onClose}
+                className="px-4 py-2.5 rounded-xl font-bold text-sm cursor-pointer border text-on-surface-variant border-outline-variant/50">
+                ביטול
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 'done' && (
+          <div className="flex flex-col items-center gap-4 py-6">
+            <span className="material-symbols-outlined text-[48px] text-green-500 icon-filled">check_circle</span>
+            <p className="text-base font-bold text-primary">
+              {action === 'enable' ? 'אימות דו-שלבי הופעל!' : 'אימות דו-שלבי בוטל'}
+            </p>
+          </div>
+        )}
+      </ModalBox>
+    </Overlay>
+  );
+}
+
 // ── Invite modal ───────────────────────────────────────────────────────────────
 
 function InviteModal({ onClose, onInvite }: {
@@ -630,10 +792,20 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [branches, setBranches] = useState<BranchData[]>([{ location: '' }]);
   const [selectedBranchIdx, setSelectedBranchIdx] = useState(0);
+  const [twoFAEnabled, setTwoFAEnabled] = useState(false);
+  const [showTwoFA, setShowTwoFA]       = useState(false);
 
   useEffect(() => {
     if (business?.logo_url) setLogoUrl(business.logo_url);
   }, [business?.logo_url]);
+
+  // Check 2FA status on mount
+  useEffect(() => {
+    supabase.auth.mfa.listFactors().then(({ data }) => {
+      const verified = data?.totp?.some((f) => f.status === 'verified') ?? false;
+      setTwoFAEnabled(verified);
+    });
+  }, []);
 
   // Load branches from DB whenever business changes
   useEffect(() => {
@@ -952,14 +1124,33 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
         <div className="flex items-center justify-between mt-4 pt-4 border-t border-outline-variant/30">
           <div>
             <p className="text-sm font-semibold text-on-surface">אימות דו-שלבי (2FA)</p>
-            <p className="text-xs mt-0.5 text-outline">הגן על החשבון שלך עם שכבת אבטחה נוספת</p>
+            <p className="text-xs mt-0.5 text-outline">
+              {twoFAEnabled ? 'מופעל — החשבון מוגן עם שכבת אבטחה נוספת' : 'הגן על החשבון שלך עם שכבת אבטחה נוספת'}
+            </p>
           </div>
           <button
-            className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl cursor-pointer transition-all hover:opacity-80 bg-surface-container-low text-on-surface-variant border border-outline-variant/50">
-            הפעל
+            onClick={() => setShowTwoFA(true)}
+            className={`flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl cursor-pointer transition-all hover:opacity-80 ${
+              twoFAEnabled
+                ? 'bg-green-100 text-green-700 border border-green-200'
+                : 'bg-surface-container-low text-on-surface-variant border border-outline-variant/50'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[16px]">
+              {twoFAEnabled ? 'verified_user' : 'shield'}
+            </span>
+            {twoFAEnabled ? 'מופעל — בטל' : 'הפעל'}
           </button>
         </div>
       </SectionCard>
+
+      {showTwoFA && (
+        <TwoFAModal
+          action={twoFAEnabled ? 'disable' : 'enable'}
+          onClose={() => setShowTwoFA(false)}
+          onSuccess={(enabled) => { setTwoFAEnabled(enabled); setShowTwoFA(false); }}
+        />
+      )}
 
       <SaveBtn onSave={handleSave} saved={saved} />
 
