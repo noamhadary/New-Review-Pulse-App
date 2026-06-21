@@ -783,6 +783,7 @@ function ModalBox({ title, icon, onClose, children }: { title: string; icon: str
 // ── Tab: Profile ───────────────────────────────────────────────────────────────
 
 interface ProfileForm {
+  contact_name: string;
   name: string;
   email: string;
   phone: string;
@@ -879,19 +880,21 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
   };
 
   const baseProfile = useMemo<ProfileForm>(() => {
+    const meta = (user?.user_metadata ?? {}) as Record<string, string>;
     if (business) {
-      // Existing user — loaded from Supabase
       return {
-        name:        business.name        ?? '',
-        email:       user?.email          ?? '',
-        phone:       business.phone       ?? '',
-        website:     business.website     ?? '',
-        category:    business.category    ?? 'קמעונאות',
-        description: business.description ?? '',
+        contact_name: meta.full_name      ?? '',
+        name:         business.name       ?? '',
+        email:        user?.email         ?? '',
+        phone:        business.phone      ?? '',
+        website:      business.website    ?? '',
+        category:     business.category   ?? 'קמעונאות',
+        description:  business.description ?? '',
       };
     }
     if (isDemo) {
       return {
+        contact_name: '',
         name: '',
         email: user?.email ?? '',
         phone: '+972534777375',
@@ -902,21 +905,22 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
       };
     }
     // New real user — prefill from registration metadata
-    const meta = (user?.user_metadata ?? {}) as Record<string, string>;
     return {
-      name:        meta.business_name || meta.full_name || '',
-      email:       user?.email ?? '',
-      phone:       '',
-      website:     '',
-      category:    'קמעונאות',
-      description: '',
+      contact_name: meta.full_name     || '',
+      name:         meta.business_name || meta.full_name || '',
+      email:        user?.email        ?? '',
+      phone:        '',
+      website:      '',
+      category:     'קמעונאות',
+      description:  '',
     };
   }, [business, isDemo, user, demoSaved]);
 
   const profile = draft ?? baseProfile;
   const setProfile = setDraft;
 
-  const initials = profile.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase() || 'מנ';
+  const displayName = profile.contact_name || profile.name || '';
+  const initials = displayName.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase() || 'מנ';
 
   const handleSave = async () => {
     if (isDemo) {
@@ -928,6 +932,11 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
       return;
     }
     if (user) {
+      // Save personal name to auth user_metadata
+      if (profile.contact_name.trim()) {
+        await supabase.auth.updateUser({ data: { full_name: profile.contact_name.trim() } });
+      }
+
       const prevCategory = business?.category ?? null;
       const fields = {
         name:        profile.name.trim()        || 'העסק שלי',
@@ -1008,8 +1017,9 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
             )}
           </div>
           <div>
-            <p className="font-bold text-primary">{profile.name || 'שם מלא'}</p>
-            <p className="text-sm text-outline">{profile.email}</p>
+            <p className="font-bold text-primary">{profile.contact_name || 'שם מלא'}</p>
+            <p className="text-sm text-on-surface-variant">{profile.name || 'שם העסק'}</p>
+            <p className="text-xs text-outline">{profile.email}</p>
             <button
               onClick={() => !isDemo && fileInputRef.current?.click()}
               disabled={uploadingAvatar || isDemo}
@@ -1028,6 +1038,7 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <InputField label="שם מלא (איש קשר)" value={profile.contact_name} onChange={(v) => setProfile({ ...profile, contact_name: v })} placeholder="ישראל ישראלי" />
           <InputField label="שם העסק" value={profile.name} onChange={(v) => setProfile({ ...profile, name: v })} />
           <InputField label="אימייל" value={profile.email} onChange={(v) => setProfile({ ...profile, email: v })} type="email" dir="ltr" />
           <InputField label="טלפון" value={profile.phone} onChange={(v) => setProfile({ ...profile, phone: v })} type="tel" dir="ltr" placeholder="+972-50-0000000" />

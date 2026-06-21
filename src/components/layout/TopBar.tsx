@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBusiness } from '../../context/business-context';
+import { useAuth } from '../../context/auth-context';
 
 const NOTIFICATIONS = [
   {
@@ -39,6 +40,11 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
   const [activeBranchIdx, setActiveBranchIdx] = useState(0);
   const navigate   = useNavigate();
   const { business } = useBusiness();
+  const { user } = useAuth();
+  const avatarInitial = (() => {
+    const name = (user?.user_metadata?.full_name as string | undefined) || business?.name || '';
+    return name.charAt(0).toUpperCase();
+  })();
   const notifRef   = useRef<HTMLDivElement>(null);
   const storeRef   = useRef<HTMLDivElement>(null);
 
@@ -208,7 +214,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
               className="w-full h-full rounded-full flex items-center justify-center text-sm font-extrabold"
               style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: '2px solid rgba(255,255,255,0.3)' }}
             >
-              {business?.name ? business.name.charAt(0).toUpperCase() : <span className="material-symbols-outlined text-[20px]">account_circle</span>}
+              {avatarInitial || <span className="material-symbols-outlined text-[20px]">account_circle</span>}
             </div>
           )}
         </button>
