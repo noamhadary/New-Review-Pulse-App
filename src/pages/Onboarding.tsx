@@ -169,7 +169,7 @@ export default function Onboarding() {
   return (
     <div className="min-h-screen px-6 md:px-16 py-10 bg-background">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-4xl font-extrabold mb-2 text-primary">
+        <h1 className="text-xl md:text-2xl font-extrabold mb-2 text-primary">
           הגדרת העסק
         </h1>
         <p className="text-sm mb-8 text-on-surface-variant">

@@ -354,7 +354,7 @@ export default function Reports() {
         style={{ background: 'linear-gradient(135deg, #00113a 0%, #002366 60%, #3a0a6e 100%)' }}
       >
         <div className="max-w-screen-xl mx-auto flex flex-col md:flex-row justify-between items-center md:items-end gap-4">
-          <div className="text-center md:text-start">
+          <div>
             <h2 className="text-xl md:text-2xl font-extrabold text-white tracking-tight">דוחות</h2>
             <p className="mt-2 text-base text-on-primary-container">
               ניהול, יצירה והורדת דוחות ביצועים
