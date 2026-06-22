@@ -1943,7 +1943,7 @@ export default function Settings() {
   return (
     <div className="min-h-screen px-6 md:px-16 py-8 bg-background">
       <div className="max-w-screen-lg mx-auto">
-        <h1 className="text-4xl font-extrabold mb-1 text-primary">הגדרות</h1>
+        <h1 className="text-xl md:text-2xl font-extrabold mb-1 text-primary">הגדרות</h1>
         <p className="text-sm mb-6 text-on-surface-variant">נהל את הגדרות החשבון, הצוות והמערכת</p>
 
         <div className="flex flex-col md:flex-row gap-6">

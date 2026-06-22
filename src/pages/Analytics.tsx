@@ -100,7 +100,7 @@ export default function Analytics() {
       >
         <div className="max-w-screen-xl mx-auto flex flex-col md:flex-row justify-between items-end gap-4">
           <div>
-            <h2 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">ניתוח מעמיק</h2>
+            <h2 className="text-xl md:text-2xl font-extrabold text-white tracking-tight">ניתוח מעמיק</h2>
             <p className="mt-2 text-base text-on-primary-container">
               מגמות, פלטפורמות ותובנות על הביקורות שלך
             </p>

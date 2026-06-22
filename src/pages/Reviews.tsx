@@ -81,7 +81,7 @@ export default function Reviews() {
         {/* Page header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-4xl font-extrabold text-primary">ביקורות</h1>
+            <h1 className="text-xl md:text-2xl font-extrabold text-primary">ביקורות</h1>
             <p className="text-sm mt-1 text-on-surface-variant">
               {filtered.length} ביקורות נמצאו
             </p>
