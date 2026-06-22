@@ -17,20 +17,20 @@ export default function KPICard({
 }: KPICardProps) {
   return (
     <div
-      className="rounded-xl p-6 flex flex-col justify-between relative overflow-hidden cursor-default bg-white border border-outline-variant/30"
+      className="rounded-xl p-3 sm:p-4 md:p-6 flex flex-col justify-between relative overflow-hidden cursor-default bg-white border border-outline-variant/30"
       style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}
     >
       {/* Top row */}
-      <div className="flex justify-between items-start mb-4">
-        <span className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
+      <div className="flex justify-between items-start mb-2 sm:mb-3 md:mb-4">
+        <span className="text-[10px] md:text-xs font-semibold uppercase tracking-wider text-on-surface-variant leading-tight">
           {label}
         </span>
         <div
-          className="w-9 h-9 rounded-lg flex items-center justify-center"
+          className="w-7 h-7 md:w-9 md:h-9 rounded-lg flex items-center justify-center flex-shrink-0"
           style={{ backgroundColor: `${accentColor}15` }}
         >
           <span
-            className="material-symbols-outlined text-[20px] icon-filled"
+            className="material-symbols-outlined text-[16px] md:text-[20px] icon-filled"
             style={{ color: accentColor }}
           >
             {icon}
@@ -39,13 +39,13 @@ export default function KPICard({
       </div>
 
       {/* Value */}
-      <div className="flex items-baseline gap-2">
-        <span className="text-5xl font-extrabold leading-none tracking-tight text-primary">
+      <div className="flex items-baseline gap-1.5 md:gap-2">
+        <span className="text-2xl sm:text-3xl md:text-5xl font-extrabold leading-none tracking-tight text-primary">
           {value}
         </span>
         {badge && (
           <span
-            className="text-xs font-bold px-2 py-0.5 rounded"
+            className="text-[10px] md:text-xs font-bold px-1.5 md:px-2 py-0.5 rounded"
             style={{ backgroundColor: `${accentColor}20`, color: accentColor }}
           >
             {badge}
@@ -56,14 +56,14 @@ export default function KPICard({
       {/* Trend */}
       {trend && (
         <div
-          className="mt-3 flex items-center gap-1 text-xs font-semibold"
+          className="mt-2 md:mt-3 flex items-center gap-1 text-[10px] md:text-xs font-semibold"
           style={{ color: trend.positive ? '#16a34a' : '#dc2626' }}
         >
-          <span className="material-symbols-outlined text-[14px]">
+          <span className="material-symbols-outlined text-[12px] md:text-[14px]">
             {trend.positive ? 'trending_up' : 'trending_down'}
           </span>
           <span>{trend.value}</span>
-          <span className="font-normal text-on-surface-variant">
+          <span className="font-normal text-on-surface-variant truncate">
             {trend.label}
           </span>
         </div>

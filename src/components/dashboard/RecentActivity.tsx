@@ -167,8 +167,8 @@ export default function RecentActivity() {
         style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}
       >
         {/* Header */}
-        <div className="px-6 py-5 flex justify-between items-center border-b border-outline-variant/30">
-          <h3 className="text-xl font-bold text-primary">פעילות אחרונה</h3>
+        <div className="px-4 md:px-6 py-4 md:py-5 flex justify-between items-center border-b border-outline-variant/30">
+          <h3 className="text-base md:text-xl font-bold text-primary">פעילות אחרונה</h3>
           <button
             onClick={handleExport}
             className={`flex items-center gap-1.5 text-sm font-semibold cursor-pointer transition-all hover:opacity-80 px-3 py-1.5 rounded-lg ${
@@ -187,12 +187,19 @@ export default function RecentActivity() {
           <table className="w-full text-right border-collapse">
             <thead>
               <tr className="bg-surface-container-low">
-                {['לקוח', 'פלטפורמה', 'דירוג', 'סנטימנט', 'סטטוס', ''].map((h) => (
+                {[
+                  { label: 'לקוח', cls: '' },
+                  { label: 'פלטפורמה', cls: 'hidden sm:table-cell' },
+                  { label: 'דירוג', cls: '' },
+                  { label: 'סנטימנט', cls: 'hidden sm:table-cell' },
+                  { label: 'סטטוס', cls: '' },
+                  { label: '', cls: '' },
+                ].map(({ label, cls }) => (
                   <th
-                    key={h}
-                    className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-on-surface-variant"
+                    key={label}
+                    className={`px-2 md:px-4 py-2 md:py-3 text-xs font-semibold uppercase tracking-wider text-on-surface-variant ${cls}`}
                   >
-                    {h}
+                    {label}
                   </th>
                 ))}
               </tr>
@@ -207,31 +214,31 @@ export default function RecentActivity() {
                     className="transition-colors border-b border-outline-variant/20 hover:bg-background"
                   >
                     {/* Customer */}
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 bg-secondary/10 text-secondary">
+                    <td className="px-2 md:px-4 py-2 md:py-3">
+                      <div className="flex items-center gap-2 md:gap-3">
+                        <div className="w-7 h-7 md:w-9 md:h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 bg-secondary/10 text-secondary">
                           {review.reviewer_initials}
                         </div>
-                        <span className="text-sm font-medium text-primary">
+                        <span className="text-xs md:text-sm font-medium text-primary max-w-[80px] md:max-w-none truncate">
                           {review.reviewer_name}
                         </span>
                       </div>
                     </td>
 
-                    {/* Platform */}
-                    <td className="px-4 py-3">
+                    {/* Platform — hidden on mobile */}
+                    <td className="hidden sm:table-cell px-4 py-3">
                       <span className="text-sm text-on-surface-variant">
                         {PLATFORM_LABELS[review.platform]}
                       </span>
                     </td>
 
                     {/* Rating */}
-                    <td className="px-4 py-3">
+                    <td className="px-2 md:px-4 py-2 md:py-3">
                       <StarRating rating={review.rating} />
                     </td>
 
-                    {/* Sentiment */}
-                    <td className="px-4 py-3">
+                    {/* Sentiment — hidden on mobile */}
+                    <td className="hidden sm:table-cell px-4 py-3">
                       <span
                         className="text-xs font-bold px-2.5 py-1 rounded-full"
                         style={{ backgroundColor: sentiment.bg, color: sentiment.text }}
@@ -241,20 +248,20 @@ export default function RecentActivity() {
                     </td>
 
                     {/* Status */}
-                    <td className="px-4 py-3">
-                      <span className="flex items-center gap-1.5 text-sm font-medium">
+                    <td className="px-2 md:px-4 py-2 md:py-3">
+                      <span className="flex items-center gap-1 md:gap-1.5 text-xs md:text-sm font-medium">
                         <span
-                          className="material-symbols-outlined text-[16px] icon-filled"
+                          className="material-symbols-outlined text-[14px] md:text-[16px] icon-filled"
                           style={{ color: status.color }}
                         >
                           {status.icon}
                         </span>
-                        <span className="text-on-surface-variant">{status.label}</span>
+                        <span className="hidden md:inline text-on-surface-variant">{status.label}</span>
                       </span>
                     </td>
 
                     {/* Actions */}
-                    <td className="px-4 py-3">
+                    <td className="px-2 md:px-4 py-2 md:py-3">
                       <div className="relative">
                         <button
                           onClick={() => setOpenMenu(openMenu === review.id ? null : review.id)}

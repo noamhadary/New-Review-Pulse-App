@@ -17,15 +17,15 @@ export default function PulseGauge({ positivePct = 94, pendingCount }: Props) {
 
   return (
     <div
-      className="rounded-2xl p-6 md:p-8 flex flex-col bg-white border border-outline-variant/20"
+      className="rounded-2xl p-4 sm:p-6 md:p-8 flex flex-col bg-white border border-outline-variant/20"
       style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}
     >
-      <h3 className="text-xl font-bold mb-6 text-primary">
+      <h3 className="text-base md:text-xl font-bold mb-4 md:mb-6 text-primary">
         Review Pulse Gauge
       </h3>
 
       {/* Gauge */}
-      <div className="relative w-44 h-44 mx-auto mb-6 flex-shrink-0">
+      <div className="relative w-36 h-36 md:w-44 md:h-44 mx-auto mb-4 md:mb-6 flex-shrink-0">
         <svg className="w-full h-full -rotate-90" viewBox="0 0 192 192">
           <circle cx="96" cy="96" r="84" fill="none" stroke="#edeeef" strokeWidth="14" />
           <circle
@@ -46,7 +46,7 @@ export default function PulseGauge({ positivePct = 94, pendingCount }: Props) {
         </svg>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-5xl font-extrabold leading-none tracking-tight text-secondary">
+          <span className="text-3xl md:text-5xl font-extrabold leading-none tracking-tight text-secondary">
             {pulse}
           </span>
           <span className="text-xs font-semibold uppercase tracking-widest mt-1 text-on-surface-variant">

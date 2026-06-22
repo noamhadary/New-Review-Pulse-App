@@ -31,10 +31,10 @@ export default function NeedsAttention() {
 
   return (
     <>
-      <div className="rounded-2xl p-6 md:p-8 flex flex-col bg-white border border-error/12" style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-        <div className="flex items-center gap-2 mb-6">
+      <div className="rounded-2xl p-4 sm:p-6 md:p-8 flex flex-col bg-white border border-error/12" style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+        <div className="flex items-center gap-2 mb-4 md:mb-6">
           <span className="material-symbols-outlined text-[20px] text-error">priority_high</span>
-          <h3 className="text-xl font-bold text-primary">דורש טיפול</h3>
+          <h3 className="text-base md:text-xl font-bold text-primary">דורש טיפול</h3>
           <span className="mr-auto text-xs font-bold px-2 py-0.5 rounded-full bg-error-container text-on-error-container">{critical.length}</span>
         </div>
         <div className="space-y-3 flex-1">

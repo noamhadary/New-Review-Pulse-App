@@ -20,11 +20,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
+      // Real session detected — discard any stale demo flag
+      if (data.session?.user) {
+        sessionStorage.removeItem('rp_demo');
+        setRuntimeDemo(false);
+      }
       setLoading(false);
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
+      if (newSession?.user) {
+        sessionStorage.removeItem('rp_demo');
+        setRuntimeDemo(false);
+      }
     });
 
     return () => listener.subscription.unsubscribe();
