@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBusiness } from '../../context/business-context';
 import { useAuth } from '../../context/auth-context';
+import { supabase } from '../../lib/supabase';
 
 const NOTIFICATIONS = [
   {
@@ -35,12 +36,15 @@ interface TopBarProps {
 }
 
 export default function TopBar({ onMenuToggle }: TopBarProps) {
-  const [notifOpen, setNotifOpen]       = useState(false);
-  const [storeOpen, setStoreOpen]       = useState(false);
+  const [notifOpen, setNotifOpen]             = useState(false);
+  const [storeOpen, setStoreOpen]             = useState(false);
+  const [profileOpen, setProfileOpen]         = useState(false);
   const [activeBranchIdx, setActiveBranchIdx] = useState(0);
-  const navigate   = useNavigate();
-  const { business } = useBusiness();
-  const { user } = useAuth();
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const navigate        = useNavigate();
+  const { business, refetch: refetchBusiness } = useBusiness();
+  const { user, signOut, isDemo }              = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const avatarInitial = (
     ((user?.user_metadata?.full_name as string | undefined) ||
       (user?.user_metadata?.name as string | undefined) ||
@@ -52,6 +56,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
   );
   const notifRef   = useRef<HTMLDivElement>(null);
   const storeRef   = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
 
   // Build display-ready branch list from saved data
   const branches = useMemo(() => {
@@ -77,19 +82,48 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
     const handler = (e: MouseEvent) => {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false);
       if (storeRef.current && !storeRef.current.contains(e.target as Node)) setStoreOpen(false);
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user || isDemo) return;
+    setUploadingAvatar(true);
+    const ext  = file.name.split('.').pop() ?? 'jpg';
+    const path = `${user.id}/logo.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from('business-logos')
+      .upload(path, file, { upsert: true });
+    if (uploadError) {
+      setUploadingAvatar(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+    const { data: { publicUrl } } = supabase.storage.from('business-logos').getPublicUrl(path);
+    const urlWithBust = `${publicUrl}?t=${Date.now()}`;
+    await supabase.from('businesses').update({ logo_url: urlWithBust }).eq('owner_id', user.id);
+    refetchBusiness();
+    setUploadingAvatar(false);
+    setProfileOpen(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    window.location.href = '/auth/login';
+  };
+
   return (
-    <header className="fixed top-0 right-0 left-0 z-50 h-28 flex items-center justify-between px-6 md:px-16 shadow-md bg-primary-container text-white">
+    <header className="fixed top-0 right-0 left-0 z-50 h-14 sm:h-20 md:h-28 flex items-center justify-between px-4 md:px-16 shadow-md bg-primary-container text-white">
       {/* לוגו — צמוד ימין (ילד ראשון ב-RTL) */}
       <img
         src="/logo.png"
         alt="Review Pulse"
         className="cursor-pointer select-none"
-        style={{ height: 50, width: 'auto', maxWidth: 180, objectFit: 'contain' }}
+        style={{ height: 'clamp(28px, 4vw, 50px)', width: 'auto', maxWidth: 180, objectFit: 'contain' }}
         onClick={() => navigate('/dashboard')}
       />
 
@@ -201,29 +235,108 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
         </div>
 
         {/* Profile */}
-        <button
-          className="rounded-full hover:opacity-80 transition-opacity cursor-pointer flex-shrink-0"
-          aria-label="פרופיל"
-          onClick={() => navigate('/settings')}
-          style={{ width: 38, height: 38 }}
-        >
-          {business?.logo_url ? (
-            <img
-              src={business.logo_url}
-              alt="לוגו העסק"
-              className="w-full h-full rounded-full object-cover"
-              style={{ border: '2px solid rgba(255,255,255,0.4)' }}
-              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-            />
-          ) : (
+        <div ref={profileRef} className="relative">
+          <button
+            className="rounded-full hover:opacity-80 transition-opacity cursor-pointer flex-shrink-0 relative"
+            aria-label="פרופיל"
+            onClick={() => setProfileOpen(!profileOpen)}
+            style={{ width: 38, height: 38 }}
+          >
+            {uploadingAvatar && (
+              <div className="absolute inset-0 rounded-full flex items-center justify-center z-10 bg-black/40">
+                <span className="material-symbols-outlined text-white text-[16px] animate-spin">progress_activity</span>
+              </div>
+            )}
+            {business?.logo_url ? (
+              <img
+                src={business.logo_url}
+                alt="לוגו העסק"
+                className="w-full h-full rounded-full object-cover"
+                style={{ border: '2px solid rgba(255,255,255,0.4)' }}
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              />
+            ) : (
+              <div
+                className="w-full h-full rounded-full flex items-center justify-center text-sm font-extrabold"
+                style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: '2px solid rgba(255,255,255,0.3)' }}
+              >
+                {avatarInitial || <span className="material-symbols-outlined text-[20px]">account_circle</span>}
+              </div>
+            )}
+          </button>
+
+          {profileOpen && (
             <div
-              className="w-full h-full rounded-full flex items-center justify-center text-sm font-extrabold"
-              style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: '2px solid rgba(255,255,255,0.3)' }}
+              className="absolute left-0 top-12 w-64 rounded-2xl overflow-hidden bg-white border border-outline-variant/30"
+              style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}
             >
-              {avatarInitial || <span className="material-symbols-outlined text-[20px]">account_circle</span>}
+              {/* Business info header */}
+              <div className="px-4 py-4 border-b border-outline-variant/30 flex items-center gap-3"
+                style={{ background: 'linear-gradient(135deg,rgba(0,35,102,0.04),rgba(135,29,211,0.06))' }}>
+                <div className="relative flex-shrink-0" style={{ width: 42, height: 42 }}>
+                  {business?.logo_url ? (
+                    <img
+                      src={business.logo_url}
+                      alt="לוגו"
+                      className="w-full h-full rounded-xl object-cover"
+                      style={{ border: '1.5px solid rgba(135,29,211,0.2)' }}
+                    />
+                  ) : (
+                    <div
+                      className="w-full h-full rounded-xl flex items-center justify-center text-sm font-extrabold"
+                      style={{ background: 'linear-gradient(135deg,#002366,#871dd3)', color: '#fff' }}
+                    >
+                      {avatarInitial || <span className="material-symbols-outlined text-[18px]">store</span>}
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold truncate text-primary">{business?.name || 'העסק שלי'}</p>
+                  <p className="text-xs truncate text-outline">{user?.email ?? ''}</p>
+                </div>
+              </div>
+
+              {/* Menu items */}
+              <div className="py-1">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarChange}
+                />
+                <button
+                  onClick={() => !isDemo && fileInputRef.current?.click()}
+                  disabled={isDemo || uploadingAvatar}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-right transition-colors hover:bg-gray-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span className="material-symbols-outlined text-[18px] text-secondary">add_a_photo</span>
+                  <span className="text-sm font-medium text-on-surface">
+                    {uploadingAvatar ? 'מעלה תמונה...' : 'שנה תמונת פרופיל'}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => { navigate('/settings'); setProfileOpen(false); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-right transition-colors hover:bg-gray-50 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[18px] text-on-surface-variant">settings</span>
+                  <span className="text-sm font-medium text-on-surface">הגדרות</span>
+                </button>
+
+                <div className="border-t border-outline-variant/20 my-1" />
+
+                <button
+                  onClick={handleSignOut}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-right transition-colors hover:bg-red-50 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[18px] text-red-500">logout</span>
+                  <span className="text-sm font-medium text-red-600">התנתק</span>
+                </button>
+              </div>
             </div>
           )}
-        </button>
+        </div>
 
         {/* Mobile menu */}
         <button
