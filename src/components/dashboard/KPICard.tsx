@@ -40,7 +40,7 @@ export default function KPICard({
 
       {/* Value */}
       <div className="flex items-baseline gap-1.5 md:gap-2">
-        <span className="text-2xl sm:text-3xl md:text-5xl font-extrabold leading-none tracking-tight text-primary">
+        <span className="text-xl sm:text-2xl md:text-4xl font-extrabold leading-none tracking-tight text-primary">
           {value}
         </span>
         {badge && (
