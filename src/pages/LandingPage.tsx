@@ -207,6 +207,350 @@ const PARTICLES = Array.from({ length: 22 }, (_, i) => ({
 
 const YEARLY: Record<string, string> = { free: '₪0', pro: '₪119', enterprise: '₪319' };
 
+// ── WhatsApp Demo Data ──────────────────────────────────────────────────────────
+
+const DEMO_PLATFORMS = [
+  { key: 'google',   label: 'Google',      color: '#4285F4' },
+  { key: 'facebook', label: 'Facebook',    color: '#1877F2' },
+  { key: 'wolt',     label: 'Wolt',        color: '#009DE0' },
+  { key: 'tripad',   label: 'TripAdvisor', color: '#00AF87' },
+] as const;
+
+type DemoPlatform = typeof DEMO_PLATFORMS[number]['key'];
+
+const DEMO_DB: Record<DemoPlatform, {
+  initials: string; color: string; name: string; time: string;
+  stars: string; text: string; badge: string;
+  sentiment: string; sClass: string;
+  notif: string; snippet: string; platform: string;
+  replies: string[];
+}> = {
+  google: {
+    initials: 'רכ', color: '#4285F4', name: 'רון כהן', time: 'לפני 12 דקות • Google',
+    stars: '★★☆☆☆',
+    text: 'המנות היו טעימות אבל שירות איטי מאוד. המתנו 40 דקות. עם קצת יותר תשומת לב לזמני ההמתנה הייתי נותן יותר כוכבים.',
+    badge: '🔍 Google Business', sentiment: '⚠️ שלילי — דורש תגובה', sClass: 'negative',
+    notif: 'ביקורת חדשה! Google ★★☆☆☆', snippet: '"המנות טעימות אבל שירות איטי..."',
+    platform: 'Google',
+    replies: [
+      'שלום רון, תודה על הפידבק. מצטערים על זמן ההמתנה — לא כך אנחנו רוצים שתרגיש. נשמח שתחזור ונדאג שהחוויה תהיה טובה יותר.',
+      'היי רון, שמענו אותך. שיפרנו את סדר העבודה ואנחנו בטוחים שביקורך הבא יהיה שונה. תוכל להגיע שוב?',
+      'תודה על הכנות! הביקורת שלך עוזרת לנו להשתפר. מנהל המסעדה ייצור איתך קשר לסיכום חוויה מפצה.',
+      'רון שלום, זמן ההמתנה שתיארת אינו מקובל. אנו מתנצלים ומזמינים אותך לארוחה חינמית כפיצוי.',
+    ],
+  },
+  facebook: {
+    initials: 'מל', color: '#1877F2', name: 'מיכל לוי', time: 'לפני 25 דקות • Facebook',
+    stars: '★★★★★',
+    text: 'חוויה מדהימה! האוכל פשוט על הגג, השירות מהיר וידידותי. הייתי עם המשפחה וכולם יצאו מרוצים. חוזרים בוודאות!',
+    badge: '👍 Facebook Page', sentiment: '✅ חיובי — מצוין לשיתוף', sClass: 'positive',
+    notif: 'ביקורת חדשה! Facebook ★★★★★', snippet: '"חוויה מדהימה! האוכל על הגג..."',
+    platform: 'Facebook',
+    replies: [
+      'מיכל היקרה, תודה רבה על המילים החמות! שמחים שהמשפחה נהנתה. מחכים לראות אתכם שוב! 🙏',
+      'איזה כיף לשמוע! כשמשפחה שלמה יוצאת מרוצה — זה כל המוטיבציה שלנו. תודה מהצוות כולו!',
+      'מיכל, תגובות כאלה ממלאות אותנו גאווה. הצוות שמח מאוד. להתראות בקרוב! 😊',
+      'תודה על הביקורת המדהימה! נשמח לראות תמונות אם צילמתם — ותמיד יש שולחן שמור למשפחה שלך.',
+    ],
+  },
+  wolt: {
+    initials: 'אב', color: '#009DE0', name: 'אייל ברק', time: 'לפני 5 דקות • Wolt',
+    stars: '★★★☆☆',
+    text: 'האוכל הגיע חם ובזמן, אבל חסר היה רוטב שהזמנתי. בגלל זה 3 כוכבים. מקווה שבפעם הבאה יהיה יותר מדויק.',
+    badge: '🛵 Wolt', sentiment: '🟡 ניטרלי — צריך מענה', sClass: 'neutral',
+    notif: 'ביקורת חדשה! Wolt ★★★☆☆', snippet: '"הגיע חם, אבל חסר רוטב שהזמנתי..."',
+    platform: 'Wolt',
+    replies: [
+      'אייל, שמחים שהאוכל הגיע חם! מצטערים על הרוטב החסר. בפעם הבאה קוד הנחה לכפרה.',
+      'תודה אייל. הייתה טעות בתהליך האריזה. עדכנו את הצוות. נשמח להחזיר לך את האמון.',
+      'היי אייל, פרטים כאלה עוזרים לנו מאוד. נשלח לך ווצ\'ר לפיצוי. תודה על ההבנה!',
+      'אייל, מתנצלים! הרוטב יצא בשגגה. נשמח לתקן בהזמנה הבאה ולהוסיף מנה על חשבוננו.',
+    ],
+  },
+  tripad: {
+    initials: 'שמ', color: '#00AF87', name: 'שרה מזרחי', time: 'לפני שעה • TripAdvisor',
+    stars: '★★★★☆',
+    text: 'מסעדה יפה עם אווירה נעימה. האוכל היה טעים אבל המחירים גבוהים קצת. מתאים לאירועים מיוחדים בהחלט.',
+    badge: '🦉 TripAdvisor', sentiment: '✅ חיובי עם הסתייגות', sClass: 'positive',
+    notif: 'ביקורת חדשה! TripAdvisor ★★★★☆', snippet: '"מסעדה יפה, אווירה נעימה..."',
+    platform: 'TripAdvisor',
+    replies: [
+      'שרה, תודה על הביקורת! שמחים שהאווירה הייתה נעימה. אנחנו עובדים על ערך מקסימלי לכל שקל.',
+      'תודה על המשוב! בהחלט מאמינים שהחוויה שווה כל שקל. נשמח לארח אתכם באירועים מיוחדים.',
+      'שרה שלום, כיף לשמוע! לגבי המחירים — יש לנו תפריט עסקי בצהריים שמתאים גם ליום-יום.',
+      'ביקורת מאוזנת, תודה! עובדים תמיד על שיפור יחס מחיר-ערך. נשמח לראות אתכם בחגים.',
+    ],
+  },
+};
+
+// ── WhatsApp Demo Component ────────────────────────────────────────────────────
+
+function WhatsAppDemo() {
+  const [platform, setPlatform] = useState<DemoPlatform>('google');
+  const [chosen, setChosen] = useState<number | null>(null);
+  const [published, setPublished] = useState(false);
+  const [publishedMsg, setPublishedMsg] = useState('');
+  const [time, setTime] = useState(() => {
+    const n = new Date();
+    return `${n.getHours()}:${String(n.getMinutes()).padStart(2, '0')}`;
+  });
+  const bodyRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      const n = new Date();
+      setTime(`${n.getHours()}:${String(n.getMinutes()).padStart(2, '0')}`);
+    }, 10000);
+    return () => clearInterval(id);
+  }, []);
+
+  const d = DEMO_DB[platform];
+
+  const sentimentColors: Record<string, { bg: string; color: string }> = {
+    positive: { bg: '#dcfce7', color: '#166534' },
+    negative: { bg: '#fee2e2', color: '#991b1b' },
+    neutral:  { bg: '#fef9c3', color: '#854d0e' },
+  };
+  const sc = sentimentColors[d.sClass] ?? sentimentColors.neutral;
+
+  function handleSelectPlatform(p: DemoPlatform) {
+    setPlatform(p);
+    setChosen(null);
+    setPublished(false);
+    setPublishedMsg('');
+  }
+
+  function handlePublish() {
+    if (chosen === null) return;
+    setPublished(true);
+    setPublishedMsg(d.replies[chosen]);
+    setTimeout(() => {
+      if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
+    }, 50);
+  }
+
+  return (
+    <section id="demo" className="py-20 px-5 bg-white">
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <FadeSection className="text-center mb-12">
+          <span className="inline-block text-sm font-bold px-4 py-1.5 rounded-full mb-4"
+            style={{ backgroundColor: 'rgba(135,29,211,0.1)', color: '#871dd3' }}>
+            הדמיה אינטרקטיבית
+          </span>
+          <h2 className="text-3xl md:text-4xl font-extrabold mb-4" style={{ color: '#00113a' }}>
+            מביקורת שנכנסת — לתגובה שמתפרסמת
+          </h2>
+          <p className="text-lg" style={{ color: '#757682' }}>
+            בחר פלטפורמה, קבל 4 תגובות בוואטסאפ, פרסם בלחיצה
+          </p>
+        </FadeSection>
+
+        <FadeSection>
+          <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-4">
+
+            {/* ── Review card ── */}
+            <div className="w-full lg:flex-1 min-w-0">
+              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#9ca3af' }}>ביקורת נכנסת מ:</p>
+              {/* Platform tabs */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {DEMO_PLATFORMS.map((p) => (
+                  <button
+                    key={p.key}
+                    onClick={() => handleSelectPlatform(p.key)}
+                    className="px-3 py-1 rounded-full text-xs font-semibold cursor-pointer transition-all"
+                    style={{
+                      color: p.color,
+                      backgroundColor: `${p.color}12`,
+                      border: `1.5px solid ${platform === p.key ? p.color : 'transparent'}`,
+                    }}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Review */}
+              <div className="rounded-2xl p-5 border" style={{ backgroundColor: '#f8f9fa', borderColor: '#e5e7eb' }}>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                    style={{ backgroundColor: d.color }}>
+                    {d.initials}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold" style={{ color: '#00113a' }}>{d.name}</p>
+                    <p className="text-xs" style={{ color: '#9ca3af' }}>{d.time}</p>
+                  </div>
+                </div>
+                <p className="text-sm mb-2" style={{ color: '#f59e0b' }}>{d.stars}</p>
+                <p className="text-sm leading-relaxed mb-3" style={{ color: '#444650' }}>{d.text}</p>
+                <span className="inline-block text-xs font-semibold px-2 py-1 rounded-full"
+                  style={{ backgroundColor: `${d.color}15`, color: d.color }}>
+                  {d.badge}
+                </span>
+                <div className="flex items-center gap-2 mt-3 pt-3 border-t" style={{ borderColor: '#e5e7eb' }}>
+                  <span className="text-xs" style={{ color: '#9ca3af' }}>סנטימנט:</span>
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+                    style={{ backgroundColor: sc.bg, color: sc.color }}>
+                    {d.sentiment}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Arrow + AI chip ── */}
+            <div className="hidden lg:flex flex-col items-center gap-2 flex-shrink-0">
+              <div className="text-xs font-bold px-3 py-1.5 rounded-full text-white"
+                style={{ background: 'linear-gradient(135deg,#871dd3,#60a5fa)' }}>
+                🤖 סוכן AI
+              </div>
+              <div className="w-0.5 h-12 relative" style={{ background: 'linear-gradient(to bottom,#871dd3,#60a5fa)' }}>
+                <div className="absolute -bottom-1.5 -right-1.5 w-0 h-0"
+                  style={{ borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: '7px solid #60a5fa' }} />
+              </div>
+              <p className="text-xs text-center max-w-14 leading-tight" style={{ color: '#9ca3af' }}>מנתח ויוצר תגובות</p>
+              <div className="w-0.5 h-12 relative" style={{ background: 'linear-gradient(to bottom,#871dd3,#60a5fa)' }}>
+                <div className="absolute -bottom-1.5 -right-1.5 w-0 h-0"
+                  style={{ borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: '7px solid #60a5fa' }} />
+              </div>
+            </div>
+
+            {/* Mobile arrow */}
+            <div className="lg:hidden flex items-center gap-3">
+              <div className="h-0.5 flex-1" style={{ background: 'linear-gradient(to left,#871dd3,#60a5fa)' }} />
+              <div className="text-xs font-bold px-3 py-1.5 rounded-full text-white flex-shrink-0"
+                style={{ background: 'linear-gradient(135deg,#871dd3,#60a5fa)' }}>
+                🤖 סוכן AI
+              </div>
+              <div className="h-0.5 flex-1" style={{ background: 'linear-gradient(to right,#871dd3,#60a5fa)' }} />
+            </div>
+
+            {/* ── Phone shell ── */}
+            <div className="flex flex-col items-center flex-shrink-0">
+              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#9ca3af' }}>📱 הטלפון שלך:</p>
+
+              {/* Phone outer shell */}
+              <div className="relative" style={{
+                width: 270, background: '#111', borderRadius: 40, padding: 10,
+                boxShadow: '0 0 0 2px #333, 0 20px 60px rgba(0,0,0,0.35)',
+              }}>
+                {/* Notch */}
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10"
+                  style={{ width: 70, height: 20, background: '#111', borderRadius: '0 0 12px 12px' }} />
+                {/* Side buttons */}
+                <div className="absolute" style={{ right: -4, top: 88, width: 4, height: 32, background: '#333', borderRadius: '0 3px 3px 0' }} />
+                <div className="absolute" style={{ left: -4, top: 78, width: 4, height: 26, background: '#333', borderRadius: '3px 0 0 3px' }} />
+                <div className="absolute" style={{ left: -4, top: 114, width: 4, height: 26, background: '#333', borderRadius: '3px 0 0 3px' }} />
+
+                {/* Screen */}
+                <div style={{ background: '#e5ddd5', borderRadius: 30, overflow: 'hidden', direction: 'rtl' }}>
+                  {/* Status bar */}
+                  <div className="flex items-center justify-between px-4" style={{ background: '#075e54', height: 28 }}>
+                    <span className="text-xs font-semibold text-white">{time}</span>
+                    <span className="text-white" style={{ fontSize: 10 }}>● WiFi 🔋</span>
+                  </div>
+                  {/* WA Header */}
+                  <div className="flex items-center gap-2 px-3 py-2" style={{ background: '#075e54' }}>
+                    <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 18 }}>‹</span>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                      style={{ background: '#128C7E' }}>RP</div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-white">Review Pulse</p>
+                      <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.65)' }}>מחובר</p>
+                    </div>
+                    <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14 }}>⋮</span>
+                  </div>
+
+                  {/* Messages */}
+                  <div ref={bodyRef} className="flex flex-col gap-1.5 p-2" style={{ maxHeight: 380, overflowY: 'auto' }}>
+                    {/* Date chip */}
+                    <div className="text-center my-1">
+                      <span className="text-white rounded-lg px-2 py-0.5" style={{ fontSize: 10, background: 'rgba(0,0,0,0.15)' }}>היום</span>
+                    </div>
+
+                    {/* Notification bubble */}
+                    <div className="rounded-lg rounded-tr-sm px-2.5 py-1.5 self-end" style={{ background: 'white', maxWidth: '90%', fontSize: 11.5, lineHeight: 1.45 }}>
+                      🔔 <strong>{d.notif}</strong><br/>
+                      <em style={{ color: '#757682' }}>{d.snippet}</em>
+                      <span className="block mt-0.5 text-left" style={{ fontSize: 9, color: 'rgba(0,0,0,0.4)' }}>{time} ✓✓</span>
+                    </div>
+
+                    <div className="rounded-lg rounded-tr-sm px-2.5 py-1.5 self-end" style={{ background: 'white', maxWidth: '90%', fontSize: 11.5, lineHeight: 1.45 }}>
+                      בחר את התגובה שתרצה לפרסם:
+                      <span className="block mt-0.5 text-left" style={{ fontSize: 9, color: 'rgba(0,0,0,0.4)' }}>{time} ✓✓</span>
+                    </div>
+
+                    {/* Reply options */}
+                    {d.replies.map((reply, i) => (
+                      <button
+                        key={`${platform}-${i}`}
+                        onClick={() => setChosen(i)}
+                        className="text-right rounded-lg px-2.5 py-2 transition-all cursor-pointer w-full"
+                        style={{
+                          background: chosen === i ? '#dcf8c6' : 'white',
+                          border: `1.5px solid ${chosen === i ? '#25D366' : '#e5e7eb'}`,
+                          fontSize: 11,
+                          lineHeight: 1.45,
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: 6,
+                        }}
+                      >
+                        <span className="flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-white mt-0.5"
+                          style={{ background: '#871dd3', fontSize: 9, minWidth: 16 }}>
+                          {i + 1}
+                        </span>
+                        <span>{reply}</span>
+                      </button>
+                    ))}
+
+                    {/* Published message */}
+                    {published && publishedMsg && (
+                      <div className="rounded-lg rounded-tl-sm px-2.5 py-1.5 self-start"
+                        style={{ background: '#dcf8c6', maxWidth: '90%', fontSize: 11, lineHeight: 1.45 }}>
+                        {publishedMsg}
+                        <span className="block mt-0.5 text-left" style={{ fontSize: 9, color: '#5b8a68' }}>{time} ✓✓</span>
+                      </div>
+                    )}
+
+                    {published && (
+                      <div className="rounded-lg px-2.5 py-1.5 text-center text-xs font-bold"
+                        style={{ background: '#dcfce7', color: '#166534', fontSize: 11 }}>
+                        🎉 פורסם ב-{d.platform}!
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Input bar */}
+                  <div className="flex items-center gap-2 px-2 py-1.5" style={{ background: '#f0f0f0' }}>
+                    <div className="flex-1 rounded-full px-3 py-1.5" style={{ background: 'white', fontSize: 11, color: '#9ca3af' }}>
+                      {chosen !== null ? 'לחץ שלח לפרסום...' : 'בחר תגובה למעלה...'}
+                    </div>
+                    <button
+                      onClick={handlePublish}
+                      disabled={chosen === null || published}
+                      className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer transition-all"
+                      style={{
+                        background: chosen !== null && !published ? '#075e54' : '#ccc',
+                        border: 'none',
+                        color: 'white',
+                        fontSize: 14,
+                      }}
+                    >
+                      ➤
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </FadeSection>
+      </div>
+    </section>
+  );
+}
+
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
 function ScrollProgressBar({ pct }: { pct: number }) {
@@ -569,6 +913,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ── WhatsApp Demo ── */}
+      <WhatsAppDemo />
 
       {/* ── Pricing ── */}
       <section id="pricing" className="py-20 px-5" style={{ backgroundColor: '#f8f9fa' }}>
