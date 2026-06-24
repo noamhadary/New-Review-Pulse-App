@@ -1,9 +1,49 @@
 import { useState, useEffect } from 'react';
+import * as XLSX from 'xlsx';
 import type { Platform, Sentiment, ReviewStatus, Review } from '../types';
 import AIReplyModal from '../components/reviews/AIReplyModal';
 import { useReviews } from '../hooks/useReviews';
 import { useBusiness } from '../context/business-context';
 import { syncGoogleReviews } from '../lib/googleBusinessAPI';
+
+const SENTIMENT_LABELS: Record<Sentiment, string> = {
+  very_positive: 'חיובי מאוד',
+  positive:      'חיובי',
+  neutral:       'ניטרלי',
+  critical:      'ביקורתי',
+};
+
+const STATUS_LABELS: Record<ReviewStatus, string> = {
+  pending:  'ממתין לתגובה',
+  replied:  'טופל',
+  ignored:  'התעלמות',
+};
+
+function exportToExcel(reviews: Review[]) {
+  const rows = reviews.map((r) => ({
+    'שם לקוח':    r.reviewer_name,
+    'פלטפורמה':   r.platform,
+    'דירוג':      r.rating,
+    'סנטימנט':    SENTIMENT_LABELS[r.sentiment] ?? r.sentiment,
+    'תוכן ביקורת': r.content ?? '',
+    'סטטוס':      STATUS_LABELS[r.status] ?? r.status,
+    'תאריך':      new Date(r.created_at).toLocaleDateString('he-IL'),
+    'תגובה שנשלחה': r.reply_text ?? '',
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  // RTL direction for the sheet
+  ws['!cols'] = [
+    { wch: 20 }, { wch: 14 }, { wch: 8 }, { wch: 14 },
+    { wch: 50 }, { wch: 16 }, { wch: 12 }, { wch: 50 },
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'ביקורות');
+
+  const date = new Date().toLocaleDateString('he-IL').replace(/\//g, '-');
+  XLSX.writeFile(wb, `ביקורות_ReviewPulse_${date}.xlsx`);
+}
 
 const PLATFORM_OPTIONS: { value: Platform | 'all'; label: string }[] = [
   { value: 'all', label: 'כל הפלטפורמות' },
@@ -87,10 +127,12 @@ export default function Reviews() {
             </p>
           </div>
           <button
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm cursor-pointer transition-opacity hover:opacity-90 bg-secondary text-white"
+            onClick={() => exportToExcel(filtered)}
+            disabled={filtered.length === 0}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm cursor-pointer transition-opacity hover:opacity-90 bg-secondary text-white disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <span className="material-symbols-outlined text-[18px]">download</span>
-            ייצוא ביקורות
+            ייצוא ביקורות ({filtered.length})
           </button>
         </div>
 
