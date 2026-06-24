@@ -104,10 +104,10 @@ export default function Onboarding() {
   const togglePlatform = async (id: string) => {
     setConnected((prev) => prev.includes(id) ? prev : [...prev, id]);
     if (user && !isDemo) {
-      await supabase.from('platform_connections').upsert(
-        { owner_id: user.id, platform: id, credentials: platformCreds[id] ?? {} },
-        { onConflict: 'owner_id,platform' },
-      );
+      const { error } = await supabase
+        .from('platform_connections')
+        .upsert({ owner_id: user.id, platform: id }, { onConflict: 'owner_id,platform' });
+      if (error) console.error('togglePlatform save error:', error.message);
     }
   };
 
