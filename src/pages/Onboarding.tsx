@@ -96,14 +96,8 @@ export default function Onboarding() {
           if (r.credentials) creds[r.platform as string] = r.credentials as Record<string, string>;
         });
         setPlatformCreds(creds);
-        setConnected(
-          data
-            .filter((r) => {
-              const c = r.credentials as Record<string, string> | null;
-              return c && Object.values(c).some((v) => v?.trim());
-            })
-            .map((r) => r.platform as string),
-        );
+        // Mark every platform that has a row in platform_connections as active
+        setConnected(data.map((r) => r.platform as string));
       });
   }, [user, isDemo]);
 
@@ -301,13 +295,21 @@ export default function Onboarding() {
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-sm text-primary">{p.name}</span>
-                          {isConnected && (
+                          {isConnected ? (
                             <span
                               className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold"
                               style={{ backgroundColor: '#dcfce7', color: '#16a34a' }}
                             >
                               <span className="material-symbols-outlined text-[12px] icon-filled">check_circle</span>
                               פעיל
+                            </span>
+                          ) : (
+                            <span
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold"
+                              style={{ backgroundColor: '#f3f4f6', color: '#9ca3af' }}
+                            >
+                              <span className="material-symbols-outlined text-[12px]">radio_button_unchecked</span>
+                              לא פעיל
                             </span>
                           )}
                         </div>
