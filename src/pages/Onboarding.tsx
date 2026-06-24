@@ -101,8 +101,14 @@ export default function Onboarding() {
       });
   }, [user, isDemo]);
 
-  const togglePlatform = (id: string) => {
+  const togglePlatform = async (id: string) => {
     setConnected((prev) => prev.includes(id) ? prev : [...prev, id]);
+    if (user && !isDemo) {
+      await supabase.from('platform_connections').upsert(
+        { owner_id: user.id, platform: id, credentials: platformCreds[id] ?? {} },
+        { onConflict: 'owner_id,platform' },
+      );
+    }
   };
 
   const disconnectPlatform = async (id: string) => {
