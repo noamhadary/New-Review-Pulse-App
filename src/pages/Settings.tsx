@@ -949,28 +949,19 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
         branches,
       };
 
-      let businessId = business?.id ?? null;
+      const { data: upserted, error: bizError } = await supabase
+        .from('businesses')
+        .upsert({ owner_id: user.id, ...fields }, { onConflict: 'owner_id' })
+        .select('id')
+        .single();
 
-      if (business?.id) {
-        const { error } = await supabase.from('businesses').update(fields).eq('id', business.id);
-        if (error) {
-          console.error('businesses save error:', error.code, error.message, error.details);
-          showToast(`שגיאה בשמירה: ${error.message}`, 'error');
-          return;
-        }
-      } else {
-        const { data: newBiz, error } = await supabase
-          .from('businesses')
-          .insert({ owner_id: user.id, ...fields })
-          .select('id')
-          .single();
-        if (error) {
-          console.error('businesses save error:', error.code, error.message, error.details);
-          showToast(`שגיאה בשמירה: ${error.message}`, 'error');
-          return;
-        }
-        businessId = newBiz?.id ?? null;
+      if (bizError) {
+        console.error('businesses save error:', bizError.code, bizError.message, bizError.details);
+        showToast(`שגיאה בשמירה: ${bizError.message}`, 'error');
+        return;
       }
+
+      const businessId = upserted?.id ?? business?.id ?? null;
 
       refetchBusiness();
 
