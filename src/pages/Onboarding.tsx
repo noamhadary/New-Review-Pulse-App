@@ -108,9 +108,15 @@ export default function Onboarding() {
   }, [user, isDemo]);
 
   const togglePlatform = (id: string) => {
-    setConnected((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
-    );
+    setConnected((prev) => prev.includes(id) ? prev : [...prev, id]);
+  };
+
+  const disconnectPlatform = async (id: string) => {
+    setConnected((prev) => prev.filter((p) => p !== id));
+    setPlatformCreds((prev) => { const next = { ...prev }; delete next[id]; return next; });
+    if (user && !isDemo) {
+      await supabase.from('platform_connections').delete().eq('owner_id', user.id).eq('platform', id);
+    }
   };
 
   const handleComplete = async () => {
@@ -273,12 +279,13 @@ export default function Onboarding() {
                 return (
                   <div key={p.id}>
                     <div
-                      className="flex items-center justify-between p-4 rounded-xl transition-all cursor-pointer"
+                      className="flex items-center justify-between p-4 rounded-xl transition-all"
                       style={{
                         border: `2px solid ${isConnected ? p.color : 'rgba(197,198,210,0.4)'}`,
                         backgroundColor: isConnected ? `${p.color}08` : '#f8f9fa',
+                        cursor: isConnected ? 'default' : 'pointer',
                       }}
-                      onClick={() => togglePlatform(p.id)}
+                      onClick={() => !isConnected && togglePlatform(p.id)}
                     >
                       <div className="flex items-center gap-3">
                         <div
@@ -305,17 +312,21 @@ export default function Onboarding() {
                           )}
                         </div>
                       </div>
-                      <div
-                        className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                        style={isConnected
-                          ? { backgroundColor: '#16a34a' }
-                          : { border: '2px solid #c5c6d2', backgroundColor: 'transparent' }
-                        }
-                      >
-                        {isConnected && (
-                          <span className="material-symbols-outlined text-white text-[14px] icon-filled">check</span>
-                        )}
-                      </div>
+                      {isConnected ? (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); disconnectPlatform(p.id); }}
+                          className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-all hover:opacity-80"
+                          style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5' }}
+                        >
+                          <span className="material-symbols-outlined text-[13px]">link_off</span>
+                          נתק
+                        </button>
+                      ) : (
+                        <div
+                          className="w-6 h-6 rounded-full flex-shrink-0"
+                          style={{ border: '2px solid #c5c6d2', backgroundColor: 'transparent' }}
+                        />
+                      )}
                     </div>
 
                     {isConnected && fields.length > 0 && (
