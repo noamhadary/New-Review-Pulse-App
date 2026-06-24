@@ -282,7 +282,7 @@ export default function Onboarding() {
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className="w-10 h-10 rounded-xl flex items-center justify-center"
+                          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                           style={{ backgroundColor: isConnected ? `${p.color}18` : '#edeeef' }}
                         >
                           <span
@@ -292,12 +292,23 @@ export default function Onboarding() {
                             {p.icon}
                           </span>
                         </div>
-                        <span className="font-semibold text-sm text-primary">{p.name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-sm text-primary">{p.name}</span>
+                          {isConnected && (
+                            <span
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold"
+                              style={{ backgroundColor: '#dcfce7', color: '#16a34a' }}
+                            >
+                              <span className="material-symbols-outlined text-[12px] icon-filled">check_circle</span>
+                              פעיל
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <div
                         className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
                         style={isConnected
-                          ? { backgroundColor: p.color }
+                          ? { backgroundColor: '#16a34a' }
                           : { border: '2px solid #c5c6d2', backgroundColor: 'transparent' }
                         }
                       >
