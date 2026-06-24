@@ -87,17 +87,17 @@ export default function Onboarding() {
     if (!user || isDemo) return;
     supabase
       .from('platform_connections')
-      .select('platform, credentials')
+      .select('*')
       .eq('owner_id', user.id)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) { console.error('platform_connections load error:', error.message); return; }
         if (!data?.length) return;
         const creds: Record<string, Record<string, string>> = {};
-        data.forEach((r) => {
+        data.forEach((r: Record<string, unknown>) => {
           if (r.credentials) creds[r.platform as string] = r.credentials as Record<string, string>;
         });
         setPlatformCreds(creds);
-        // Mark every platform that has a row in platform_connections as active
-        setConnected(data.map((r) => r.platform as string));
+        setConnected(data.map((r: Record<string, unknown>) => r.platform as string));
       });
   }, [user, isDemo]);
 
