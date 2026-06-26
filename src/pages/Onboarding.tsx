@@ -33,10 +33,9 @@ const STEPS = [
 ];
 
 const PLATFORMS = [
-  { id: 'google',      name: 'Google Business', icon: 'language',        color: '#4285F4' },
-  { id: 'facebook',    name: 'Facebook Pages',  icon: 'groups',          color: '#1877F2' },
-  { id: 'tripadvisor', name: 'TripAdvisor',     icon: 'flight',          color: '#34E0A1' },
-  { id: 'wolt',        name: 'Wolt',            icon: 'delivery_dining', color: '#FF6B35' },
+  { id: 'google',      name: 'Google Business', icon: 'language', color: '#4285F4' },
+  { id: 'facebook',    name: 'Facebook Pages',  icon: 'groups',   color: '#1877F2' },
+  { id: 'tripadvisor', name: 'TripAdvisor',     icon: 'flight',   color: '#34E0A1' },
 ];
 
 type OnbCredField = { key: string; label: string; placeholder: string; dir?: 'ltr' | 'rtl'; type?: string; hint: string };
@@ -51,9 +50,6 @@ const PLATFORM_CREDENTIAL_FIELDS: Record<string, OnbCredField[]> = {
   ],
   tripadvisor: [
     { key: 'location_url', label: 'קישור לדף TripAdvisor', placeholder: 'https://www.tripadvisor.com/Restaurant_Review-...', dir: 'ltr', hint: 'העתק את הכתובת מהדפדפן כשאתה בדף העסק' },
-  ],
-  wolt: [
-    { key: 'restaurant_url', label: 'קישור לדף Wolt', placeholder: 'https://wolt.com/he/isr/tel-aviv/restaurant/...', dir: 'ltr', hint: 'העתק את הכתובת מהדפדפן כשאתה בדף המסעדה' },
   ],
 };
 

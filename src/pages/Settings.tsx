@@ -61,9 +61,8 @@ const INITIAL_MEMBERS: TeamMember[] = [
 
 const INTEGRATIONS_CONFIG = [
   { id: 'google',      name: 'Google Business', icon: 'language',       color: '#4285F4', reviews: 142, lastSync: 'לפני 2 שעות' },
-  { id: 'facebook',    name: 'Facebook Pages',  icon: 'groups',         color: '#1877F2', reviews: 0,   lastSync: null },
-  { id: 'tripadvisor', name: 'TripAdvisor',     icon: 'flight',         color: '#34E0A1', reviews: 0,   lastSync: null },
-  { id: 'wolt',        name: 'Wolt',            icon: 'delivery_dining',color: '#FF6B35', reviews: 0,   lastSync: null },
+  { id: 'facebook',    name: 'Facebook Pages',  icon: 'groups',  color: '#1877F2', reviews: 0, lastSync: null },
+  { id: 'tripadvisor', name: 'TripAdvisor',     icon: 'flight',  color: '#34E0A1', reviews: 0, lastSync: null },
 ];
 
 type CredField = { key: string; label: string; placeholder: string; dir?: 'ltr' | 'rtl'; type?: string; hint: string };
@@ -78,9 +77,6 @@ const PLATFORM_CREDENTIAL_FIELDS: Record<string, CredField[]> = {
   ],
   tripadvisor: [
     { key: 'location_url', label: 'קישור לדף TripAdvisor', placeholder: 'https://www.tripadvisor.com/Restaurant_Review-...', dir: 'ltr', hint: 'העתק את הכתובת מהדפדפן כשאתה בדף העסק' },
-  ],
-  wolt: [
-    { key: 'restaurant_url', label: 'קישור לדף Wolt', placeholder: 'https://wolt.com/he/isr/tel-aviv/restaurant/...', dir: 'ltr', hint: 'העתק את הכתובת מהדפדפן כשאתה בדף המסעדה' },
   ],
 };
 

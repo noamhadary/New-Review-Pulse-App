@@ -50,7 +50,6 @@ const PLATFORM_OPTIONS: { value: Platform | 'all'; label: string }[] = [
   { value: 'google', label: 'Google' },
   { value: 'facebook', label: 'Facebook' },
   { value: 'tripadvisor', label: 'TripAdvisor' },
-  { value: 'wolt', label: 'Wolt' },
 ];
 
 const SENTIMENT_OPTIONS: { value: Sentiment | 'all'; label: string }[] = [
