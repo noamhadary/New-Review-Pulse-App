@@ -20,10 +20,7 @@ async function provisionBusiness(user: User): Promise<'new' | 'existing'> {
 
   await supabase.from('businesses').insert({
     owner_id: user.id,
-    name:     (meta.business_name as string | undefined)?.trim()
-           || (meta.full_name     as string | undefined)?.trim()
-           || user.email?.split('@')[0]
-           || 'העסק שלי',
+    name:     (meta.business_name as string | undefined)?.trim() || 'העסק שלי',
     category: 'קמעונאות',
   });
 
