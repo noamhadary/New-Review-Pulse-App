@@ -646,7 +646,7 @@ export default function LandingPage() {
       >
         <div className="max-w-6xl mx-auto px-5 h-28 flex items-center justify-between">
           <div className="cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <img src="/logo.png" alt="Rate Pulse" style={{ height: 50, width: 'auto', maxWidth: 180, objectFit: 'contain' }} />
+            <img src="/logo.png" alt="Rate Pulse" style={{ height: 75, width: 'auto', maxWidth: 270, objectFit: 'contain' }} />
           </div>
 
           <div className="hidden md:flex items-center gap-6">
@@ -1023,7 +1023,7 @@ export default function LandingPage() {
       <footer style={{ backgroundColor: '#00113a' }}>
         <div className="max-w-6xl mx-auto px-5 py-10">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <img src="/logo.png" alt="Rate Pulse" style={{ height: 16, width: 'auto', maxWidth: 80, objectFit: 'contain', opacity: 0.85 }} />
+            <img src="/logo.png" alt="Rate Pulse" style={{ height: 24, width: 'auto', maxWidth: 120, objectFit: 'contain', opacity: 0.85 }} />
             <div className="flex flex-wrap justify-center gap-6">
               {[["פיצ'רים",'features'],['מחירים','pricing'],['המלצות','testimonials']].map(([label, id]) => (
                 <button key={id} onClick={() => scrollTo(id)} className="text-sm py-2.5 cursor-pointer hover:opacity-60 transition-opacity text-white/70">{label}</button>

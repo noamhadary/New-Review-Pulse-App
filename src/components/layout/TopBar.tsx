@@ -123,7 +123,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
         src="/logo.png"
         alt="Rate Pulse"
         className="cursor-pointer select-none"
-        style={{ height: 'clamp(28px, 4vw, 50px)', width: 'auto', maxWidth: 180, objectFit: 'contain' }}
+        style={{ height: 'clamp(42px, 6vw, 75px)', width: 'auto', maxWidth: 270, objectFit: 'contain' }}
         onClick={() => navigate('/dashboard')}
       />
 

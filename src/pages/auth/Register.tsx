@@ -252,7 +252,7 @@ export default function Register() {
             src="/logo.png"
             alt="Rate Pulse"
             className="cursor-pointer"
-            style={{ width: 130, maxWidth: '42%', height: 'auto', objectFit: 'contain', display: 'block', margin: '0 auto', filter: 'drop-shadow(0 0 20px rgba(135,29,211,0.55))' }}
+            style={{ width: 195, maxWidth: '63%', height: 'auto', objectFit: 'contain', display: 'block', margin: '0 auto', filter: 'drop-shadow(0 0 20px rgba(135,29,211,0.55))' }}
             onClick={() => navigate('/')}
           />
           <p className="mt-2 text-sm text-on-primary-container">
