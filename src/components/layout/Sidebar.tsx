@@ -46,7 +46,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       >
         {/* Brand */}
         <div className="px-5 py-5 border-b border-outline-variant">
-          <img src="/logo.png" alt="Review Pulse" style={{ height: 38, width: 'auto', maxWidth: '100%', objectFit: 'contain' }} />
+          <img src="/logo.svg" alt="Rate Pulse" style={{ height: 38, width: 'auto', maxWidth: '100%', objectFit: 'contain' }} />
           <p className="text-xs mt-1.5 text-outline">ניהול מוניטין</p>
         </div>
 

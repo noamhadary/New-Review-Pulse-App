@@ -120,8 +120,8 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
     <header className="fixed top-0 right-0 left-0 z-50 h-14 sm:h-20 md:h-28 flex items-center justify-between px-4 md:px-16 shadow-md bg-primary-container text-white">
       {/* לוגו — צמוד ימין (ילד ראשון ב-RTL) */}
       <img
-        src="/logo.png"
-        alt="Review Pulse"
+        src="/logo.svg"
+        alt="Rate Pulse"
         className="cursor-pointer select-none"
         style={{ height: 'clamp(28px, 4vw, 50px)', width: 'auto', maxWidth: 180, objectFit: 'contain' }}
         onClick={() => navigate('/dashboard')}

@@ -189,7 +189,7 @@ const PLANS = [
 ];
 
 const TESTIMONIALS = [
-  { name: 'דנה כהן',  role: 'בעלת מסעדה, תל אביב',      initials: 'דכ', rating: 5, color: '#871dd3', text: 'לפני Review Pulse הייתי מחמיצה ביקורות שלמות בגוגל. היום אני עונה לכולן תוך שעות ורואה עלייה ישירה בדירוג.' },
+  { name: 'דנה כהן',  role: 'בעלת מסעדה, תל אביב',      initials: 'דכ', rating: 5, color: '#871dd3', text: 'לפני Rate Pulse הייתי מחמיצה ביקורות שלמות בגוגל. היום אני עונה לכולן תוך שעות ורואה עלייה ישירה בדירוג.' },
   { name: 'יוסי לוי', role: 'מנהל רשת מספרות, חיפה',    initials: 'יל', rating: 5, color: '#2563eb', text: 'ניהול 3 סניפים עם צוות מחייב הרשאות ברורות. המערכת עשתה לנו סדר -- כל אחד יודע מה תפקידו.'              },
   { name: 'מיכל גרין',role: 'מנכ"לית בוטיק, ירושלים',   initials: 'מג', rating: 5, color: '#16a34a', text: 'תגובות ה-AI מדויקות בטירוף. הן נשמעות כמוני -- לא כמו בוט. הלקוחות מגיבים הרבה יותר חיובי.'            },
 ];
@@ -440,7 +440,7 @@ function WhatsAppDemo() {
                     <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
                       style={{ background: '#128C7E' }}>RP</div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-white">Review Pulse</p>
+                      <p className="text-xs font-semibold text-white">Rate Pulse</p>
                       <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.65)' }}>מחובר</p>
                     </div>
                     <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14 }}>⋮</span>
@@ -646,7 +646,7 @@ export default function LandingPage() {
       >
         <div className="max-w-6xl mx-auto px-5 h-28 flex items-center justify-between">
           <div className="cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <img src="/logo.png" alt="Review Pulse" style={{ height: 50, width: 'auto', maxWidth: 180, objectFit: 'contain' }} />
+            <img src="/logo.svg" alt="Rate Pulse" style={{ height: 50, width: 'auto', maxWidth: 180, objectFit: 'contain' }} />
           </div>
 
           <div className="hidden md:flex items-center gap-6">
@@ -772,7 +772,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-lg md:text-xl mb-10 max-w-2xl mx-auto leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)' }}>
-            Review Pulse מסנכרן ביקורות מכל הפלטפורמות, מנתח סנטימנט בעברית ומציע תגובות מותאמות אישית -- כדי שתוכל לשמור על מוניטין מושלם בלי לבזבז שעות.
+            Rate Pulse מסנכרן ביקורות מכל הפלטפורמות, מנתח סנטימנט בעברית ומציע תגובות מותאמות אישית -- כדי שתוכל לשמור על מוניטין מושלם בלי לבזבז שעות.
           </p>
 
           {/* CTA buttons */}
@@ -952,7 +952,7 @@ export default function LandingPage() {
           <FadeSection className="text-center mb-14">
             <span className="inline-block text-sm font-bold px-4 py-1.5 rounded-full mb-4" style={{ backgroundColor: 'rgba(245,158,11,0.1)', color: '#d97706' }}>המלצות</span>
             <h2 className="text-3xl md:text-4xl font-extrabold mb-4" style={{ color: '#00113a' }}>עסקים ישראלים אוהבים אותנו</h2>
-            <p className="text-lg" style={{ color: '#757682' }}>מה אומרים בעלי עסקים שכבר עובדים עם Review Pulse.</p>
+            <p className="text-lg" style={{ color: '#757682' }}>מה אומרים בעלי עסקים שכבר עובדים עם Rate Pulse.</p>
           </FadeSection>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1023,7 +1023,7 @@ export default function LandingPage() {
       <footer style={{ backgroundColor: '#00113a' }}>
         <div className="max-w-6xl mx-auto px-5 py-10">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <img src="/logo.png" alt="Review Pulse" style={{ height: 16, width: 'auto', maxWidth: 80, objectFit: 'contain', opacity: 0.85 }} />
+            <img src="/logo.svg" alt="Rate Pulse" style={{ height: 16, width: 'auto', maxWidth: 80, objectFit: 'contain', opacity: 0.85 }} />
             <div className="flex flex-wrap justify-center gap-6">
               {[["פיצ'רים",'features'],['מחירים','pricing'],['המלצות','testimonials']].map(([label, id]) => (
                 <button key={id} onClick={() => scrollTo(id)} className="text-sm py-2.5 cursor-pointer hover:opacity-60 transition-opacity text-white/70">{label}</button>
@@ -1031,7 +1031,7 @@ export default function LandingPage() {
               <button onClick={() => navigate('/auth/login')}    className="text-sm py-2.5 cursor-pointer hover:opacity-60 transition-opacity text-white/70">כניסה</button>
               <button onClick={() => navigate('/auth/register')} className="text-sm py-2.5 cursor-pointer hover:opacity-60 transition-opacity text-white/70">הרשמה</button>
             </div>
-            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>© 2025 Review Pulse. כל הזכויות שמורות.</p>
+            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>© 2025 Rate Pulse. כל הזכויות שמורות.</p>
           </div>
         </div>
       </footer>

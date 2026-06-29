@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 52" fill="none">
+  <!-- RATE text -->
+  <text x="0" y="34" font-family="'Segoe UI', Arial, sans-serif" font-size="30" font-weight="800" letter-spacing="2" fill="white">RATE</text>
+  <!-- PULSE text -->
+  <text x="0" y="50" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="400" letter-spacing="4" fill="white" opacity="0.85">PULSE</text>
+  <!-- Gold star -->
+  <text x="112" y="18" font-size="22" fill="#F5B800">★</text>
+</svg>

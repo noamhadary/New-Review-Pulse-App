@@ -67,8 +67,8 @@ export default function Login() {
         {/* Logo */}
         <div className="text-center mb-8">
           <img
-            src="/logo.png"
-            alt="Review Pulse"
+            src="/logo.svg"
+            alt="Rate Pulse"
             style={{ width: 130, maxWidth: '42%', height: 'auto', objectFit: 'contain', display: 'block', margin: '0 auto', filter: 'drop-shadow(0 0 20px rgba(135,29,211,0.55))' }}
           />
           <p className="mt-2 text-sm text-on-primary-container">ניהול מוניטין חכם לעסק שלך</p>

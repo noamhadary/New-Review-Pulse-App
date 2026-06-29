@@ -175,7 +175,7 @@ export default function Onboarding() {
           הגדרת העסק
         </h1>
         <p className="text-sm mb-8 text-on-surface-variant">
-          עקוב אחר השלבים להגדרת Review Pulse לעסק שלך
+          עקוב אחר השלבים להגדרת Rate Pulse לעסק שלך
         </p>
 
         {/* Stepper */}
@@ -416,7 +416,7 @@ export default function Onboarding() {
                 ברכות! העסק שלך מוכן
               </h2>
               <p className="text-sm mb-6 text-on-surface-variant">
-                Review Pulse מוגדר ומוכן לנטר את הביקורות שלך בזמן אמת
+                Rate Pulse מוגדר ומוכן לנטר את הביקורות שלך בזמן אמת
               </p>
               <div className="flex flex-col gap-2 p-4 rounded-xl mb-6 text-right bg-surface-container-low">
                 <div className="flex items-center gap-2">

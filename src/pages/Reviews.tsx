@@ -42,7 +42,7 @@ function exportToExcel(reviews: Review[]) {
   XLSX.utils.book_append_sheet(wb, ws, 'ביקורות');
 
   const date = new Date().toLocaleDateString('he-IL').replace(/\//g, '-');
-  XLSX.writeFile(wb, `ביקורות_ReviewPulse_${date}.xlsx`);
+  XLSX.writeFile(wb, `ביקורות_RatePulse_${date}.xlsx`);
 }
 
 const PLATFORM_OPTIONS: { value: Platform | 'all'; label: string }[] = [

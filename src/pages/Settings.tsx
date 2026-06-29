@@ -300,8 +300,8 @@ function TwoFAModal({
       const email = sessionData.session?.user?.email ?? 'המשתמש';
       const { data, error: e } = await supabase.auth.mfa.enroll({
         factorType: 'totp',
-        friendlyName: `Review Pulse (${email})`,
-        issuer: 'Review Pulse',
+        friendlyName: `Rate Pulse (${email})`,
+        issuer: 'Rate Pulse',
       });
       if (e || !data) { setError(e?.message ?? 'שגיאה'); setStep('qr'); return; }
       setFactorId(data.id);
