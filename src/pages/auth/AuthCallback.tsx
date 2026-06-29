@@ -191,7 +191,7 @@ export default function AuthCallback() {
         </div>
 
         {/* Logo below card */}
-        <img src="/logo.svg" alt="Rate Pulse" style={{ width: 180, maxWidth: '80%', height: 'auto', objectFit: 'contain', opacity: 0.65, marginTop: 24 }} />
+        <img src="/logo.png" alt="Rate Pulse" style={{ width: 180, maxWidth: '80%', height: 'auto', objectFit: 'contain', opacity: 0.65, marginTop: 24 }} />
       </div>
 
       <style>{`
