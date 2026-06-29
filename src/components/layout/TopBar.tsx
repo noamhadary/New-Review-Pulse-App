@@ -42,7 +42,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
   const [activeBranchIdx, setActiveBranchIdx] = useState(0);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const navigate        = useNavigate();
-  const { business, refetch: refetchBusiness } = useBusiness();
+  const { business } = useBusiness();
   const { user, signOut, isDemo }              = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const avatarInitial = (
