@@ -61,10 +61,9 @@ const MOCK_RATING_DIST: RatingDist[] = [
 ];
 
 const MOCK_PLATFORMS: PlatformStat[] = [
-  { name: 'Google',      icon: 'language',        reviews: 142, positive: 89, color: '#4285F4' },
-  { name: 'Facebook',    icon: 'groups',           reviews: 67,  positive: 82, color: '#1877F2' },
-  { name: 'TripAdvisor', icon: 'flight',           reviews: 28,  positive: 91, color: '#34E0A1' },
-  { name: 'Wolt',        icon: 'delivery_dining',  reviews: 10,  positive: 70, color: '#FF6B35' },
+  { name: 'Google',      icon: 'language', reviews: 142, positive: 89, color: '#4285F4' },
+  { name: 'Facebook',    icon: 'groups',   reviews: 67,  positive: 82, color: '#1877F2' },
+  { name: 'TripAdvisor', icon: 'flight',   reviews: 28,  positive: 91, color: '#34E0A1' },
 ];
 
 const MOCK_TOPICS: TopicStat[] = [
@@ -80,7 +79,6 @@ const PLATFORM_META: Record<string, { icon: string; color: string }> = {
   google:      { icon: 'language',       color: '#4285F4' },
   facebook:    { icon: 'groups',         color: '#1877F2' },
   tripadvisor: { icon: 'flight',         color: '#34E0A1' },
-  wolt:        { icon: 'delivery_dining',color: '#FF6B35' },
   other:       { icon: 'star',           color: '#871dd3' },
 };
 
