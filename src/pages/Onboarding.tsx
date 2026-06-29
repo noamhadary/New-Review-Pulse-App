@@ -59,7 +59,15 @@ export default function Onboarding() {
   const { business: existingBusiness, refetch: refetchBusiness } = useBusiness();
 
   const [step, setStep] = useState(1);
-  const [business, setBusiness] = useState({ name: '', category: 'קמעונאות', phone: '', website: '' });
+  const [business, setBusiness] = useState({
+    name:     (user?.user_metadata?.business_name as string | undefined) ?? '',
+    category: 'קמעונאות',
+    phone:    '',
+    website:  '',
+  });
+  const managerName = (user?.user_metadata?.full_name as string | undefined)
+                   || (user?.user_metadata?.name      as string | undefined)
+                   || '';
   const [connected, setConnected] = useState<string[]>([]);
   const [platformCreds, setPlatformCreds] = useState<Record<string, Record<string, string>>>({});
   const [notifs, setNotifs] = useState({ email: true, new_review: true, critical: true, weekly: false });
@@ -225,6 +233,16 @@ export default function Onboarding() {
           {step === 1 && (
             <div className="space-y-5">
               <h2 className="text-xl font-bold text-primary">פרטי העסק</h2>
+
+              {managerName && (
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary/8 border border-secondary/20">
+                  <span className="material-symbols-outlined text-[20px] text-secondary icon-filled">account_circle</span>
+                  <div>
+                    <p className="text-xs text-on-surface-variant">מנהל החשבון</p>
+                    <p className="text-sm font-semibold text-primary">{managerName}</p>
+                  </div>
+                </div>
+              )}
 
               {[
                 { key: 'name',    label: 'שם העסק',      placeholder: 'קפה ישראל' },

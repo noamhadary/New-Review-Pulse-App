@@ -54,6 +54,10 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
       .charAt(0)
       .toUpperCase()
   );
+  const googleAvatar = (user?.user_metadata?.avatar_url as string | undefined)
+                    || (user?.user_metadata?.picture   as string | undefined)
+                    || null;
+  const avatarUrl = business?.logo_url || googleAvatar;
   const notifRef   = useRef<HTMLDivElement>(null);
   const storeRef   = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -247,9 +251,9 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
                 <span className="material-symbols-outlined text-white text-[16px] animate-spin">progress_activity</span>
               </div>
             )}
-            {business?.logo_url ? (
+            {avatarUrl ? (
               <img
-                src={business.logo_url}
+                src={avatarUrl}
                 alt="לוגו העסק"
                 className="w-full h-full rounded-full object-cover"
                 style={{ border: '2px solid rgba(255,255,255,0.4)' }}
@@ -274,9 +278,9 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
               <div className="px-4 py-4 border-b border-outline-variant/30 flex items-center gap-3"
                 style={{ background: 'linear-gradient(135deg,rgba(0,35,102,0.04),rgba(135,29,211,0.06))' }}>
                 <div className="relative flex-shrink-0" style={{ width: 42, height: 42 }}>
-                  {business?.logo_url ? (
+                  {avatarUrl ? (
                     <img
-                      src={business.logo_url}
+                      src={avatarUrl}
                       alt="לוגו"
                       className="w-full h-full rounded-xl object-cover"
                       style={{ border: '1.5px solid rgba(135,29,211,0.2)' }}
