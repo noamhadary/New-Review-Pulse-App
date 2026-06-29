@@ -54,10 +54,12 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
       .charAt(0)
       .toUpperCase()
   );
-  const googleAvatar = (user?.user_metadata?.avatar_url as string | undefined)
-                    || (user?.user_metadata?.picture   as string | undefined)
-                    || null;
-  const avatarUrl = business?.logo_url || googleAvatar;
+  // Personal profile photo (used in the avatar circle top-right)
+  const avatarUrl = (user?.user_metadata?.avatar_url as string | undefined)
+                 || (user?.user_metadata?.picture     as string | undefined)
+                 || null;
+  // Business logo (used next to branch name)
+  const businessLogoUrl = business?.logo_url ?? null;
   const notifRef   = useRef<HTMLDivElement>(null);
   const storeRef   = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -97,7 +99,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
     if (!file || !user || isDemo) return;
     setUploadingAvatar(true);
     const ext  = file.name.split('.').pop() ?? 'jpg';
-    const path = `${user.id}/logo.${ext}`;
+    const path = `${user.id}/profile.${ext}`;
     const { error: uploadError } = await supabase.storage
       .from('business-logos')
       .upload(path, file, { upsert: true });
@@ -108,8 +110,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
     }
     const { data: { publicUrl } } = supabase.storage.from('business-logos').getPublicUrl(path);
     const urlWithBust = `${publicUrl}?t=${Date.now()}`;
-    await supabase.from('businesses').update({ logo_url: urlWithBust }).eq('owner_id', user.id);
-    refetchBusiness();
+    await supabase.auth.updateUser({ data: { avatar_url: urlWithBust } });
     setUploadingAvatar(false);
     setProfileOpen(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -139,9 +140,9 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
             onClick={() => multiBranch && setStoreOpen(!storeOpen)}
             className={`flex items-center gap-2 px-3 py-2.5 rounded-lg transition-colors ${multiBranch ? 'bg-white/10 hover:bg-white/20 cursor-pointer' : 'bg-white/5 cursor-default'}`}
           >
-            {avatarUrl ? (
+            {businessLogoUrl ? (
               <img
-                src={avatarUrl}
+                src={businessLogoUrl}
                 alt="לוגו העסק"
                 className="w-8 h-8 rounded-lg object-cover flex-shrink-0"
                 style={{ border: '1.5px solid rgba(255,255,255,0.3)' }}

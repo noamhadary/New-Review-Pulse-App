@@ -806,7 +806,10 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
   const [showPwd, setShowPwd] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
+  const [uploadingProfilePhoto, setUploadingProfilePhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const profilePhotoRef = useRef<HTMLInputElement>(null);
   const [branches, setBranches] = useState<BranchData[]>([{ location: '' }]);
   const [selectedBranchIdx, setSelectedBranchIdx] = useState(0);
   const [twoFAEnabled, setTwoFAEnabled] = useState(false);
@@ -816,6 +819,14 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
   useEffect(() => {
     setLogoUrl(business?.logo_url ?? null);
   }, [business?.logo_url]);
+
+  // Sync profile photo from user metadata
+  useEffect(() => {
+    const url = (user?.user_metadata?.avatar_url as string | undefined)
+             || (user?.user_metadata?.picture   as string | undefined)
+             || null;
+    setProfilePhotoUrl(url);
+  }, [user?.user_metadata]);
 
   // Check 2FA status on mount
   useEffect(() => {
@@ -852,6 +863,28 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
 
   const branchLabel = (idx: number) => idx === 0 ? 'סניף ראשי' : `סניף ${idx + 1}`;
 
+  const handleProfilePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setUploadingProfilePhoto(true);
+    const ext = file.name.split('.').pop() ?? 'jpg';
+    const { error: uploadError } = await supabase.storage
+      .from('business-logos')
+      .upload(`${user.id}/profile.${ext}`, file, { upsert: true });
+    if (uploadError) {
+      showToast(`שגיאה בהעלאת התמונה: ${uploadError.message}`, 'error');
+      setUploadingProfilePhoto(false);
+      return;
+    }
+    const { data: { publicUrl } } = supabase.storage.from('business-logos').getPublicUrl(`${user.id}/profile.${ext}`);
+    const urlWithBust = `${publicUrl}?t=${Date.now()}`;
+    await supabase.auth.updateUser({ data: { avatar_url: urlWithBust } });
+    setProfilePhotoUrl(urlWithBust);
+    setUploadingProfilePhoto(false);
+    showToast('תמונת הפרופיל עודכנה בהצלחה');
+    if (profilePhotoRef.current) profilePhotoRef.current.value = '';
+  };
+
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
@@ -862,7 +895,6 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
       .from('business-logos')
       .upload(path, file, { upsert: true });
     if (uploadError) {
-      console.error('Avatar upload error:', uploadError);
       showToast(`שגיאה בהעלאת התמונה: ${uploadError.message}`, 'error');
       setUploadingAvatar(false);
       return;
@@ -873,7 +905,7 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
     setLogoUrl(urlWithBust);
     refetchBusiness();
     setUploadingAvatar(false);
-    showToast('תמונת הפרופיל עודכנה בהצלחה');
+    showToast('לוגו העסק עודכן בהצלחה');
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -981,32 +1013,83 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
       {showPwd && <PasswordModal onClose={() => setShowPwd(false)} onSave={() => { setShowPwd(false); showToast('הסיסמה עודכנה בהצלחה'); }} />}
 
       <SectionCard title="פרטים אישיים">
-        {/* Avatar */}
-        <div className="flex items-center gap-4 mb-6 pb-6 border-b border-outline-variant/30">
-          <div className="relative flex-shrink-0">
-            {logoUrl ? (
-              <img
-                src={logoUrl}
-                alt="לוגו העסק"
-                className="w-16 h-16 rounded-2xl object-cover"
-                style={{ border: '2px solid rgba(135,29,211,0.2)' }}
-                onError={() => setLogoUrl(null)}
-              />
-            ) : (
-              <div
-                className="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-extrabold"
-                style={{ background: 'linear-gradient(135deg,#002366,#871dd3)', color: '#fff' }}
-              >
-                {initials}
-              </div>
-            )}
-            {uploadingAvatar && (
-              <div className="absolute inset-0 rounded-2xl flex items-center justify-center bg-black/40">
-                <span className="material-symbols-outlined text-white text-[20px] animate-spin">progress_activity</span>
-              </div>
-            )}
+        {/* Profile photo + Business logo */}
+        <div className="flex flex-wrap items-start gap-6 mb-6 pb-6 border-b border-outline-variant/30">
+
+          {/* Profile photo */}
+          <div className="flex flex-col items-center gap-1.5">
+            <p className="text-xs font-semibold text-on-surface-variant mb-1">תמונת פרופיל</p>
+            <div className="relative">
+              {profilePhotoUrl ? (
+                <img
+                  src={profilePhotoUrl}
+                  alt="תמונת פרופיל"
+                  className="w-16 h-16 rounded-full object-cover"
+                  style={{ border: '2px solid rgba(135,29,211,0.2)' }}
+                  onError={() => setProfilePhotoUrl(null)}
+                />
+              ) : (
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-extrabold"
+                  style={{ background: 'linear-gradient(135deg,#002366,#871dd3)', color: '#fff' }}
+                >
+                  {initials}
+                </div>
+              )}
+              {uploadingProfilePhoto && (
+                <div className="absolute inset-0 rounded-full flex items-center justify-center bg-black/40">
+                  <span className="material-symbols-outlined text-white text-[20px] animate-spin">progress_activity</span>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => !isDemo && profilePhotoRef.current?.click()}
+              disabled={uploadingProfilePhoto || isDemo}
+              className="text-xs font-semibold cursor-pointer hover:underline text-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {uploadingProfilePhoto ? 'מעלה...' : 'שנה תמונת פרופיל'}
+            </button>
+            <input ref={profilePhotoRef} type="file" accept="image/*" className="hidden" onChange={handleProfilePhotoChange} />
           </div>
-          <div>
+
+          {/* Business logo */}
+          <div className="flex flex-col items-center gap-1.5">
+            <p className="text-xs font-semibold text-on-surface-variant mb-1">לוגו עסק</p>
+            <div className="relative">
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt="לוגו העסק"
+                  className="w-16 h-16 rounded-2xl object-cover"
+                  style={{ border: '2px solid rgba(135,29,211,0.2)' }}
+                  onError={() => setLogoUrl(null)}
+                />
+              ) : (
+                <div
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-extrabold"
+                  style={{ background: 'linear-gradient(135deg,#002366,#871dd3)', color: '#fff' }}
+                >
+                  {initials}
+                </div>
+              )}
+              {uploadingAvatar && (
+                <div className="absolute inset-0 rounded-2xl flex items-center justify-center bg-black/40">
+                  <span className="material-symbols-outlined text-white text-[20px] animate-spin">progress_activity</span>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => !isDemo && fileInputRef.current?.click()}
+              disabled={uploadingAvatar || isDemo}
+              className="text-xs font-semibold cursor-pointer hover:underline text-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {uploadingAvatar ? 'מעלה...' : 'שנה לוגו עסק'}
+            </button>
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+          </div>
+
+          {/* User info */}
+          <div className="flex flex-col justify-center">
             <p className="font-bold text-primary">
               {profile.contact_name || profile.name || user?.email?.split('@')[0] || ''}
             </p>
@@ -1014,20 +1097,6 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
               <p className="text-sm text-on-surface-variant">{profile.name}</p>
             )}
             <p className="text-xs text-outline">{profile.email}</p>
-            <button
-              onClick={() => !isDemo && fileInputRef.current?.click()}
-              disabled={uploadingAvatar || isDemo}
-              className="text-xs font-semibold mt-1 cursor-pointer hover:underline text-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {uploadingAvatar ? 'מעלה...' : 'שנה לוגו עסק'}
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleAvatarChange}
-            />
           </div>
         </div>
 
