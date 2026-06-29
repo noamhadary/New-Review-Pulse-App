@@ -139,7 +139,17 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
             onClick={() => multiBranch && setStoreOpen(!storeOpen)}
             className={`flex items-center gap-2 px-3 py-2.5 rounded-lg transition-colors ${multiBranch ? 'bg-white/10 hover:bg-white/20 cursor-pointer' : 'bg-white/5 cursor-default'}`}
           >
-            <span className="material-symbols-outlined text-white text-[20px]">store</span>
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt="לוגו העסק"
+                className="w-8 h-8 rounded-lg object-cover flex-shrink-0"
+                style={{ border: '1.5px solid rgba(255,255,255,0.3)' }}
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              />
+            ) : (
+              <span className="material-symbols-outlined text-white text-[20px]">store</span>
+            )}
             <div className="text-right">
               <p className="text-sm font-semibold text-white leading-tight">{activeBranch.label}</p>
               {activeBranch.location && (

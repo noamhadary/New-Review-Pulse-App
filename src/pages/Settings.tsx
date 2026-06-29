@@ -1019,7 +1019,7 @@ function ProfileTab({ showToast }: { showToast: (m: string, t?: ToastProps['type
               disabled={uploadingAvatar || isDemo}
               className="text-xs font-semibold mt-1 cursor-pointer hover:underline text-secondary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {uploadingAvatar ? 'מעלה...' : 'שנה תמונת פרופיל'}
+              {uploadingAvatar ? 'מעלה...' : 'שנה לוגו עסק'}
             </button>
             <input
               ref={fileInputRef}
