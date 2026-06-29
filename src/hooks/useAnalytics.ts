@@ -158,7 +158,7 @@ export function useAnalytics(): AnalyticsData {
               byPlatform[p].positive++;
           });
 
-          result.platformData = Object.entries(byPlatform).map(([platform, val]) => ({
+          result.platformData = Object.entries(byPlatform).filter(([p]) => p !== 'wolt').map(([platform, val]) => ({
             name: platform.charAt(0).toUpperCase() + platform.slice(1),
             icon: PLATFORM_META[platform]?.icon ?? 'star',
             color: PLATFORM_META[platform]?.color ?? '#871dd3',
