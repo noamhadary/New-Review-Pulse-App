@@ -46,8 +46,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       >
         {/* Brand */}
         <div className="px-5 py-5 border-b border-outline-variant">
-          <img src="/logo.png" alt="Rate Pulse" style={{ height: 57, width: 'auto', maxWidth: '100%', objectFit: 'contain' }} />
-          <p className="text-xs mt-1.5 text-outline">ניהול מוניטין</p>
+          <p className="text-sm font-semibold text-outline">ניהול מוניטין</p>
         </div>
 
         {/* Navigation */}
