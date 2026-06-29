@@ -21,7 +21,7 @@ export default function PulseGauge({ positivePct = 94, pendingCount }: Props) {
       style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}
     >
       <h3 className="text-base md:text-xl font-bold mb-4 md:mb-6 text-primary">
-        Review Pulse Gauge
+        מדד חיוביות
       </h3>
 
       {/* Gauge */}
