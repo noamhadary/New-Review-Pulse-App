@@ -1,4 +1,4 @@
-# ReviewPulse — ניהול מוניטין חכם
+# Rate Pulse — ניהול מוניטין חכם
 
 > פלטפורמת SaaS לעסקים ישראלים: מרכזת ביקורות מכל הפלטפורמות, מנתחת סנטימנט בזמן אמת, ומייצרת תשובות בעברית בעזרת AI.
 
@@ -6,7 +6,7 @@
 
 ## סקירה כללית
 
-ReviewPulse מאגדת את כל הביקורות של העסק — Google, Facebook, TripAdvisor, Wolt — לדשבורד אחד, מסווגת אותן לפי סנטימנט, ומציעה 4 תשובות מותאמות-טון בעברית שנוצרות על-ידי Claude AI. בלחיצה אחת בוחרים תשובה ומפרסמים.
+Rate Pulse מאגדת את כל הביקורות של העסק — Google, Facebook, TripAdvisor, Wolt — לדשבורד אחד, מסווגת אותן לפי סנטימנט, ומציעה 4 תשובות מותאמות-טון בעברית שנוצרות על-ידי Claude AI. בלחיצה אחת בוחרים תשובה ומפרסמים.
 
 ---
 
@@ -49,10 +49,7 @@ ReviewPulse מאגדת את כל הביקורות של העסק — Google, Face
 
 ## Live Demo
 
-🔗 **[reviewpulse.vercel.app](https://reviewpulse.vercel.app)** *(להוסיף קישור אמיתי)*
-
-<!-- להוסיף צילום מסך של הדשבורד -->
-<!-- ![Dashboard Screenshot](docs/screenshot-dashboard.png) -->
+🔗 **[rate-pulse.vercel.app](https://rate-pulse.vercel.app)**
 
 ---
 
@@ -68,8 +65,8 @@ ReviewPulse מאגדת את כל הביקורות של העסק — Google, Face
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/<your-org>/reviewpulse.git
-cd reviewpulse
+git clone https://github.com/noamhadary/New-Review-Pulse-App.git
+cd New-Review-Pulse-App
 npm install
 ```
 
@@ -265,4 +262,3 @@ npm run build
 # Push to GitHub → Import in Vercel
 # Set env vars: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
 ```
-# Review-Pulse
