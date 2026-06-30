@@ -51,6 +51,8 @@ Rate Pulse מאגדת את כל הביקורות של העסק — Google, Faceb
 
 🔗 **[rate-pulse.vercel.app](https://rate-pulse.vercel.app)**
 
+![Dashboard Screenshot](docs/screenshot-dashboard.png)
+
 ---
 
 ## הרצה מקומית
