@@ -69,8 +69,8 @@ Rate Pulse מאגדת את כל הביקורות של העסק — Google, Faceb
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/noamhadary/New-Review-Pulse-App.git
-cd New-Review-Pulse-App
+git clone https://github.com/noamhadary/Rate-Pulse.git
+cd Rate-Pulse
 npm install
 ```
 
