@@ -51,7 +51,7 @@ Rate Pulse מאגדת את כל הביקורות של העסק — Google, Faceb
 
 ## Live Demo
 
-🔗 **[rate-pulse.vercel.app](https://rate-pulse.vercel.app)**
+🔗 **[https://rate-pulse.vercel.app](https://rate-pulse-flame.vercel.app/dashboard)**
 
 > **בדיקה מהירה:** בדף הכניסה לחצו על **"מעבר לגירסת הדמו"** — ללא צורך בהרשמה.
 
