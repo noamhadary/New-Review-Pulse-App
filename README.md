@@ -1,3 +1,5 @@
+<div dir="rtl">
+
 # Rate Pulse — ניהול מוניטין חכם
 
 > פלטפורמת SaaS לעסקים ישראלים: מרכזת ביקורות מכל הפלטפורמות, מנתחת סנטימנט בזמן אמת, ומייצרת תשובות בעברית בעזרת AI.
@@ -266,3 +268,5 @@ npm run build
 # Push to GitHub → Import in Vercel
 # Set env vars: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
 ```
+
+</div>
