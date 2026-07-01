@@ -2,19 +2,23 @@
 
 # Rate Pulse — ניהול מוניטין חכם
 
-> פלטפורמת SaaS לעסקים ישראלים: מרכזת ביקורות מכל הפלטפורמות, מנתחת סנטימנט בזמן אמת, ומייצרת תשובות בעברית בעזרת AI.
+> פלטפורמת SaaS לעסקים ישראלים: מרכזת ביקורות מכל הפלטפורמות, מנתחת מגמות ורגישות בזמן אמת, ומייצרת תשובות בעברית בעזרת AI.
 
 ---
 
 ## סקירה כללית
 
-Rate Pulse מאגדת את כל הביקורות של העסק — Google, Facebook, TripAdvisor - לדשבורד אחד, מסווגת אותן לפי סנטימנט, ומציעה 4 תשובות מותאמות-טון בעברית שנוצרות על-ידי Claude AI. בלחיצה אחת בוחרים תשובה ומפרסמים.
+Rate Pulse מאגדת את כל הביקורות של העסק - Google, Facebook, TripAdvisor - לדשבורד אחד, מסווגת אותן לפי סוג הביקורת, ומציעה 4 תשובות מותאמות בעברית שנוצרות על-ידי Claude AI. בלחיצה אחת בוחרים תשובה ומפרסמים.
+המערכת מאפשרת להגדיר את הסגנון שבו תבחר להגיב (מתנצל, רך, תקיף וכ"ו)
+באפשרותך לבחור שהמערכת שתגיב במקומך לכל ביקורת ע"פ הסגנון שסימנת או
+לחלופין לקבל לטלפון באמצעות ווטסאפ 4 תגובות מוצעות ע"י הבינה המלכותית ואתה
+תבחר איזה הודעה תשלח.
 
 ---
 
 ## הבעיה שאנחנו פותרים
 
-בעלי עסקים קטנים ובינוניים מקבלים ביקורות ב-3–5 פלטפורמות שונות. הם מתחלקים בין אפליקציות, שוכחים לענות (במיוחד לביקורות שליליות), ומבזבזים שעות על ניסוח תשובות מנומסות בעברית — שלרוב נכתבות מחדש בכל פעם. תגובה איטית לביקורת שלילית פוגעת בדירוג ובאמון הלקוח.
+בעלי עסקים קטנים ובינוניים מקבלים ביקורות ב-3–5 פלטפורמות שונות. הם מתחלקים בין אפליקציות, בעלי העסקים לרוב עסוקים מאוד ולא מוצאים את הזמן לענות (במיוחד לביקורות שליליות), ומבזבזים שעות על ניסוח תשובות מנומסות בעברית — שלרוב נכתבות מחדש בכל פעם. תגובה איטית לביקורת שלילית פוגעת בדירוג ובאמון הלקוח.
 
 ---
 
@@ -23,11 +27,12 @@ Rate Pulse מאגדת את כל הביקורות של העסק — Google, Faceb
 עסקים ישראלים קטנים-בינוניים עם נוכחות דיגיטלית ב-2+ פלטפורמות:
 
 - **מסעדות וקפה** — תנועת ביקורות גבוהה, שעות שיא עמוסות, צורך בתגובה מהירה
-- **סלוני יופי וספרים** — לקוחות חוזרים, מוניטין אישי רגיש
-- **בתי מלון ו-Airbnb** — ציון ממוצע משפיע ישירות על הכנסות
-- **רשתות קמעונאיות קטנות** — כמה סניפים, צוות מנהל מרכזי
+- **סלוני יופי וספרים** - לקוחות חוזרים, מוניטין אישי רגיש
+- **בתי מלון ו-Airbnb** - ציון ממוצע משפיע ישירות על הכנסות
+- **רשתות קמעונאיות קטנות** - כמה סניפים, צוות מנהל מרכזי
+- **כל עסק קטן או בינוני שיש לו דף עסק באחת מהפלטפורמות.**
 
-טריגר שימוש: "קיבלתי ביקורת 1 כוכב בגוגל, לא ראיתי אותה שבועיים, המתחרה שלי ענה תוך שעה."
+טריגר שימוש: "קיבלתי ביקורת 1 כוכב בגוגל, לא ראיתי אותה שבועיים, ולקוחות אחרים כבר ראו את הביקורת השלילית שממתינה ללא תגובה ולכן הם הלכו למתחרה שלי."
 
 ---
 
@@ -38,12 +43,12 @@ Rate Pulse מאגדת את כל הביקורות של העסק — Google, Faceb
 | **ניהול ידני** (לפתוח כל אפ בנפרד) | בזבוז זמן, פספוס ביקורות, אין ניתוח |
 | **וואטסאפ / אקסל** למעקב | לא מחובר לפלטפורמות, לא מדרג |
 | **Birdeye / Podium** (גלובלי) | לא תומך בעברית ו-RTL, יקר ($300+/mo), ממשק באנגלית |
-| **Grade.us / ReviewTrackers** | ממוצא צפון-אמריקאי, ללא Wolt/ישראלי, ללא AI בעברית |
+| **Grade.us / ReviewTrackers** | ממוצא צפון-אמריקאי, לא פונה לקהל הישראלי, ללא AI בעברית |
 
 **הבידול שלנו:**
 - **עברית-ראשונה** — כל ה-UI, הניתוח, ותשובות ה-AI בעברית RTL מלא
-- **Wolt + ישראל** — אינטגרציה לפלטפורמה שאין למתחרים
-- **AI בטון** — 4 תשובות עם בחירת טון (עדין / אמפתי / תקיף / מתנצל)
+- **קהל ישראלי** — אינטגרציה לפלטפורמה שאין למתחרים
+- **מענה בסגנון שלי** — 4 תשובות עם בחירת טון (עדין / אמפתי / תקיף / מתנצל)
 - **WhatsApp loop** — מקבל ביקורת, בוחר תשובה בוואטסאפ, מפרסם אוטומטית
 - **מחיר ישראלי** — ₪149/חודש לעומת $300+ למתחרים הגלובליים
 
@@ -55,70 +60,8 @@ Rate Pulse מאגדת את כל הביקורות של העסק — Google, Faceb
 
 > **בדיקה מהירה:** בדף הכניסה לחצו על **"מעבר לגירסת הדמו"** — ללא צורך בהרשמה.
 
+![Landing Page](docs/landingpage.png)
 ![Dashboard Screenshot](docs/screenshot-dashboard.png)
-
----
-
-## הרצה מקומית
-
-### דרישות מקדימות
-
-- Node.js 20+
-- חשבון [Supabase](https://supabase.com) (חינמי)
-- מפתח API של [Anthropic](https://console.anthropic.com) לתשובות AI
-- (אופציונלי) חשבון [GREEN API](https://green-api.com) לאינטגרציית WhatsApp
-
-### 1. Clone & Install
-
-```bash
-git clone https://github.com/noamhadary/Rate-Pulse.git
-cd Rate-Pulse
-npm install
-```
-
-### 2. הגדרת משתני סביבה
-
-```bash
-cp .env.example .env.local
-```
-
-ערכו את `.env.local`:
-
-```env
-VITE_SUPABASE_URL=https://xxxx.supabase.co
-VITE_SUPABASE_ANON_KEY=your_anon_key
-
-# Edge Functions (מוגדר ב-Supabase Dashboard → Settings → Edge Functions)
-ANTHROPIC_API_KEY=sk-ant-...
-GREEN_API_INSTANCE_ID=your_instance_id
-GREEN_API_TOKEN=your_token
-```
-
-### 3. הרצת מיגרציות Supabase
-
-ב-Supabase SQL Editor, הריצו בסדר:
-
-```
-supabase/migrations/001_initial_schema.sql
-supabase/migrations/002_ai_replies.sql
-supabase/migrations/003_settings_and_team.sql
-supabase/migrations/004_unique_constraints.sql
-```
-
-### 4. Deploy Edge Functions
-
-```bash
-supabase functions deploy generate-replies
-supabase functions deploy send-whatsapp
-supabase functions deploy whatsapp-webhook
-```
-
-### 5. הרצה מקומית
-
-```bash
-npm run dev
-# → http://localhost:5173
-```
 
 ---
 
@@ -138,6 +81,8 @@ npm run dev
 ---
 
 ## ERD — מודל נתונים (Supabase / PostgreSQL)
+
+![Supabase Tables](docs/Supabase-tables.png)
 
 ```mermaid
 erDiagram
@@ -219,8 +164,6 @@ erDiagram
     reviews ||--o{ reply_sessions : "generates"
 ```
 
-> לתרשים חזותי מלא: **Supabase Dashboard → Database → Schema Visualizer**
-
 ---
 
 ## שירותים חיצוניים ואינטגרציות
@@ -231,9 +174,9 @@ erDiagram
 | **Anthropic Claude** (`claude-sonnet-4-6`) | יצירת 4 תשובות AI בעברית לפי טון הביקורת | `ANTHROPIC_API_KEY` |
 | **GREEN API** | שליחת ביקורות ותשובות מוצעות ב-WhatsApp Business | `GREEN_API_INSTANCE_ID`, `GREEN_API_TOKEN` |
 | **Google Business Profile** | שליפת ביקורות Google | OAuth / API Key |
+| **Google OAuth** | אוטנטיקציה — התחברות משתמשים דרך חשבון גוגל | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` |
 | **Facebook Pages API** | שליפת ביקורות Facebook | `FB_ACCESS_TOKEN` |
 | **TripAdvisor API** | שליפת ביקורות TripAdvisor | `TRIPADVISOR_KEY` |
-| **Wolt Partner API** | שליפת ביקורות Wolt | `WOLT_API_KEY` |
 | **Vercel** | Hosting ו-CI/CD לצד הלקוח | — |
 
 ---
@@ -256,17 +199,9 @@ erDiagram
 | תוכנית | מחיר | ביקורות | AI תשובות | פלטפורמות | משתמשים |
 |--------|------|---------|-----------|-----------|---------|
 | Free | ₪0 | 100/חודש | 30 | 1 | 1 |
-| Pro | ₪149/חודש | ללא הגבלה | ללא הגבלה | כל | 5 |
-| Enterprise | ₪399/חודש | ללא הגבלה | ללא הגבלה | כל + API | ללא הגבלה |
+| בעתיד — Pro | ₪149/חודש | ללא הגבלה | ללא הגבלה | כל | 5 |
+| בעתיד — Enterprise | ₪399/חודש | ללא הגבלה | ללא הגבלה | כל + API | ללא הגבלה |
 
 ---
-
-## Deploy to Vercel
-
-```bash
-npm run build
-# Push to GitHub → Import in Vercel
-# Set env vars: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
-```
 
 </div>
