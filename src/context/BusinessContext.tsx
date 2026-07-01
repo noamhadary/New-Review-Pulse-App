@@ -8,7 +8,7 @@ const DEMO_BUSINESS: Business = {
   id: 'demo-business-1',
   owner_id: 'demo-user-1',
   name: 'מוסך עמי',
-  category: 'מוסך ותיקון רכב',
+  category: 'שירותים',
   phone: '03-555-1234',
   website: 'https://mosek-ami.co.il',
   logo_url: '/demo-garage-logo.svg',
