@@ -53,11 +53,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
   };
 
+  const demoUser = effectiveDemo ? {
+    id: 'demo-user-1',
+    email: 'ami@mosek-ami.co.il',
+    user_metadata: {
+      full_name: 'עמי בן-דוד',
+      avatar_url: 'https://ui-avatars.com/api/?name=%D7%A2%D7%9E%D7%99+%D7%91%D7%9F-%D7%93%D7%95%D7%93&background=002366&color=fff&size=128&bold=true',
+    },
+  } as unknown as import('@supabase/supabase-js').User : null;
+
   return (
     <AuthContext.Provider
       value={{
         session,
-        user: session?.user ?? null,
+        user: effectiveDemo ? demoUser : (session?.user ?? null),
         loading,
         signOut,
         isDemo: effectiveDemo,
