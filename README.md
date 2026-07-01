@@ -94,6 +94,8 @@ erDiagram
         text phone
         text website
         text logo_url
+        text description
+        jsonb branches
         timestamptz created_at
     }
 
@@ -109,6 +111,7 @@ erDiagram
         text status
         text reply_text
         timestamptz replied_at
+        boolean is_demo
         timestamptz created_at
     }
 
@@ -155,6 +158,7 @@ erDiagram
         uuid owner_id FK
         text platform
         int reviews_count
+        jsonb credentials
         timestamptz last_sync_at
         timestamptz created_at
     }
