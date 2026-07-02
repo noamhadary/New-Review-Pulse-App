@@ -13,9 +13,12 @@
     "test:e2e:report": "playwright show-report tests/e2e/report"
   },
   "dependencies": {
+    "@fontsource/heebo": "^5.2.8",
+    "@fontsource/plus-jakarta-sans": "^5.2.8",
     "@supabase/supabase-js": "^2.105.4",
     "@tailwindcss/vite": "^4.3.0",
     "lucide-react": "^1.14.0",
+    "material-symbols": "^0.45.5",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-hot-toast": "^2.6.0",
