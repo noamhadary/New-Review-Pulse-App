@@ -144,8 +144,8 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
               <img
                 src={businessLogoUrl}
                 alt="לוגו העסק"
-                className="w-8 h-8 rounded-lg object-cover flex-shrink-0"
-                style={{ border: '1.5px solid rgba(255,255,255,0.3)' }}
+                className="w-12 h-12 rounded-xl object-cover flex-shrink-0"
+                style={{ border: '2px solid rgba(255,255,255,0.6)', boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />
             ) : (
