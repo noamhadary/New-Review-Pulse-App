@@ -11,7 +11,7 @@ const DEMO_BUSINESS: Business = {
   category: 'שירותים',
   phone: '03-555-1234',
   website: 'https://mosek-ami.co.il',
-  logo_url: '/demo-garage-logo.svg',
+  logo_url: '/demo-garage-logo.png',
   description: 'מוסך מקצועי לטיפול ותיקון רכב בפתח תקווה. מעל 20 שנות ניסיון. מומחים בטיפולים שגרתיים, תיקוני מנוע, בלמים וחשמל רכב.',
   branches: [{ location: 'פתח תקווה, רחוב הרצל 12' }],
   created_at: new Date().toISOString(),
